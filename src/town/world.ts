@@ -28,7 +28,7 @@ export class TownWorld {
   private route: Point[] = [];
   private petRoute: Point[] = [];
   private petWait = 0;
-  private focus: Point = { x: 14.5, z: 11.5 };
+  private focus: Point = { ...TOWN.entry };
   private zoom = 0.8;
   private following = false;
   private pointer: {
@@ -47,11 +47,13 @@ export class TownWorld {
   private last = 0;
   private disposed = false;
   private coinCooldown = 0;
+  private coinAvailable = false;
   constructor(
     private host: HTMLElement,
     private profile: ProfileRepository,
     private home: () => void,
     private notify: (text: string) => void,
+    private coinAvailabilityChanged: (available: boolean) => void,
     private petAssets: PetAssets = new PetAssets(),
   ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -66,20 +68,20 @@ export class TownWorld {
     canvas.tabIndex = 0;
     canvas.setAttribute(
       "aria-label",
-      "Village square. Tap paths to walk, drag to look around, tap fountain to toss a coin.",
+      "Woodland village. Tap paths to walk, cross the stream by its bridge, and approach the fountain to toss a coin.",
     );
     canvas.style.touchAction = "none";
     this.scene.add(new THREE.HemisphereLight(0xfff7dc, 0x7c997e, 2.5));
     const sun = new THREE.DirectionalLight(0xffebbd, 3);
-    sun.position.set(12, 28, 10);
+    sun.position.set(TOWN.width / 2 - 3, 34, TOWN.depth / 2 - 5);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -24;
-    sun.shadow.camera.right = 24;
-    sun.shadow.camera.top = 24;
-    sun.shadow.camera.bottom = -24;
+    sun.shadow.camera.left = -36;
+    sun.shadow.camera.right = 36;
+    sun.shadow.camera.top = 36;
+    sun.shadow.camera.bottom = -36;
     sun.shadow.normalBias = 0.045;
-    sun.target.position.set(15, 0, 10);
+    sun.target.position.set(TOWN.width / 2, 0, TOWN.depth / 2);
     this.scene.add(sun, sun.target, this.art.root);
     this.avatar = new AnimalRig(
       profile.state.avatar.color,
@@ -99,6 +101,9 @@ export class TownWorld {
     this.audio = new TownAudio(profile.state.muted);
     this.audio.setActive(true);
     this.audio.setHidden(document.hidden);
+    // Entering town is itself a user gesture, so the woodland can begin at once.
+    this.audio.unlock();
+    this.updateCoinAvailability();
     this.observer = new ResizeObserver(() => {
       this.pointer = null;
       this.resize();
@@ -263,7 +268,7 @@ export class TownWorld {
   }
   private positionCamera() {
     this.focus.x = Math.max(3, Math.min(TOWN.width - 3, this.focus.x));
-    this.focus.z = Math.max(3, Math.min(TOWN.streamZ, this.focus.z));
+    this.focus.z = Math.max(3, Math.min(TOWN.depth - 3, this.focus.z));
     this.camera.position.set(this.focus.x + 14, 18, this.focus.z + 17);
     this.camera.lookAt(this.focus.x, 0, this.focus.z);
     this.camera.updateMatrixWorld();
@@ -316,7 +321,7 @@ export class TownWorld {
     this.following = true;
   }
   visitSquare() {
-    this.walk({ x: 15, z: 13 });
+    this.walk({ x: TOWN.fountain.x, z: TOWN.fountain.z + 3.1 });
   }
   center() {
     this.following = true;
@@ -339,13 +344,24 @@ export class TownWorld {
     this.react("surprise");
   }
   tossCoin() {
+    if (!this.coinAvailable) {
+      this.avatarReaction.show("question");
+      this.notify("Come a little closer to the fountain.");
+      return;
+    }
     if (this.coinCooldown > 0) return;
     this.coinCooldown = 1.5;
     this.audio.unlock();
-    this.art.tossCoin();
+    this.art.tossCoin(this.point);
     this.audio.coin();
     this.react("heart");
     this.notify("A little wish for the village.");
+  }
+  private updateCoinAvailability() {
+    const available = this.nav.nearFountain(this.point);
+    if (available === this.coinAvailable) return;
+    this.coinAvailable = available;
+    this.coinAvailabilityChanged(available);
   }
   private frame = (time: number) => {
     if (this.disposed) return;
@@ -362,17 +378,20 @@ export class TownWorld {
       this.avatar.root.rotation.y = moved.facing;
       this.avatar.root.position.set(this.point.x, 0, this.point.z);
       this.avatar.update(dt, moved.moved, this.profile.state.reduced);
+      this.updateCoinAvailability();
       if (this.pet) {
         this.petWait -= dt;
         if (this.petWait <= 0) {
-          this.petWait = 0.7;
+          this.petWait = 0.35;
+          const target = this.nav.companionTarget(
+            this.point,
+            this.avatar.root.rotation.y,
+          );
           if (
-            Math.hypot(
-              this.petPoint.x - this.point.x,
-              this.petPoint.z - this.point.z,
-            ) > 1.1
+            Math.hypot(this.petPoint.x - target.x, this.petPoint.z - target.z) >
+            0.3
           )
-            this.petRoute = this.nav.path(this.petPoint, this.point);
+            this.petRoute = this.nav.path(this.petPoint, target);
         }
         const pm = RouteMotion.step(
           this.petPoint,
@@ -417,6 +436,7 @@ export class TownWorld {
       focus: { ...this.focus },
       zoom: this.zoom,
       coinFlipping: this.coinCooldown > 0,
+      coinAvailable: this.coinAvailable,
       audio: this.audio.status(),
       scenery: this.art.status(),
       pet:
@@ -433,6 +453,7 @@ export class TownWorld {
     this.abort.abort();
     this.observer.disconnect();
     this.audio.dispose();
+    this.coinAvailabilityChanged(false);
     this.avatarReaction.dispose();
     this.petReaction.dispose();
     this.art.dispose();

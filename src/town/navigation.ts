@@ -2,15 +2,28 @@ import { TOWN } from "./layout";
 import type { Point } from "../core/profile";
 /** A bounded A* over the same obstacle geometry that TownArt draws. */
 export class TownNavigation {
+  nearFountain(p: Point) {
+    return (
+      Math.hypot(p.x - TOWN.fountain.x, p.z - TOWN.fountain.z) <=
+      TOWN.fountain.interactionRadius + Number.EPSILON * 32
+    );
+  }
+
   walkable(p: Point) {
     const r = 0.3;
+    const inStream = p.z > TOWN.stream.minZ - r && p.z < TOWN.stream.maxZ + r;
+    const onBridge =
+      Math.abs(p.x - TOWN.bridge.x) <= TOWN.bridge.width / 2 - r &&
+      p.z > TOWN.stream.minZ - r &&
+      p.z < TOWN.stream.maxZ + r;
     return (
       Number.isFinite(p.x) &&
       Number.isFinite(p.z) &&
       p.x >= r &&
       p.x <= TOWN.width - r &&
       p.z >= r &&
-      p.z < TOWN.streamZ - r &&
+      p.z <= TOWN.depth - r &&
+      (!inStream || onBridge) &&
       Math.hypot(p.x - TOWN.fountain.x, p.z - TOWN.fountain.z) >=
         TOWN.fountain.radius + r &&
       !TOWN.trees.some(
@@ -21,6 +34,26 @@ export class TownNavigation {
           Math.abs(p.x - b.x) < b.width / 2 + r &&
           Math.abs(p.z - b.z) < b.depth / 2 + r,
       )
+    );
+  }
+
+  /** Prefer a walkable shoulder position so the companion never settles on the avatar. */
+  companionTarget(origin: Point, facing: number): Point {
+    const right = { x: Math.cos(facing), z: -Math.sin(facing) };
+    const forward = { x: Math.sin(facing), z: Math.cos(facing) };
+    const candidates = [
+      { x: origin.x + right.x, z: origin.z + right.z },
+      { x: origin.x - right.x, z: origin.z - right.z },
+      {
+        x: origin.x - forward.x * 0.85 + right.x * 0.5,
+        z: origin.z - forward.z * 0.85 + right.z * 0.5,
+      },
+      { x: origin.x - forward.x, z: origin.z - forward.z },
+    ];
+    return (
+      candidates.find((candidate) => this.walkable(candidate)) ?? {
+        ...origin,
+      }
     );
   }
   private clear(a: Point, b: Point) {
@@ -49,13 +82,16 @@ export class TownNavigation {
       previous = new Map<string, string>(),
       closed = new Set<string>();
     let finish = "";
-    while (open.length && closed.size < 5000) {
+    while (open.length && closed.size < 30000) {
       open.sort((a, b) => a.f - b.f);
       const n = open.shift()!,
         k = key(n.x, n.z);
       if (closed.has(k)) continue;
       closed.add(k);
-      if (Math.hypot(n.x * step - end.x,n.z * step - end.z) <= step * 2 && this.clear({x:n.x*step,z:n.z*step},end)) {
+      if (
+        Math.hypot(n.x * step - end.x, n.z * step - end.z) <= step * 2 &&
+        this.clear({ x: n.x * step, z: n.z * step }, end)
+      ) {
         finish = k;
         break;
       }

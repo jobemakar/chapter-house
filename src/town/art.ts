@@ -1,10 +1,20 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { TOWN, type TownBuilding } from "./layout";
+import { TOWN, type TownBuilding, type TownPoint } from "./layout";
 import { TownAssets } from "./assets";
 
 const material = (color: THREE.ColorRepresentation, roughness = 0.82) =>
   new THREE.MeshStandardMaterial({ color, roughness });
+
+/** Deterministic avatar-to-fountain arc, shared with regression tests. */
+export const coinFlightPoint = (from: TownPoint, progress: number) => {
+  const p = Math.max(0, Math.min(1, progress));
+  return {
+    x: from.x + (TOWN.fountain.x - from.x) * p,
+    y: 1.15 + (0.58 - 1.15) * p + Math.sin(p * Math.PI) * 2.25,
+    z: from.z + (TOWN.fountain.z - from.z) * p,
+  };
+};
 
 /** Composes curated Kenney scenery with the interactive village landmarks. */
 export class TownArt {
@@ -19,12 +29,14 @@ export class TownArt {
   private readonly ripples: THREE.Mesh[] = [];
   private readonly signTextures = new Set<THREE.Texture>();
   private coinMesh: THREE.Mesh | null = null;
+  private coinStart = new THREE.Vector3();
   private coinAge = 0;
 
   constructor() {
     this.root.name = "Forest village";
     this.makeGround();
     this.makeStream();
+    this.makeBridge();
     this.makePlaza();
     this.makePaths();
     this.root.add(this.imported);
@@ -73,11 +85,8 @@ export class TownArt {
     if (!this.coinMesh) return;
     this.coinAge += safeDt;
     const p = Math.min(this.coinAge / 1.2, 1);
-    const arc = Math.sin(p * Math.PI);
-    this.coinMesh.position.y = 1.05 + arc * 2.25;
-    this.coinMesh.position.x =
-      TOWN.fountain.x + Math.sin(p * Math.PI * 2.4) * 0.3;
-    this.coinMesh.position.z = TOWN.fountain.z - 0.25 + p * 0.9;
+    const point = coinFlightPoint(this.coinStart, p);
+    this.coinMesh.position.set(point.x, point.y, point.z);
     this.coinMesh.rotation.y += safeDt * (reducedMotion ? 5 : 18);
     if (p >= 1) {
       this.coinMesh.parent?.remove(this.coinMesh);
@@ -88,7 +97,7 @@ export class TownArt {
   }
 
   /** A visual-only, bounded toss; the caller owns no currency mutation. */
-  tossCoin(): void {
+  tossCoin(from: { x: number; z: number }): void {
     if (this.coinMesh) return;
     const coin = new THREE.Mesh(
       new THREE.CylinderGeometry(0.14, 0.14, 0.045, 20),
@@ -99,7 +108,8 @@ export class TownArt {
       }),
     );
     coin.castShadow = true;
-    coin.position.set(TOWN.fountain.x, 1.05, TOWN.fountain.z - 0.25);
+    this.coinStart.set(from.x, 1.15, from.z);
+    coin.position.copy(this.coinStart);
     coin.rotation.x = Math.PI / 2;
     this.root.add(coin);
     this.coinMesh = coin;
@@ -142,17 +152,18 @@ export class TownArt {
       this.root,
       new THREE.PlaneGeometry(TOWN.width, TOWN.depth),
       0x88ae77,
-      15,
+      TOWN.width / 2,
       -0.025,
-      12,
+      TOWN.depth / 2,
     ).rotation.x = -Math.PI / 2;
     // Broad low patches give the lawn variation without hundreds of individual dots.
     for (const [x, z, r] of [
-      [3, 4, 3.5],
-      [7, 16, 3],
-      [25, 14, 3.5],
-      [24, 4, 4],
-      [15, 2, 3],
+      [6, 7, 5],
+      [12, 35, 5.5],
+      [25, 15, 5],
+      [41, 8, 6],
+      [50, 35, 6],
+      [32, 44, 4.5],
     ]) {
       const patch = this.mesh(
         this.root,
@@ -168,39 +179,67 @@ export class TownArt {
   }
 
   private makePaths() {
+    // South district: gate, fountain square, and the three familiar landmarks.
     this.path(
       [
-        [15, 19.6],
-        [14.2, 17.3],
-        [12.8, 15.8],
-        [13, 13.7],
+        [30, 47.5],
+        [30, 44],
+        [29.2, 40],
+        [30, 37.5],
       ],
       1.8,
     );
     this.path(
       [
-        [11, 11],
-        [9.4, 10.2],
-        [7, 9],
-        [7, 7.9],
+        [26, 35],
+        [24.5, 34.5],
+        [22, 36.4],
       ],
       1.7,
     );
     this.path(
       [
-        [19, 10],
-        [21, 9],
-        [23.8, 8],
-        [24, 7],
+        [34, 35],
+        [36.5, 34],
+        [39, 34.4],
       ],
       1.5,
     );
     this.path(
       [
-        [18.6, 13.3],
-        [21, 14.7],
-        [23.2, 16.4],
-        [25, 16.4],
+        [33, 38],
+        [35.5, 40],
+        [40, 42.7],
+      ],
+      1.45,
+    );
+    // A continuous trail makes the bridge the intentional route between districts.
+    this.path(
+      [
+        [30, 32],
+        [30, 28.5],
+        [30, 24],
+        [30, 19],
+        [27, 16],
+        [24, 13],
+      ],
+      1.7,
+    );
+    this.path(
+      [
+        [24, 13],
+        [18, 11],
+        [12, 12],
+        [7, 15],
+      ],
+      1.45,
+    );
+    this.path(
+      [
+        [30, 19],
+        [37, 17],
+        [45, 14],
+        [53, 15],
       ],
       1.45,
     );
@@ -234,22 +273,24 @@ export class TownArt {
   }
 
   private makeStream() {
-    const bank = this.mesh(
-      this.root,
-      new THREE.BoxGeometry(TOWN.width, 0.12, 1.05),
-      0x6f8757,
-      15,
-      0.015,
-      TOWN.streamZ - 0.12,
-      { shadow: false },
-    );
+    const streamDepth = TOWN.stream.maxZ - TOWN.stream.minZ;
+    for (const z of [TOWN.stream.minZ - 0.18, TOWN.stream.maxZ + 0.18])
+      this.mesh(
+        this.root,
+        new THREE.BoxGeometry(TOWN.width, 0.12, 0.72),
+        0x6f8757,
+        TOWN.width / 2,
+        0.015,
+        z,
+        { shadow: false },
+      );
     const stream = this.mesh(
       this.root,
-      new THREE.PlaneGeometry(TOWN.width, TOWN.depth - TOWN.streamZ + 0.65),
+      new THREE.PlaneGeometry(TOWN.width, streamDepth),
       0x5ba7b6,
-      15,
+      TOWN.width / 2,
       0.06,
-      (TOWN.streamZ + TOWN.depth) / 2,
+      (TOWN.stream.minZ + TOWN.stream.maxZ) / 2,
       { shadow: false, roughness: 0.38 },
     );
     stream.rotation.x = -Math.PI / 2;
@@ -259,17 +300,68 @@ export class TownArt {
     streamMaterial.transparent = true;
     streamMaterial.opacity = 0.88;
     this.water.push(streamMaterial);
-    bank.receiveShadow = true;
-    for (let x = 1.2; x < 30; x += 2.1) {
-      const stone = this.mesh(
-        this.root,
-        new THREE.DodecahedronGeometry(0.17, 0),
-        0x97a28a,
-        x,
-        0.12,
-        20.1 + Math.sin(x * 1.7) * 0.23,
+    for (const bankZ of [TOWN.stream.minZ, TOWN.stream.maxZ]) {
+      for (let x = 1.2; x < TOWN.width; x += 2.1) {
+        if (Math.abs(x - TOWN.bridge.x) < TOWN.bridge.width / 2 + 0.8) continue;
+        const stone = this.mesh(
+          this.root,
+          new THREE.DodecahedronGeometry(0.17, 0),
+          0x97a28a,
+          x,
+          0.12,
+          bankZ + Math.sin(x * 1.7) * 0.18,
+        );
+        stone.scale.set(1.4, 0.55, 0.9);
+      }
+    }
+  }
+
+  private makeBridge() {
+    const bridge = new THREE.Group();
+    bridge.name = "Woodland bridge";
+    bridge.position.set(TOWN.bridge.x, 0, TOWN.bridge.z);
+    this.root.add(bridge);
+    const plankCount = 12;
+    for (let i = 0; i < plankCount; i++) {
+      const z =
+        -TOWN.bridge.depth / 2 + (TOWN.bridge.depth * (i + 0.5)) / plankCount;
+      const plank = this.mesh(
+        bridge,
+        new RoundedBoxGeometry(
+          TOWN.bridge.width,
+          0.16,
+          TOWN.bridge.depth / plankCount - 0.035,
+          2,
+          0.035,
+        ),
+        i % 3 === 0 ? 0x9c6f46 : 0xb17e4c,
+        0,
+        0.17,
+        z,
       );
-      stone.scale.set(1.4, 0.55, 0.9);
+      plank.rotation.y = Math.sin(i * 1.8) * 0.012;
+    }
+    for (const side of [-1, 1]) {
+      for (const z of [-2.15, 0, 2.15])
+        this.mesh(
+          bridge,
+          new THREE.CylinderGeometry(0.07, 0.09, 1.05, 8),
+          0x6f4b32,
+          side * 1.72,
+          0.62,
+          z,
+        );
+      for (const y of [0.65, 0.95]) {
+        const rail = this.mesh(
+          bridge,
+          new THREE.CylinderGeometry(0.055, 0.055, 4.6, 8),
+          0x765036,
+          side * 1.72,
+          y,
+          0,
+        );
+        rail.rotation.x = Math.PI / 2;
+      }
     }
   }
 
@@ -459,26 +551,29 @@ export class TownArt {
 
   private makeGardenAccents() {
     // Decorative clusters stay within existing tree/landmark footprints or along the stream.
-    for (let i = 0; i < 18; i++) {
-      const x = 0.6 + i * 1.65,
-        z = 20.05 + Math.sin(i * 1.6) * 0.13;
-      this.place(
-        i % 3 === 0 ? "mini-rocks" : "rock",
-        x,
-        z,
-        { height: i % 3 === 0 ? 0.43 : 0.22 },
-        0,
-        i * 0.9,
-      );
-      if (i % 2 === 0)
-        this.place("grass", x + 0.25, z - 0.12, { height: 0.35 });
+    for (const bankZ of [TOWN.stream.minZ, TOWN.stream.maxZ]) {
+      for (let i = 0; i < 30; i++) {
+        const x = 0.6 + i * 2.03;
+        if (Math.abs(x - TOWN.bridge.x) < TOWN.bridge.width / 2 + 0.8) continue;
+        const z = bankZ + Math.sin(i * 1.6) * 0.13;
+        this.place(
+          i % 3 === 0 ? "mini-rocks" : "rock",
+          x,
+          z,
+          { height: i % 3 === 0 ? 0.43 : 0.22 },
+          0,
+          i * 0.9,
+        );
+        if (i % 2 === 0)
+          this.place("grass", x + 0.25, z - 0.12, { height: 0.35 });
+      }
     }
     for (const [x, z] of [
-      [2, 2.5],
-      [2.6, 12.7],
-      [18.7, 2.4],
-      [27.8, 3],
-      [22, 18.2],
+      [3.5, 4],
+      [17, 15],
+      [48, 4],
+      [13.5, 44],
+      [47.5, 42],
     ]) {
       this.place("mushroom", x + 0.25, z + 0.1, { height: 0.26 });
       this.place("bush", x - 0.25, z - 0.15, { height: 0.45 });
@@ -602,4 +697,3 @@ export class TownArt {
     }
   }
 }
-

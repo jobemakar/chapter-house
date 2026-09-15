@@ -6,14 +6,27 @@ class FakeParam {
   value = 0;
   readonly ramps: number[] = [];
   cancelScheduledValues() {}
-  setValueAtTime(value: number) { this.value = value; }
-  linearRampToValueAtTime(value: number) { this.value = value; this.ramps.push(value); }
-  setTargetAtTime(value: number) { this.value = value; this.ramps.push(value); }
-  exponentialRampToValueAtTime(value: number) { this.value = value; this.ramps.push(value); }
+  setValueAtTime(value: number) {
+    this.value = value;
+  }
+  linearRampToValueAtTime(value: number) {
+    this.value = value;
+    this.ramps.push(value);
+  }
+  setTargetAtTime(value: number) {
+    this.value = value;
+    this.ramps.push(value);
+  }
+  exponentialRampToValueAtTime(value: number) {
+    this.value = value;
+    this.ramps.push(value);
+  }
 }
 
 class FakeNode {
-  connect() { return this; }
+  connect() {
+    return this;
+  }
   disconnect() {}
 }
 
@@ -21,7 +34,9 @@ class FakeSource extends FakeNode {
   onended: (() => void) | null = null;
   stopped = false;
   start() {}
-  stop() { this.stopped = true; }
+  stop() {
+    this.stopped = true;
+  }
 }
 
 class FakeAudioContext {
@@ -32,7 +47,9 @@ class FakeAudioContext {
   readonly gains: Array<{ gain: FakeParam } & FakeNode> = [];
   readonly panners: Array<{ pan: FakeParam } & FakeNode> = [];
   readonly buffers: FakeSource[] = [];
-  readonly oscillators: FakeSource[] = [];
+  readonly oscillators: Array<
+    FakeSource & { type: OscillatorType; frequency: FakeParam }
+  > = [];
   suspendCalls = 0;
   closeCalls = 0;
   createGain() {
@@ -51,26 +68,46 @@ class FakeAudioContext {
   createBufferSource() {
     const source = new FakeSource();
     this.buffers.push(source);
-    return Object.assign(source, { buffer: null as AudioBuffer | null, loop: false });
+    return Object.assign(source, {
+      buffer: null as AudioBuffer | null,
+      loop: false,
+    });
   }
   createOscillator() {
-    const oscillator = new FakeSource();
+    const oscillator = Object.assign(new FakeSource(), {
+      type: "sine" as OscillatorType,
+      frequency: new FakeParam(),
+    });
     this.oscillators.push(oscillator);
-    return Object.assign(oscillator, { type: "sine" as OscillatorType, frequency: new FakeParam() });
+    return oscillator;
   }
-  resume() { this.state = "running"; return Promise.resolve(); }
-  suspend() { this.suspendCalls++; this.state = "suspended"; return Promise.resolve(); }
-  close() { this.closeCalls++; this.state = "closed"; return Promise.resolve(); }
+  resume() {
+    this.state = "running";
+    return Promise.resolve();
+  }
+  suspend() {
+    this.suspendCalls++;
+    this.state = "suspended";
+    return Promise.resolve();
+  }
+  close() {
+    this.closeCalls++;
+    this.state = "closed";
+    return Promise.resolve();
+  }
 }
 
-test("town water is gesture-gated and responds to view attenuation and stereo pan", () => {
+test("town audio is gesture-gated: water is spatial, nature is global, and coins remain audible", () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, "AudioContext");
   const contexts: FakeAudioContext[] = [];
   let audio: TownAudio | undefined;
   Object.defineProperty(globalThis, "AudioContext", {
     configurable: true,
     value: class extends FakeAudioContext {
-      constructor() { super(); contexts.push(this); }
+      constructor() {
+        super();
+        contexts.push(this);
+      }
     },
   });
   try {
@@ -83,7 +120,18 @@ test("town water is gesture-gated and responds to view attenuation and stereo pa
     audio.unlock();
     assert.equal(contexts.length, 1);
     assert.equal(audio.status().waterPlaying, true);
-    assert.equal(contexts[0].buffers.length, 1, "one looping water source");
+    assert.equal(audio.status().naturePlaying, true);
+    assert.equal(
+      contexts[0].buffers.length,
+      2,
+      "one water loop and one global nature loop",
+    );
+    assert.equal(
+      contexts[0].gains.length,
+      2,
+      "water and nature each own a gain",
+    );
+    assert.equal(contexts[0].panners.length, 1, "only water is spatialized");
     assert.equal(contexts[0].panners[0].pan.value, -0.6);
     const waterGain = contexts[0].gains[0].gain;
     const nearGain = waterGain.ramps.at(-1)!;
@@ -95,10 +143,24 @@ test("town water is gesture-gated and responds to view attenuation and stereo pa
     audio.setView(false, 1, 0);
     assert.equal(waterGain.ramps.at(-1), 0, "off-camera water fades fully out");
     audio.coin();
-    assert.equal(contexts[0].oscillators.length, 0, "off-camera fountain effects are silent");
+    assert.equal(
+      contexts[0].oscillators.length,
+      2,
+      "an off-camera toss still has a clink and splash",
+    );
+    assert.equal(contexts[0].oscillators[0].frequency.value, 1760);
+    assert.equal(
+      contexts[0].oscillators[1].frequency.value,
+      120,
+      "the splash falls in pitch",
+    );
     audio.setView(true, 1, 0);
     audio.coin();
-    assert.equal(contexts[0].oscillators.length, 2, "an eligible coin toss uses two short notes");
+    assert.equal(
+      contexts[0].oscillators.length,
+      4,
+      "each eligible toss uses two short voices",
+    );
   } finally {
     audio?.dispose();
     if (previous) Object.defineProperty(globalThis, "AudioContext", previous);
@@ -113,7 +175,10 @@ test("town audio mutes, suspends in a hidden page, and tears down all voices", (
   Object.defineProperty(globalThis, "AudioContext", {
     configurable: true,
     value: class extends FakeAudioContext {
-      constructor() { super(); context = this; }
+      constructor() {
+        super();
+        context = this;
+      }
     },
   });
   try {
@@ -123,23 +188,76 @@ test("town audio mutes, suspends in a hidden page, and tears down all voices", (
     audio.unlock();
     audio.coin();
     assert.equal(audio.status().scheduledVoices, 2);
+    assert.equal(audio.status().naturePlaying, true);
 
     audio.setMuted(true);
     audio.coin();
-    assert.equal(audio.status().scheduledVoices, 0, "mute stops and blocks effect voices");
-    assert.equal(context!.gains[0].gain.ramps.at(-1), 0, "mute fades water out");
+    assert.equal(
+      audio.status().scheduledVoices,
+      0,
+      "mute stops and blocks effect voices",
+    );
+    assert.equal(
+      context!.gains[0].gain.ramps.at(-1),
+      0,
+      "mute fades water out",
+    );
+    assert.equal(
+      audio.status().naturePlaying,
+      false,
+      "mute stops the global nature loop and bird timer",
+    );
     audio.setMuted(false);
     assert.ok(context!.gains[0].gain.ramps.at(-1)! > 0);
+    assert.equal(
+      audio.status().naturePlaying,
+      true,
+      "unmuting restores nature while active",
+    );
+
+    audio.setActive(false);
+    audio.coin();
+    assert.equal(
+      audio.status().naturePlaying,
+      false,
+      "leaving town stops nature and blocks coin voices",
+    );
+    assert.equal(audio.status().scheduledVoices, 0);
+    audio.setActive(true);
+    assert.equal(
+      audio.status().naturePlaying,
+      true,
+      "returning to town restores nature",
+    );
 
     audio.setHidden(true);
     assert.equal(context!.gains[0].gain.ramps.at(-1), 0);
-    assert.ok(context!.suspendCalls >= 1, "inactive audio transport is suspended");
+    assert.ok(
+      context!.suspendCalls >= 1,
+      "inactive audio transport is suspended",
+    );
     audio.coin();
-    assert.equal(audio.status().scheduledVoices, 0, "hidden pages do not schedule effects");
+    assert.equal(
+      audio.status().scheduledVoices,
+      0,
+      "hidden pages do not schedule effects",
+    );
+    assert.equal(
+      audio.status().naturePlaying,
+      false,
+      "hidden pages stop nature and clear its bird timer",
+    );
 
     audio.dispose();
-    assert.equal(context!.buffers[0].stopped, true);
-    assert.equal(context!.oscillators.every((voice) => voice.stopped), true);
+    assert.equal(
+      context!.buffers.every((source) => source.stopped),
+      true,
+      "all looping sources stop on dispose",
+    );
+    assert.equal(
+      context!.oscillators.every((voice) => voice.stopped),
+      true,
+    );
     assert.equal(context!.closeCalls, 1);
   } finally {
     audio?.dispose();
@@ -159,9 +277,17 @@ test("town audio remains a safe no-op where Web Audio is unavailable", () => {
     audio.setView(true, 0, 0);
     audio.coin();
     assert.deepEqual(audio.status(), {
-      muted: false, active: true, hidden: false, unlocked: false,
-      supported: false, waterPlaying: false, scheduledVoices: 0,
-      visible: true, distance: 0, pan: 0,
+      muted: false,
+      active: true,
+      hidden: false,
+      unlocked: false,
+      supported: false,
+      waterPlaying: false,
+      naturePlaying: false,
+      scheduledVoices: 0,
+      visible: true,
+      distance: 0,
+      pan: 0,
       gain: 0,
     });
   } finally {

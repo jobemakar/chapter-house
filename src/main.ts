@@ -126,7 +126,7 @@ class ChapterHouse {
 <main class="town-page" hidden><div class="town-world"></div>
 <div class="town-heading"><span class="eyebrow">A LITTLE FURTHER AFIELD</span><h2>Willowbrook square</h2><p>Tap a path to walk · drag to explore</p></div>
 <div class="town-controls"><button data-action="inside">← Clubhouse</button><button data-action="plaza">Fountain square</button><button data-action="town-center" aria-label="Center on avatar">◎</button><button data-action="town-out" aria-label="Town zoom out">−</button><button data-action="town-in" aria-label="Town zoom in">+</button></div>
-<div class="town-emotes"><button data-action="town-wave">Wave</button><button data-action="town-jump">Jump</button><button data-action="town-heart" aria-label="Heart reaction">♥</button><button data-action="town-question" aria-label="Curious reaction">?</button><button data-action="fountain-coin">Toss a coin</button></div>
+<div class="town-emotes"><button data-action="town-wave">Wave</button><button data-action="town-jump">Jump</button><button data-action="town-heart" aria-label="Heart reaction">♥</button><button data-action="town-question" aria-label="Curious reaction">?</button><button data-action="fountain-coin" disabled aria-disabled="true" title="Walk closer to the fountain">Toss a coin</button></div>
 </main>
 <aside class="panel" aria-label="Clubhouse options" hidden>
 <header>
@@ -594,6 +594,17 @@ class ChapterHouse {
       this.profile,
       () => this.leaveTown(),
       this.notify,
+      (available) => {
+        const button = this.root.querySelector<HTMLButtonElement>(
+          '[data-action="fountain-coin"]',
+        );
+        if (!button) return;
+        button.disabled = !available;
+        button.setAttribute("aria-disabled", String(!available));
+        button.title = available
+          ? "Toss a coin into the fountain"
+          : "Walk closer to the fountain";
+      },
       this.petAssets,
     );
   }
