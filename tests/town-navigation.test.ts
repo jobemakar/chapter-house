@@ -90,3 +90,18 @@ test("the fountain action has a bounded interaction radius", () => {
     false,
   );
 });
+
+test("fishing targets exist only at clear stream banks and never on the bridge", () => {
+  const nav = new TownNavigation();
+  assert.deepEqual(nav.streamTarget({ x: 10, z: 27 }), {
+    x: 10,
+    z: 25.35,
+  });
+  assert.deepEqual(nav.streamTarget({ x: 48, z: 21 }), {
+    x: 48,
+    z: 22.65,
+  });
+  assert.equal(nav.streamTarget({ x: 10, z: 30 }), null);
+  assert.equal(nav.streamTarget({ x: 30, z: 27 }), null);
+  assert.equal(nav.streamTarget({ x: 10, z: 24 }), null);
+});

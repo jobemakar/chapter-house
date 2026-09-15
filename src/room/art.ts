@@ -358,6 +358,7 @@ export class AnimalRig {
   private waveTime = 0;
   private petTime = 0;
   private petBody = false;
+  private activity: "rod" | "shovel" | null = null;
   constructor(
     color: THREE.ColorRepresentation,
     shape: "fox" | "cat" | "bunny" = "fox",
@@ -444,6 +445,9 @@ export class AnimalRig {
     this.petTime = 1.8;
     this.jump();
   }
+  setActivityPose(activity: "rod" | "shovel" | null) {
+    this.activity = activity;
+  }
   update(dt: number, moving: boolean, reduced: boolean) {
     this.phase += dt * (moving ? 10 : 2);
     this.jumpTime = Math.max(0, this.jumpTime - dt);
@@ -507,5 +511,14 @@ export class AnimalRig {
           : (i === 1 ? 1 : -1) * flight * 0.6 * strength;
       if (i === 1 && this.waveTime > 0) a.rotation.x = -0.15;
     });
+    if (this.activity === "rod") {
+      this.arms[0].rotation.set(-0.45, 0, -0.72);
+      this.arms[1].rotation.set(-0.55, 0, 0.68);
+    } else if (this.activity === "shovel") {
+      const scoop = Math.sin(this.phase * (reduced ? 0.7 : 1.8)) * 0.2;
+      this.arms[0].rotation.set(-0.7 + scoop, 0, -0.42);
+      this.arms[1].rotation.set(-0.45 + scoop, 0, 0.52);
+      this.body.rotation.x += scoop * 0.18;
+    }
   }
 }

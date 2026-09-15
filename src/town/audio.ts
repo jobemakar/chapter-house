@@ -2,6 +2,9 @@ type TownAudioContext = AudioContext & {
   createStereoPanner?: () => StereoPannerNode;
 };
 
+/** Rarity is supplied by the collection catalog; audio only colors its reveal. */
+export type TownRarity = "common" | "uncommon" | "rare";
+
 export interface TownAudioStatus {
   muted: boolean;
   active: boolean;
@@ -89,6 +92,62 @@ export class TownAudio {
     // heard at the player even after the fountain has faded out of view.
     this.note(1760, 0.07, 0.05, "triangle", 0);
     this.note(270, 0.18, 0.038, "sine", 0.9, 120);
+  }
+
+  /** A small, friendly pop for the avatar-following action bubble. */
+  actionPrompt(): void {
+    if (!this.canPlay()) return;
+    this.note(780, 0.075, 0.022, "triangle", 0, 1080);
+  }
+
+  /** A springy rod swish followed by a deliberately bubbly lure plop. */
+  fishCast(): void {
+    if (!this.canPlay()) return;
+    this.note(480, 0.12, 0.03, "triangle", 0, 210);
+    this.note(180, 0.11, 0.035, "sine", 0.1, 92);
+  }
+
+  /** Two soft water bubbles make the waiting ripple readable without urgency. */
+  fishRipple(): void {
+    if (!this.canPlay()) return;
+    this.note(620, 0.13, 0.021, "sine", 0, 390);
+    this.note(470, 0.16, 0.017, "sine", 0.12, 300);
+  }
+
+  /** Friendly, slightly exaggerated reel clicks. */
+  reel(): void {
+    if (!this.canPlay()) return;
+    this.note(760, 0.045, 0.026, "square", 0, 940);
+    this.note(900, 0.045, 0.023, "square", 0.065, 1080);
+    this.note(1040, 0.055, 0.02, "triangle", 0.13, 1220);
+  }
+
+  /** A catch gets a splash, then a rarity-colored little celebration. */
+  catchFish(rarity: TownRarity): void {
+    if (!this.canPlay()) return;
+    this.note(230, 0.18, 0.042, "sine", 0, 110);
+    this.rarityStinger(rarity, 0.1);
+  }
+
+  /** Missing a fish is a harmless floppy line flick, never an alarm. */
+  emptyLine(): void {
+    if (!this.canPlay()) return;
+    this.note(330, 0.08, 0.025, "triangle", 0, 205);
+    this.note(205, 0.1, 0.016, "sine", 0.075, 150);
+  }
+
+  /** Scrape, chunky scoop, then a soft crumble for each dig action. */
+  dig(): void {
+    if (!this.canPlay()) return;
+    this.note(150, 0.09, 0.024, "triangle", 0, 105);
+    this.note(110, 0.1, 0.038, "square", 0.1, 78);
+    this.note(290, 0.14, 0.018, "sine", 0.21, 160);
+  }
+
+  /** Finds use the same rarity language as fish after their soil flourish. */
+  discover(rarity: TownRarity): void {
+    if (!this.canPlay()) return;
+    this.rarityStinger(rarity);
   }
 
   status(): TownAudioStatus {
@@ -298,6 +357,36 @@ export class TownAudio {
       }
     });
     this.voices.clear();
+  }
+
+  private rarityStinger(rarity: TownRarity, delay = 0): void {
+    const notes: Record<TownRarity, Array<[number, number]>> = {
+      common: [
+        [660, 0],
+        [880, 0.075],
+      ],
+      uncommon: [
+        [740, 0],
+        [988, 0.065],
+        [1245, 0.13],
+      ],
+      rare: [
+        [784, 0],
+        [1047, 0.055],
+        [1319, 0.11],
+        [1568, 0.165],
+      ],
+    };
+    notes[rarity].forEach(([frequency, offset], index) =>
+      this.note(
+        frequency,
+        0.13,
+        0.018 + index * 0.003,
+        "triangle",
+        delay + offset,
+        frequency * 1.08,
+      ),
+    );
   }
 
   private scheduleBird(): void {

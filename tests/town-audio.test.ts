@@ -266,6 +266,114 @@ test("town audio mutes, suspends in a hidden page, and tears down all voices", (
   }
 });
 
+test("town activity cues schedule cartoony action and rarity voices", () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "AudioContext");
+  let context: FakeAudioContext | undefined;
+  let audio: TownAudio | undefined;
+  Object.defineProperty(globalThis, "AudioContext", {
+    configurable: true,
+    value: class extends FakeAudioContext {
+      constructor() {
+        super();
+        context = this;
+      }
+    },
+  });
+  try {
+    audio = new TownAudio(false);
+    audio.setActive(true);
+    audio.unlock();
+    audio.actionPrompt();
+    audio.fishCast();
+    audio.fishRipple();
+    audio.reel();
+    audio.catchFish("rare");
+    audio.emptyLine();
+    audio.dig();
+    audio.discover("uncommon");
+
+    const frequencies = context!.oscillators.map(
+      (oscillator) => oscillator.frequency.value,
+    );
+    assert.deepEqual(
+      frequencies,
+      [
+        1080, 210, 92, 390, 300, 940, 1080, 1220, 110, 846.72, 1130.76, 1424.52,
+        1693.44, 205, 150, 105, 78, 160, 799.2, 1067.04, 1344.6000000000001,
+      ],
+    );
+    assert.equal(
+      audio.status().scheduledVoices,
+      frequencies.length,
+      "every cue is tracked for lifecycle cleanup",
+    );
+  } finally {
+    audio?.dispose();
+    if (previous) Object.defineProperty(globalThis, "AudioContext", previous);
+    else Reflect.deleteProperty(globalThis, "AudioContext");
+  }
+});
+
+test("town activity cues are no-ops while muted, hidden, inactive, or disposed", () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "AudioContext");
+  let context: FakeAudioContext | undefined;
+  let audio: TownAudio | undefined;
+  Object.defineProperty(globalThis, "AudioContext", {
+    configurable: true,
+    value: class extends FakeAudioContext {
+      constructor() {
+        super();
+        context = this;
+      }
+    },
+  });
+  const playEveryCue = (target: TownAudio) => {
+    target.actionPrompt();
+    target.fishCast();
+    target.fishRipple();
+    target.reel();
+    target.catchFish("common");
+    target.emptyLine();
+    target.dig();
+    target.discover("rare");
+  };
+  try {
+    audio = new TownAudio(false);
+    audio.setActive(true);
+    audio.unlock();
+    playEveryCue(audio);
+    const initial = context!.oscillators.length;
+    assert.ok(initial > 0);
+
+    audio.setMuted(true);
+    playEveryCue(audio);
+    assert.equal(context!.oscillators.length, initial);
+    assert.equal(audio.status().scheduledVoices, 0);
+
+    audio.setMuted(false);
+    audio.setHidden(true);
+    playEveryCue(audio);
+    assert.equal(context!.oscillators.length, initial);
+
+    audio.setHidden(false);
+    audio.setActive(false);
+    playEveryCue(audio);
+    assert.equal(context!.oscillators.length, initial);
+
+    audio.dispose();
+    playEveryCue(audio);
+    assert.equal(context!.oscillators.length, initial);
+    assert.equal(
+      context!.oscillators.every((oscillator) => oscillator.stopped),
+      true,
+    );
+  } finally {
+    audio?.dispose();
+    if (previous) Object.defineProperty(globalThis, "AudioContext", previous);
+    else Reflect.deleteProperty(globalThis, "AudioContext");
+  }
+});
+
 test("town audio remains a safe no-op where Web Audio is unavailable", () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, "AudioContext");
   Reflect.deleteProperty(globalThis, "AudioContext");

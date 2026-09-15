@@ -4,6 +4,7 @@ import {
   WishboneProgression,
   type WishboneProgress,
 } from "../games/wishbone/progression";
+import { FISH, FINDS, type DiscoveryKind } from "../town/activities";
 export interface Point {
   x: number;
   z: number;
@@ -30,6 +31,8 @@ export interface Profile {
   activePets: string[];
   starterChosen: boolean;
   items: OwnedItem[];
+  /** Additive v1 collection counts. A positive count also means discovered. */
+  collection: Record<DiscoveryKind, Record<string, number>>;
   wishbone: WishboneProgress;
   muted: boolean;
   reduced: boolean;
@@ -111,6 +114,7 @@ function fresh(): Profile {
         placement: { x: 0.65, z: 3.5, rotation: 0 },
       },
     ],
+    collection: { fish: {}, finds: {} },
     wishbone: WishboneProgression.load(null),
     muted: false,
     reduced: false,
@@ -194,6 +198,17 @@ export class ProfileRepository {
                   : null,
             };
           });
+      }
+      const collection = record(data.collection);
+      for (const [kind, catalog] of [
+        ["fish", FISH],
+        ["finds", FINDS],
+      ] as const) {
+        const saved = record(collection[kind]);
+        for (const definition of catalog) {
+          const value = count(saved[definition.id]);
+          if (value > 0) initial.collection[kind][definition.id] = value;
+        }
       }
       initial.wishbone = WishboneProgression.load(data.wishbone);
       initial.muted = data.muted === true;
@@ -281,6 +296,14 @@ export class ProfileRepository {
         });
     }
     if (notify) this.save();
+  }
+  addDiscovery(kind: DiscoveryKind, id: string): number {
+    const catalog = kind === "fish" ? FISH : FINDS;
+    if (!catalog.some((definition) => definition.id === id)) return 0;
+    const next = (this.state.collection[kind][id] ?? 0) + 1;
+    this.state.collection[kind][id] = next;
+    this.save();
+    return next;
   }
   chooseStarter(id: string): boolean {
     if (this.state.starterChosen || !getPet(id)?.starter) return false;

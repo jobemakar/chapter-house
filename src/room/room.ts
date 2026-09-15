@@ -7,6 +7,7 @@ import type { RoomSound } from "./audio";
 import { RoomNavigation, ROOM, footprint } from "./navigation";
 import { PetAssets, PetRig, type PetAssetKey } from "./pet-assets";
 import { getFurniture, getPet } from "../core/catalog";
+import { PointerGesture, type ScreenPoint } from "../core/pointer-gesture";
 import {
   ProfileRepository,
   type OwnedItem,
@@ -79,14 +80,8 @@ export class ClubhouseRoom {
   private zoom = 1;
   private pan = { x: 0, z: 0 };
   private paused = false;
-  private pointer: {
-    id: number;
-    x: number;
-    y: number;
-    lastX: number;
-    lastY: number;
-    moved: boolean;
-  } | null = null;
+  private gesture = new PointerGesture(12);
+  private pinch: { zoom: number; anchor: THREE.Vector3 } | null = null;
   private destination: THREE.Mesh;
   private destinationAge = 0;
   constructor(
@@ -97,6 +92,7 @@ export class ClubhouseRoom {
     private sound: (sound: RoomSound) => void = () => {},
     private petAssets: PetAssets = new PetAssets(),
   ) {
+    if (window.matchMedia("(max-width: 540px)").matches) this.zoom = 1.18;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
@@ -158,39 +154,38 @@ export class ClubhouseRoom {
     canvas.addEventListener(
       "pointerdown",
       (e) => {
-        this.pointer = {
-          id: e.pointerId,
+        if (e.button !== 0) return;
+        canvas.setPointerCapture(e.pointerId);
+        const update = this.gesture.down(e.pointerId, {
           x: e.clientX,
           y: e.clientY,
-          lastX: e.clientX,
-          lastY: e.clientY,
-          moved: false,
-        };
-        canvas.setPointerCapture(e.pointerId);
+        });
+        if (update.kind === "pinch-start") this.beginPinch(update.midpoint);
       },
       { signal: this.abort.signal },
     );
-    canvas.addEventListener("pointermove", this.panMove, {
+    canvas.addEventListener("pointermove", (e) => this.moveGesture(e), {
       signal: this.abort.signal,
     });
     canvas.addEventListener(
       "pointerup",
       (e) => {
-        if (
-          this.pointer?.id === e.pointerId &&
-          !this.pointer.moved &&
-          Math.hypot(e.clientX - this.pointer.x, e.clientY - this.pointer.y) <
-            12
-        )
-          this.tap(e);
-        this.pointer = null;
+        const end = this.gesture.up(e.pointerId, {
+          x: e.clientX,
+          y: e.clientY,
+        });
+        if (end.kind === "tap") this.tap(end.point);
+        this.pinch = null;
+        if (canvas.hasPointerCapture(e.pointerId))
+          canvas.releasePointerCapture(e.pointerId);
       },
       { signal: this.abort.signal },
     );
     canvas.addEventListener(
       "pointercancel",
-      () => {
-        this.pointer = null;
+      (e) => {
+        this.gesture.cancel(e.pointerId);
+        this.pinch = null;
       },
       { signal: this.abort.signal },
     );
@@ -380,6 +375,7 @@ export class ClubhouseRoom {
     this.camera.position.set(17 + this.pan.x, 15, 19 + this.pan.z);
     this.camera.lookAt(5 + this.pan.x, 0.75, 3.8 + this.pan.z);
     this.camera.updateProjectionMatrix();
+    this.camera.updateMatrixWorld();
   }
   private floorAt(x: number, y: number): THREE.Vector3 | null {
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -392,22 +388,43 @@ export class ClubhouseRoom {
     );
     return this.ray.ray.intersectPlane(this.plane, new THREE.Vector3());
   }
-  private panMove = (event: PointerEvent) => {
-    const p = this.pointer;
-    if (!p || p.id !== event.pointerId || this.paused || this.draft) return;
-    if (!p.moved && Math.hypot(event.clientX - p.x, event.clientY - p.y) < 12)
+  private beginPinch(midpoint: ScreenPoint) {
+    const anchor = this.floorAt(midpoint.x, midpoint.y);
+    this.pinch = anchor ? { zoom: this.zoom, anchor } : null;
+  }
+  private moveGesture(event: PointerEvent) {
+    const update = this.gesture.move(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+    if (update.kind === "pinch") {
+      const pinch = this.pinch;
+      if (!pinch) return;
+      this.zoom = Math.max(0.8, Math.min(1.55, pinch.zoom * update.scale));
+      this.resize();
+      const after = this.floorAt(update.midpoint.x, update.midpoint.y);
+      if (after) {
+        this.pan.x = Math.max(
+          -3,
+          Math.min(3, this.pan.x + pinch.anchor.x - after.x),
+        );
+        this.pan.z = Math.max(
+          -3,
+          Math.min(3, this.pan.z + pinch.anchor.z - after.z),
+        );
+        this.resize();
+      }
       return;
-    p.moved = true;
-    const from = this.floorAt(p.lastX, p.lastY),
-      to = this.floorAt(event.clientX, event.clientY);
+    }
+    if (update.kind !== "pan" || this.paused || this.draft) return;
+    const from = this.floorAt(update.from.x, update.from.y),
+      to = this.floorAt(update.to.x, update.to.y);
     if (from && to) {
       this.pan.x = Math.max(-3, Math.min(3, this.pan.x + from.x - to.x));
       this.pan.z = Math.max(-3, Math.min(3, this.pan.z + from.z - to.z));
       this.resize();
     }
-    p.lastX = event.clientX;
-    p.lastY = event.clientY;
-  };
+  }
   setZoom(value: number) {
     this.zoom = Math.max(0.8, Math.min(1.55, value));
     this.resize();
@@ -415,13 +432,13 @@ export class ClubhouseRoom {
   zoomBy(factor: number) {
     this.setZoom(this.zoom * factor);
   }
-  private tap(event: PointerEvent) {
+  private tap(screen: ScreenPoint) {
     if (this.paused) return;
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.ray.setFromCamera(
       new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        (-(event.clientY - rect.top) / rect.height) * 2 + 1,
+        ((screen.x - rect.left) / rect.width) * 2 - 1,
+        (-(screen.y - rect.top) / rect.height) * 2 + 1,
       ),
       this.camera,
     );
@@ -792,6 +809,10 @@ export class ClubhouseRoom {
   }
   setPaused(value: boolean) {
     if (value) this.cancelPetPlay();
+    if (value) {
+      this.gesture.cancel();
+      this.pinch = null;
+    }
     this.paused = value;
     this.last = 0;
   }

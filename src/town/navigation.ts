@@ -2,6 +2,22 @@ import { TOWN } from "./layout";
 import type { Point } from "../core/profile";
 /** A bounded A* over the same obstacle geometry that TownArt draws. */
 export class TownNavigation {
+  /** Returns a lure point in the stream only while standing on a clear bank. */
+  streamTarget(p: Point): Point | null {
+    if (!this.walkable(p)) return null;
+    const bankReach = 2.15;
+    const bridgeClearance = TOWN.bridge.width / 2 + 0.9;
+    if (Math.abs(p.x - TOWN.bridge.x) < bridgeClearance) return null;
+    const north =
+      p.z >= TOWN.stream.maxZ && p.z <= TOWN.stream.maxZ + bankReach;
+    const south =
+      p.z <= TOWN.stream.minZ && p.z >= TOWN.stream.minZ - bankReach;
+    if (!north && !south) return null;
+    return {
+      x: Math.max(0.8, Math.min(TOWN.width - 0.8, p.x)),
+      z: north ? TOWN.stream.maxZ - 0.65 : TOWN.stream.minZ + 0.65,
+    };
+  }
   nearFountain(p: Point) {
     return (
       Math.hypot(p.x - TOWN.fountain.x, p.z - TOWN.fountain.z) <=

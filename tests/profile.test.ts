@@ -181,3 +181,37 @@ test("replayed purchase requests cannot double-spend across reload", () => {
   assert.ok(p.buyFurniture("little-fern", "purchase-2"));
   assert.equal(p.state.items.length, size + 1);
 });
+
+test("fish and finds stack additively and survive reload", () => {
+  const store = new MemoryStore();
+  let profile = new ProfileRepository(store);
+  assert.deepEqual(profile.state.collection, { fish: {}, finds: {} });
+  assert.equal(profile.addDiscovery("fish", "brook-trout"), 1);
+  assert.equal(profile.addDiscovery("fish", "brook-trout"), 2);
+  assert.equal(profile.addDiscovery("finds", "star-map-shard"), 1);
+  assert.equal(profile.addDiscovery("fish", "not-in-the-catalog"), 0);
+  profile = new ProfileRepository(store);
+  assert.equal(profile.state.collection.fish["brook-trout"], 2);
+  assert.equal(profile.state.collection.finds["star-map-shard"], 1);
+});
+
+test("old and malformed collection data migrate without affecting the profile", () => {
+  const store = new MemoryStore();
+  store.setItem(
+    PROFILE_KEY,
+    JSON.stringify({
+      version: 1,
+      name: "mossy-otter",
+      currency: 7,
+      collection: {
+        fish: { "brook-trout": 3.8, unknown: 99 },
+        finds: { "little-fossil": -2, "pocket-compass": 2 },
+      },
+    }),
+  );
+  const profile = new ProfileRepository(store);
+  assert.equal(profile.state.name, "mossy-otter");
+  assert.equal(profile.state.currency, 7);
+  assert.deepEqual(profile.state.collection.fish, { "brook-trout": 3 });
+  assert.deepEqual(profile.state.collection.finds, { "pocket-compass": 2 });
+});
