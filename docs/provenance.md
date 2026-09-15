@@ -13,3 +13,5 @@ Fraunces (`title.ttf`) and DM Sans (`body.ttf`) retain their SIL Open Font Licen
 Room furniture, characters, catalog portraits, icon paths and the favicon are authored procedural geometry/SVG for this local application. They are invented visual treatments, not claims about exact objects or character appearance in the novel. Audio is the prior original Web Audio synthesis, ported to `GameAudio`; no recordings were downloaded.
 
 The book connection, spoiler policy and keepsake invention boundaries remain in the collection's plans/08-book-connections.md and plans/11-collectible-catalog.md. This integration introduces no new game concept or altered mechanical signature.
+
+Feedback 02: bowl, aquarium, fish and trampoline are original procedural Three.js geometry; the wooden launcher is original canvas drawing. New yard layouts are invented play spaces, not representations of scenes from the novel. Existing licensed/source assets are unchanged.

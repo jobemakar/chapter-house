@@ -11,6 +11,7 @@ import { WishboneGame } from "./games/wishbone/game";
 import { furniture, pets, getFurniture } from "./core/catalog";
 import "./styles.css";
 import "./room/actions.css";
+import "./games/wishbone/ui.css";
 const paths: Record<string, string> = {
   book: "M4 4h6c2 0 2 2 2 2s0-2 2-2h6v15h-6c-2 0-2 2-2 2s0-2-2-2H4z M12 6v15",
   game: "M7 7h10c3 0 5 9 4 11s-4-1-5-3H8c-1 2-4 5-5 3S4 7 7 7z M7 9v5 M4.5 11.5h5 M16 10h.1 M19 13h.1",
@@ -47,7 +48,7 @@ class ChapterHouse {
 </span>
 </div>
 <div class="wallet" aria-label="Your coins">
-<span class="coin">✦</span>
+<span class="coin" aria-hidden="true">C</span>
 <b data-ui="coins">0</b>
 </div>
 <div class="utilities">
@@ -240,9 +241,7 @@ class ChapterHouse {
         }
         break;
       case "sound":
-        this.profile.state.muted = !this.profile.state.muted;
-        this.profile.save();
-        this.game?.setMuted(this.profile.state.muted);
+        this.toggleSound();
         break;
       case "fullscreen":
         void this.fullscreen();
@@ -297,6 +296,10 @@ class ChapterHouse {
           this.notify("A new little friend has arrived.");
           this.renderPanel();
         }
+        break;
+      case "interact-furniture":
+        this.closePanel();
+        this.room.interactWithFurniture(id);
         break;
       case "pet":
         this.room.pet(id);
@@ -418,13 +421,28 @@ class ChapterHouse {
         .join(
           "",
         )}<button class="empty-pet" data-action="shop"><span>+</span><b>Room for a friend</b><small>Meet more pets in the shop</small></button><div class="empty-pet decorative" aria-hidden="true"><span>+</span></div></div>`;
+    if (name === "pets") {
+      content.innerHTML += `<h3>A little pet corner</h3><p>Your new bowl, fish tank and trampoline are ready in Decorate.</p><div class="accessories">${this.profile.state.items
+        .filter(
+          (i) =>
+            i.placement &&
+            ["bowl", "aquarium", "trampoline"].includes(
+              getFurniture(i.definitionId)!.kind,
+            ),
+        )
+        .map(
+          (i) =>
+            `<button data-action="interact-furniture" data-id="${i.id}">${getFurniture(i.definitionId)!.kind === "bowl" ? "Fill bowl" : getFurniture(i.definitionId)!.kind === "aquarium" ? "Watch fish dart" : "Trampoline time"}</button>`,
+        )
+        .join("")}</div>`;
+    }
     if (name === "style")
       content.innerHTML = `<div class="style-preview"><img src="${this.portraits.avatar(this.profile.state.avatar.color, this.profile.state.avatar.accessory)}" alt="Fox avatar"></div><h3>A little color</h3><div class="swatches">${["#cc8957", "#8e9eae", "#d3ad85", "#af96b3"].map((c, i) => `<button style="--swatch:${c}" data-action="color" data-id="${c}" aria-label="${["Autumn", "Slate", "Honey", "Lilac"][i]} fur" aria-pressed="${this.profile.state.avatar.color === c}"></button>`).join("")}</div><h3>The finishing touch</h3><div class="accessories">${["scarf", "bow", "none"].map((a) => `<button data-action="accessory" data-id="${a}" aria-pressed="${this.profile.state.avatar.accessory === a}">${a === "none" ? "Just me" : a[0].toUpperCase() + a.slice(1)}</button>`).join("")}</div><p class="quiet">These starter looks are free. More animal species and outfits will come in later iterations.</p>`;
     if (name === "shop")
       content.innerHTML = `<p>Little rewards for time spent playing. Your coins grow during active games.</p><h3>A new companion</h3><div class="catalog-grid">${pets
         .map((p) => {
           const owned = this.profile.state.pets.includes(p.id);
-          return `<div class="catalog-card"><img src="${this.portraits.image(p.id, true)}" alt=""><b>${p.name}</b><button data-action="buy-pet" data-id="${p.id}" ${owned || this.profile.state.currency < p.price ? "disabled" : ""}>${owned ? "Already your friend" : `✦ ${p.price} · Adopt`}</button></div>`;
+          return `<div class="catalog-card"><img src="${this.portraits.image(p.id, true)}" alt=""><b>${p.name}</b><button data-action="buy-pet" data-id="${p.id}" ${owned || this.profile.state.currency < p.price ? "disabled" : ""}>${owned ? "Already your friend" : `${p.price} coins · Adopt`}</button></div>`;
         })
         .join(
           "",
@@ -432,7 +450,7 @@ class ChapterHouse {
         .filter((d) => d.price !== undefined)
         .map(
           (d) =>
-            `<div class="catalog-card"><img src="${this.portraits.image(d.id)}" alt=""><b>${d.name}</b><button data-action="buy-furniture" data-id="${d.id}" ${this.profile.state.currency < d.price! ? "disabled" : ""}>✦ ${d.price} · Bring home</button></div>`,
+            `<div class="catalog-card"><img src="${this.portraits.image(d.id)}" alt=""><b>${d.name}</b><button data-action="buy-furniture" data-id="${d.id}" ${this.profile.state.currency < d.price! ? "disabled" : ""}>${d.price} coins · Bring home</button></div>`,
         )
         .join(
           "",
@@ -452,6 +470,12 @@ class ChapterHouse {
       this.profile,
       () => this.leaveGame(),
       this.notify,
+      {
+        toggleSound: () => this.toggleSound(),
+        fullscreen: () => {
+          void this.fullscreen();
+        },
+      },
     );
     this.root.classList.add("playing");
   }
@@ -465,6 +489,11 @@ class ChapterHouse {
     this.root.classList.remove("playing");
     this.room.setPaused(false);
     this.audio.setRoomActive(true);
+  }
+  private toggleSound() {
+    this.profile.state.muted = !this.profile.state.muted;
+    this.profile.save();
+    this.game?.setMuted(this.profile.state.muted);
   }
   private async fullscreen() {
     try {

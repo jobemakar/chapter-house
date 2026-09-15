@@ -1,6 +1,7 @@
 import { record, count, finite, strings, parse } from "../../core/validation";
 import { loadPowers, definitions } from "./powers";
 import type { Checkpoint, PowerState } from "./types";
+import { yards } from "./levels";
 export interface WishboneProgress {
   version: 2;
   throws: number;
@@ -54,7 +55,7 @@ export const keepsakes = [
     name: "Doghouse table",
     at: 8,
     metric: "rescued",
-    detail: "Free all eight toys",
+    detail: "Free eight different toys",
   },
   ...definitions.map((p) => ({
     id: "power-" + p.id,
@@ -69,7 +70,7 @@ export class WishboneProgression {
   static load(raw: unknown): WishboneProgress {
     const data = record(typeof raw === "string" ? parse(raw) : raw),
       checkpoints: Record<string, Checkpoint> = {};
-    for (const id of ["teeter", "domino"]) {
+    for (const { id } of yards) {
       const c = record(record(data.checkpoints)[id]);
       if (!Array.isArray(c.pieces)) continue;
       const pieces = c.pieces
@@ -116,14 +117,20 @@ export class WishboneProgression {
     const state: WishboneProgress = {
       version: 2,
       throws: count(data.throws),
-      rescued: strings(data.rescued).filter((id) =>
-        /^(teeter|domino):\d+$/.test(id),
-      ),
+      rescued: strings(data.rescued).filter((id) => {
+        const [yard, piece] = id.split(":");
+        return yards.some((y) => y.id === yard) && /^\d+$/.test(piece ?? "");
+      }),
       owned: strings(data.owned).filter((id) =>
         keepsakes.some((k) => k.id === id),
       ),
       bestCascade: count(data.bestCascade, 100),
-      yard: data.yard === 1 ? 1 : 0,
+      yard:
+        typeof data.yard === "number" &&
+        Number.isInteger(data.yard) &&
+        yards[data.yard]
+          ? data.yard
+          : 2,
       muted: data.muted === true,
       reduced: data.reduced === true,
       checkpoints,

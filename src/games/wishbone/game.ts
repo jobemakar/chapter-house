@@ -8,6 +8,11 @@ import { WishboneProgression, keepsakes } from "./progression";
 import { GameAudio } from "./audio";
 import type { AimInput } from "./types";
 
+export type WishboneShellCallbacks = {
+  toggleSound: () => void;
+  fullscreen: () => void;
+};
+
 /** A disposable game session. Durable state belongs to the shared profile. */
 export class WishboneGame implements GameSession {
   private yard: PowerYard;
@@ -25,6 +30,7 @@ export class WishboneGame implements GameSession {
   private cascade = 0;
   private cascadeTime = 0;
   private impactWait = 0;
+  private powersOpen = false;
   private activity: ActivityClock;
   private powerKey = "";
   private statusKey = "";
@@ -33,6 +39,7 @@ export class WishboneGame implements GameSession {
     private profile: ProfileRepository,
     private leave: () => void,
     private notify: (text: string) => void,
+    private shell?: WishboneShellCallbacks,
   ) {
     const progress = profile.state.wishbone;
     this.activity = new ActivityClock(profile.state.activeSeconds);
@@ -41,52 +48,42 @@ export class WishboneGame implements GameSession {
       progress.checkpoints[yards[progress.yard].id],
       progress.powers,
     );
-    host.innerHTML = `<section class="game-page">
-<header class="game-heading">
-<button data-action="leave" class="back">← Clubhouse</button>
-<div>
-<span class="eyebrow">WISH · GAME 01</span>
-<h1>Wishbone Fling</h1>
-</div>
-<div class="game-options">
-<button data-action="help" aria-label="Game instructions">?</button>
-<button data-action="pause">Pause</button>
-</div>
-</header>
-<div class="game-meta">
-<div>
-<b data-ui="title">
-</b>
-<span data-ui="rescued">
-</span>
-</div>
-<div class="segmented">
-<button data-action="yard0">Yard 1</button>
-<button data-action="yard1">Yard 2</button>
-</div>
-</div>
+    host.innerHTML = `<section class="wishbone-game game-page">
 <div class="yard-wrap">
 <canvas aria-label="Wishbone physics yard. Pull left and down from Wishbone, then release." tabindex="0">
 </canvas>
+<header class="wishbone-hud">
+<button data-action="leave" class="hud-back">← Clubhouse</button>
+<div class="hud-title"><span class="eyebrow">WISHBONE FLING</span><b data-ui="title"></b><small data-ui="rescued"></small></div>
+<div class="game-wallet" aria-label="Your coins"><span aria-hidden="true">●</span><b data-ui="coins">0</b></div>
+<div class="hud-actions">
+<button data-action="sound" aria-label="Toggle sound">Sound</button>
+<button data-action="fullscreen" aria-label="Fullscreen">Full screen</button>
+<button data-action="help" aria-label="Game instructions">Help</button>
+<button data-action="pause">Pause</button>
+</div>
+</header>
+<button data-action="levels" class="levels-toggle" aria-expanded="false">Levels</button>
+<nav class="yard-switcher" data-ui="yard-list" aria-label="Choose a Wishbone yard" hidden>${[...yards.slice(2), ...yards.slice(0, 2)]
+      .map(
+        (yard, index) =>
+          `<button data-action="yard${yards.indexOf(yard)}" aria-pressed="false"><span>${yards.indexOf(yard) < 2 ? "Classic" : `Yard ${yards.indexOf(yard) - 1}`}</span>${yard.name}</button>`,
+      )
+      .join("")}</nav>
 <div class="pause-cover" hidden>
 <h2>A little breather</h2>
 <button data-action="resume" class="primary">Keep playing</button>
 </div>
 <button data-action="gust" class="stage-gust" hidden>Gust ↑</button>
+<div class="stage-tools">
+<button data-action="restack" class="stage-tool" aria-label="Restack this yard"><span aria-hidden="true">↺</span>Restack</button>
+<button data-action="collection" class="stage-tool" aria-label="Open keepsakes"><span aria-hidden="true">♥</span>Keepsakes</button>
 </div>
-<div class="game-foot">
-<div>
-<b data-ui="hint">Pull back. Let him fly.</b>
-<small data-ui="milestone">Unlimited tumbles. Everything you earn stays yours.</small>
-</div>
-<div>
-<button data-action="recall">Call Wishbone</button>
-<button data-action="restack">Restack</button>
-<button data-action="collection">Keepsakes</button>
-</div>
-</div>
-<section class="power-shelf">
-<span class="eyebrow">POCKET POWERUPS</span>
+<button data-action="recall" class="stage-recall" hidden>Recall</button>
+<div class="game-status" role="status"><b data-ui="hint">Pull back. Let him fly.</b><small data-ui="milestone">Unlimited tumbles. Everything you earn stays yours.</small></div>
+<section class="power-tray-wrap">
+<button data-action="powers" class="power-toggle" aria-expanded="false">Pocket powers <span data-ui="power-count"></span></button>
+<div class="power-shelf" data-ui="power-tray" hidden>
 <div class="power-buttons">${definitions
       .map(
         (p) => `<button data-action="${p.id}" title="${p.detail}">
@@ -97,7 +94,9 @@ export class WishboneGame implements GameSession {
 </div>
 <small data-ui="power-hint">
 </small>
+</div>
 </section>
+</div>
 <dialog class="game-dialog">
 <button class="dialog-close" data-action="close-dialog" aria-label="Close">×</button>
 <div data-ui="dialog">
@@ -185,6 +184,16 @@ export class WishboneGame implements GameSession {
       this.leave();
       return;
     }
+    if (action === "sound") {
+      this.shell?.toggleSound();
+      this.setMuted(this.profile.state.muted);
+      this.refresh();
+      return;
+    }
+    if (action === "fullscreen") {
+      this.shell?.fullscreen();
+      return;
+    }
     if (action === "pause" || action === "resume") {
       this.setPaused(!this.paused);
       return;
@@ -197,12 +206,28 @@ export class WishboneGame implements GameSession {
       this.dialog(action);
       return;
     }
+    if (action === "powers") {
+      this.powersOpen = !this.powersOpen;
+      this.ui("power-tray").hidden = !this.powersOpen;
+      this.button("powers").setAttribute("aria-expanded", String(this.powersOpen));
+      return;
+    }
+    if (action === "levels") {
+      const list = this.ui("yard-list");
+      list.hidden = !list.hidden;
+      this.button("levels").setAttribute("aria-expanded", String(!list.hidden));
+      return;
+    }
     if (this.paused) return;
     this.activity.interact();
     this.sound.start();
-    if (action === "yard0" || action === "yard1") {
-      const index = action === "yard0" ? 0 : 1;
+    const yardMatch = /^yard(\d+)$/.exec(action);
+    if (yardMatch) {
+      const index = Number(yardMatch[1]);
+      if (!Number.isInteger(index) || index < 0 || index >= yards.length) return;
       if (index !== this.yard.index) this.switchYard(index);
+      this.ui("yard-list").hidden = true;
+      this.button("levels").setAttribute("aria-expanded", "false");
     }
     if (action === "restack") this.switchYard(this.yard.index, true);
     if (action === "recall") {
@@ -318,6 +343,7 @@ export class WishboneGame implements GameSession {
   }
   setMuted(value: boolean) {
     this.sound.muted = value;
+    this.powerKey = "";
     if (value) this.sound.suspend();
     else if (!this.paused) this.sound.start();
   }
@@ -327,7 +353,7 @@ export class WishboneGame implements GameSession {
     this.setPaused(true);
     if (kind === "help")
       this.ui("dialog").innerHTML =
-        `<span class="eyebrow">A LITTLE HELP</span><h2>One happy tumble at a time.</h2><p>Touch the left side of the yard, near Wishbone. Pull left and down, then release. Aim low to tip the supports, or high to reach the top.</p><p>Hit floating powerups to keep them. Choose one before a throw; the pinwheel gives you a Gust button during flight. The lever, bellows, and magnet switch respond to collisions.</p><p>Call Wishbone for a quicker return. Restack whenever you like. Make fourteen throws to earn a Patchwork dog bed for your clubhouse.</p>`;
+        `<span class="eyebrow">A LITTLE HELP</span><h2>One happy tumble at a time.</h2><p>Touch the left side of the yard, near Wishbone. Pull left and down, then release. Aim low to tip the supports, or high to reach the top.</p><p>Hit floating powerups to keep them. Choose one before a throw; the pinwheel gives you a Gust button during flight. The lever, bellows, and magnet switch respond to collisions.</p><p>Wishbone comes back automatically after each toss. Recall brings him back sooner. Restack whenever you like. Make fourteen throws to earn a Patchwork dog bed for your clubhouse.</p>`;
     else {
       this.ui("dialog").innerHTML =
         '<span class="eyebrow">YOUR WISHBONE COLLECTION</span><h2>Little stories to keep.</h2><div class="collection-grid"></div>';
@@ -358,6 +384,7 @@ export class WishboneGame implements GameSession {
       this.yard.mode,
       this.paused,
       p.throws,
+      this.profile.state.currency,
     ].join();
     if (key !== this.statusKey) {
       this.statusKey = key;
@@ -371,16 +398,15 @@ export class WishboneGame implements GameSession {
         this.yard.mode === "ready"
           ? "Pull back. Let him fly."
           : "Floppy paws. Big tumble.";
-      this.button("yard0").setAttribute(
-        "aria-pressed",
-        String(this.yard.index === 0),
-      );
-      this.button("yard1").setAttribute(
-        "aria-pressed",
-        String(this.yard.index === 1),
-      );
+      for (let index = 0; index < yards.length; index++)
+        this.button(`yard${index}`).setAttribute(
+          "aria-pressed",
+          String(this.yard.index === index),
+        );
+      this.button("recall").hidden = this.yard.mode === "ready";
       this.button("recall").disabled = this.paused;
       this.button("restack").disabled = this.paused;
+      this.ui("coins").textContent = String(this.profile.state.currency);
     }
     const powerKey = JSON.stringify([
       p.powers,
@@ -398,6 +424,16 @@ export class WishboneGame implements GameSession {
         this.paused || this.yard.mode !== "ready" || p.powers.counts[d.id] < 1;
       b.setAttribute("aria-pressed", String(this.yard.armed === d.id));
     }
+    this.button("sound").textContent = this.profile.state.muted
+      ? "Sound off"
+      : "Sound on";
+    this.button("sound").setAttribute(
+      "aria-pressed",
+      String(!this.profile.state.muted),
+    );
+    this.ui("power-count").textContent = String(
+      definitions.reduce((total, d) => total + p.powers.counts[d.id], 0),
+    );
     this.button("gust").hidden =
       this.paused || this.yard.mode !== "flight" || this.yard.active !== "wind";
     this.ui<HTMLInputElement>("auto").checked = p.powers.autoGust;

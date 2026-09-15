@@ -17,6 +17,7 @@ export interface OwnedItem {
   placement: Placement | null;
   /** Optional additive v1 field: old saves start with lamps off. */
   lampOn?: boolean;
+  filled?: boolean;
 }
 export interface Profile {
   version: 1;
@@ -178,6 +179,9 @@ export class ProfileRepository {
               ...(getFurniture(String(item.definitionId))?.kind === "lamp"
                 ? { lampOn: item.lampOn === true }
                 : {}),
+              ...(getFurniture(String(item.definitionId))?.kind === "bowl"
+                ? { filled: item.filled === true }
+                : {}),
               placement:
                 item.placement &&
                 typeof p.x === "number" &&
@@ -211,6 +215,12 @@ export class ProfileRepository {
       } catch {}
     }
     this.syncKeepsakes(false);
+    // One local preview set, granted by stable instance ID without disturbing layout.
+    for (const definitionId of ["pet-bowl", "fish-tank", "pet-trampoline"]) {
+      const id = `starter-${definitionId}`;
+      if (!initial.items.some((item) => item.id === id))
+        initial.items.push({ id, definitionId, placement: null });
+    }
     this.save();
   }
   subscribe(listener: () => void): () => void {
@@ -235,6 +245,14 @@ export class ProfileRepository {
     item.lampOn = !item.lampOn;
     this.save();
     return item.lampOn;
+  }
+  fillBowl(id: string): boolean {
+    const item = this.state.items.find((item) => item.id === id);
+    if (!item?.placement || getFurniture(item.definitionId)?.kind !== "bowl")
+      return false;
+    item.filled = true;
+    this.save();
+    return true;
   }
   syncKeepsakes(notify = true): void {
     for (const item of furniture) {

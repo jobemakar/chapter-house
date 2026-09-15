@@ -8,7 +8,10 @@ export type FurnitureKind =
   | "bed"
   | "basket"
   | "doghouse"
-  | "ornament";
+  | "ornament"
+  | "bowl"
+  | "aquarium"
+  | "trampoline";
 export interface FurnitureDefinition {
   id: string;
   name: string;
@@ -84,6 +87,39 @@ export const furniture: FurnitureDefinition[] = [
     color: 0x5d9977,
     price: 12,
     description: "A leafy friend for your room",
+  },
+  {
+    id: "pet-bowl",
+    name: "Sunny pet bowl",
+    kind: "bowl",
+    width: 0.7,
+    depth: 0.7,
+    height: 0.26,
+    color: 0xe1a45e,
+    price: 12,
+    description: "Tap to serve a cheerful little meal",
+  },
+  {
+    id: "fish-tank",
+    name: "Bubbleglass aquarium",
+    kind: "aquarium",
+    width: 1.5,
+    depth: 0.8,
+    height: 1.6,
+    color: 0x79b9b5,
+    price: 36,
+    description: "Three tiny fish make a calm, colorful home",
+  },
+  {
+    id: "pet-trampoline",
+    name: "Pet trampoline",
+    kind: "trampoline",
+    width: 1.3,
+    depth: 1.3,
+    height: 0.35,
+    color: 0xd77872,
+    price: 30,
+    description: "A springy spot for playful pet hops",
   },
   {
     id: "wish-bed",

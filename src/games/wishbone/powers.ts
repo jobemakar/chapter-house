@@ -85,6 +85,9 @@ export class PowerYard extends FloppyYard {
   bellows: M.Body;
   gate: M.Body;
   gadgets: M.Body[];
+  hasMechanism(kind: "lever" | "magnet" | "bellows") {
+    return this.layout.mechanisms?.includes(kind) ?? true;
+  }
   constructor(
     index = 0,
     checkpoint: Checkpoint | null = null,
@@ -115,13 +118,14 @@ export class PowerYard extends FloppyYard {
     this.switchAt = -10;
     this.bellowsAt = -10;
     this.gustUntil = 0;
-    this.field = { x: 970, y: 415, r: 165 };
+    this.field = this.layout.devices?.field ?? { x: 970, y: 415, r: 165 };
     this.pickups = (
-      [
+      this.layout.pickups ??
+      ([
         { id: "bounce", x: 380, y: 410 },
         { id: "magnet", x: 660, y: 225 },
         { id: "wind", x: 1150, y: 490 },
-      ] as { id: PowerId; x: number; y: number }[]
+      ] as { id: PowerId; x: number; y: number }[])
     ).map((p) => ({
       ...p,
       hit: M.Bodies.circle(p.x, p.y, 22, { isStatic: true, isSensor: true }),
@@ -140,13 +144,23 @@ export class PowerYard extends FloppyYard {
       b.game = { kind };
       return b;
     };
-    this.lever = sensor("lever", 420, 485, 36, 74);
-    this.button = sensor("polarity", 850, 566, 48, 50);
-    this.bellows = sensor("bellows", 470, 580, 68, 32);
-    this.gate = M.Bodies.rectangle(1100, 490, 18, 220, { isStatic: true });
+    const positions = this.layout.devices;
+    const lever = positions?.lever ?? { x: 420, y: 485 };
+    const button = positions?.button ?? { x: 850, y: 566 };
+    const bellows = positions?.bellows ?? { x: 470, y: 580 };
+    const gate = positions?.gate ?? { x: 1100, y: 490 };
+    this.lever = sensor("lever", lever.x, lever.y, 36, 74);
+    this.button = sensor("polarity", button.x, button.y, 48, 50);
+    this.bellows = sensor("bellows", bellows.x, bellows.y, 68, 32);
+    this.gate = M.Bodies.rectangle(gate.x, gate.y, 18, 220, { isStatic: true });
     this.gate.game = { kind: "gate" };
-    if (this.gateOpen) M.Body.setPosition(this.gate, { x: 1100, y: 240 });
-    this.gadgets = [this.lever, this.button, this.bellows, this.gate];
+    if (this.gateOpen)
+      M.Body.setPosition(this.gate, { x: gate.x, y: gate.y - 250 });
+    this.gadgets = [
+      ...(this.hasMechanism("lever") ? [this.lever, this.gate] : []),
+      ...(this.hasMechanism("magnet") ? [this.button] : []),
+      ...(this.hasMechanism("bellows") ? [this.bellows] : []),
+    ];
     M.Composite.add(this.engine.world, this.gadgets);
     M.Events.on(this.engine, "collisionStart", (event) => {
       for (const pair of event.pairs) {
@@ -159,9 +173,9 @@ export class PowerYard extends FloppyYard {
             this.gateOpen = true;
             this.events.push({
               type: "mechanism",
-              text: "Gate open! Bonus pinwheel ahead.",
-              x: 420,
-              y: 440,
+              text: "The gate is open!",
+              x: lever.x,
+              y: lever.y - 45,
             });
           }
           if (device === this.button && this.time - this.switchAt > 0.8) {
@@ -173,8 +187,8 @@ export class PowerYard extends FloppyYard {
                 this.polarity === 1
                   ? "Magnet pulls inward"
                   : "Magnet pushes outward",
-              x: 850,
-              y: 520,
+              x: button.x,
+              y: button.y - 46,
             });
           }
           if (device === this.bellows && this.time - this.bellowsAt > 2) {
@@ -183,8 +197,8 @@ export class PowerYard extends FloppyYard {
             this.events.push({
               type: "mechanism",
               text: "Whooosh!",
-              x: 470,
-              y: 520,
+              x: bellows.x,
+              y: bellows.y - 60,
             });
           }
         }
@@ -262,8 +276,8 @@ export class PowerYard extends FloppyYard {
     if (this.gateOpen && this.gateLift < 1) {
       this.gateLift = Math.min(1, this.gateLift + dt * 2.5);
       M.Body.setPosition(this.gate, {
-        x: 1100,
-        y: 490 - this.gateLift * 250,
+        x: this.layout.devices?.gate?.x ?? 1100,
+        y: (this.layout.devices?.gate?.y ?? 490) - this.gateLift * 250,
       });
     }
     if (this.mode === "flight") {
@@ -291,7 +305,7 @@ export class PowerYard extends FloppyYard {
             this.pull(b, this.dog.position.x, this.dog.position.y, 0.0035);
         }
     }
-    if (this.polarity)
+    if (this.hasMechanism("magnet") && this.polarity)
       for (const b of [
         ...this.pieces,
         ...(this.mode === "flight" ? [this.dog] : []),
@@ -312,7 +326,7 @@ export class PowerYard extends FloppyYard {
           !(
             "id" in (b.game || {}) && this.rescued.has((b as PieceBody).game.id)
           ) &&
-          Math.abs(b.position.x - 470) < 85 &&
+          Math.abs(b.position.x - this.bellows.position.x) < 85 &&
           b.position.y > 320 &&
           b.position.y < 610
         )

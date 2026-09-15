@@ -1625,3 +1625,12 @@ dialog::backdrop {
     font-size: 13px;
   }
 }
+/* One shared game surface: game HUD supplies the same navigation/settings. */
+#app.playing > .topbar { display: none; }
+#app.playing .game-host { height: 100%; }
+.wallet .coin {
+  display: inline-grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 50%; border: 2px solid #b58328; background: #e4b449;
+  box-shadow: inset 0 0 0 2px #ffdc78, 0 2px 0 #a77728;
+  color: #92641c; font: 700 13px Georgia, serif;
+}

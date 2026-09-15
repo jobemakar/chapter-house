@@ -31,7 +31,7 @@ Cancel, placement and storage keep decorating active; tap another piece or choos
 
 The [feedback pass](docs/feedback-01.md) adds expressive jump/wave poses, stable arrival direction and rounded action buttons. Larger or connected rooms are recorded for later. More avatar accessories are proposed, not included in this polish pass.
 
-Games opens Wishbone Fling. Pull back from the left of its yard, then release. The two original yards, floppy dog, recall, restack, three pocket powers and three collision mechanisms remain. Progress and powerups persist. Fourteen throws earn a Patchwork dog bed; return to Decorate to place it. All nine original keepsakes have floor display models. Game rewards cannot be bought.
+Games opens Wishbone Fling. Pull back from the left of its yard, then release. Five new focused yards showcase a bridge, domino chain, lever gate, bellows and magnet; the two original yards remain under Classics. A forked wooden slingshot and compact overlay controls replace the heavier framing. Recall appears only while Wishbone is away; keepsakes remain accessible. Progress and powerups persist. Fourteen throws earn a Patchwork dog bed; return to Decorate to place it. All nine original keepsakes have floor display models. Game rewards cannot be bought.
 
 Active play earns one coin per ten counted seconds, independent of score. Idle, paused and hidden games stop earning. A fern costs 12, the cheapest additional pet 60; furniture copies are distinct, pet ownership is unique. These are named developer tuning values, not final economy balancing.
 
@@ -65,3 +65,7 @@ This subset has one fox avatar (four fur colors, scarf/bow/none), two starter ch
 Physical phone/iPad testing and listening on actual speakers remain pending. Browser viewport checks cover portrait/landscape and tablet/desktop dimensions. Fullscreen support depends on the host browser; failure shows a fallback notice. Price pacing and the generosity of the active-play window should be tuned with actual children.
 
 See `docs/verification.md`, `docs/provenance.md`, and the collection's `plans/19` through `plans/22` for requirements and the next checkpoint.
+
+## Interactive furnishings and five-yard pass
+
+Decorate includes a free local preview bowl, aquarium and pet trampoline. Tap a placed bowl to fill it (saved locally), a tank to make swimming fish dart, or a trampoline to invite a pet to bounce. Duplicate pieces are available in the shop. The currency uses a round gold coin. See [plan](docs/feedback-02-plan.md) and [verification](docs/feedback-02-verification.md). Scrolling/parallax remains a future iteration.

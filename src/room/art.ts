@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { InteractiveFurnishing } from "./furnishings";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import type { FurnitureDefinition, PetDefinition } from "../core/catalog";
 const palette = [0xbd705c, 0xe2bf75, 0x789887, 0x7f96a9, 0xbaa0ac, 0xf0ddac];
@@ -69,6 +70,8 @@ export class RoomArt {
     return mesh;
   }
   static furniture(def: FurnitureDefinition, lampOn = false): THREE.Group {
+    if (["bowl", "aquarium", "trampoline"].includes(def.kind))
+      return new InteractiveFurnishing(def).root;
     const g = new THREE.Group(),
       w = def.width,
       d = def.depth,

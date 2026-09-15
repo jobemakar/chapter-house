@@ -20,6 +20,15 @@ export interface YardDefinition {
   name: string;
   subtitle: string;
   pieces: PieceDefinition[];
+  mechanisms?: ("lever" | "bellows" | "magnet")[];
+  devices?: {
+    lever?: { x: number; y: number };
+    gate?: { x: number; y: number };
+    bellows?: { x: number; y: number };
+    button?: { x: number; y: number };
+    field?: { x: number; y: number; r: number };
+  };
+  pickups?: { id: PowerId; x: number; y: number }[];
 }
 export interface PieceMetadata extends PieceDefinition {
   id: number;

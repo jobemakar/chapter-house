@@ -246,149 +246,131 @@ function gadgets(
   time: number,
   reduced: boolean,
 ) {
-  if (!yard.gadgets) return;
-  const f = yard.field;
   c.save();
-  c.setLineDash([7, 8]);
-  c.strokeStyle = yard.polarity === -1 ? "#b97d6a99" : "#4f928499";
-  c.lineWidth = 2;
-  c.beginPath();
-  c.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-  c.stroke();
-  c.setLineDash([]);
-  if (yard.polarity) {
-    for (let i = 0; i < 6; i++) {
-      const a = (i * Math.PI) / 3,
-        r = 100 + (reduced ? 0 : Math.sin(time * 3) * 12);
-      const x = f.x + Math.cos(a) * r,
-        y = f.y + Math.sin(a) * r,
-        dir = yard.polarity === 1 ? -1 : 1;
-      line(
-        c,
-        [
-          [x, y],
-          [x + Math.cos(a) * dir * 20, y + Math.sin(a) * dir * 20],
-        ],
-        "#588e80",
-        3,
-      );
-      ellipse(
-        c,
-        x + Math.cos(a) * dir * 20,
-        y + Math.sin(a) * dir * 20,
-        3,
-        3,
-        "#588e80",
-      );
-    }
+  if (yard.hasMechanism("magnet")) {
+    const f = yard.field,
+      button = yard.button.position;
+    c.setLineDash([7, 8]);
+    c.strokeStyle = yard.polarity === -1 ? "#b97d6a99" : "#4f928499";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    c.stroke();
+    c.setLineDash([]);
+    gadgetLabel(
+      c,
+      yard.polarity === 0
+        ? "MAGNET OFF"
+        : yard.polarity === 1
+          ? "PULL IN +"
+          : "PUSH OUT -",
+      f.x,
+      f.y - f.r - 12,
+    );
+    round(c, button.x - 28, button.y - 1, 56, 32, 10, "#688e85", "#3f685d");
+    ellipse(
+      c,
+      button.x,
+      button.y - 2,
+      23,
+      12,
+      yard.polarity === -1 ? "#df927c" : "#a4d0b6",
+    );
+    c.fillStyle = "#304c43";
+    c.font = "bold 20px DM";
+    c.textAlign = "center";
+    c.fillText("+ / -", button.x, button.y + 2);
+    for (const b of yard.pieces)
+      if (b.game.kind === "bucket") {
+        line(
+          c,
+          [
+            [b.position.x - 14, b.position.y - 30],
+            [b.position.x, b.position.y - 40],
+            [b.position.x + 14, b.position.y - 30],
+          ],
+          "#386b64",
+          3,
+        );
+      }
   }
-  gadgetLabel(
-    c,
-    yard.polarity === 0
-      ? "MAGNET OFF"
-      : yard.polarity === 1
-        ? "PULL IN +"
-        : "PUSH OUT −",
-    970,
-    232,
-  );
-  // Striped buckets are the metal props affected by this fixed field.
-  for (const b of yard.pieces)
-    if (b.game.kind === "bucket") {
-      c.save();
-      c.translate(b.position.x, b.position.y - 38);
-      c.rotate(b.angle);
-      line(
-        c,
-        [
-          [-14, 0],
-          [-7, -7],
-          [0, 0],
-          [7, -7],
-          [14, 0],
-        ],
-        "#386b64",
-        3,
-      );
-      c.restore();
-    }
-  line(
-    c,
-    [
-      [420, 523],
-      [420, 620],
-      [1100, 620],
-      [1100, 600],
-    ],
-    yard.gateOpen ? "#77a38e" : "#bca27e",
-    3,
-  );
-  round(c, 401, 510, 38, 15, 5, "#9e8060");
-  c.save();
-  c.translate(420, 510);
-  c.rotate(yard.gateOpen ? 0.7 : -0.5);
-  round(c, -5, -58, 10, 58, 5, "#8b7052");
-  ellipse(c, 0, -58, 17, 17, yard.gateOpen ? "#83b59d" : "#df9067");
-  c.restore();
-  gadgetLabel(c, "LEVER", 365, 530);
-  const gateY = yard.gate.position.y;
-  round(c, 1088, gateY - 110, 24, 220, 5, "#a88a61", "#6f6247");
-  for (let y = gateY - 99; y < gateY + 104; y += 22)
+  if (yard.hasMechanism("lever")) {
+    const l = yard.lever.position,
+      g = yard.gate.position;
     line(
       c,
       [
-        [1091, y],
-        [1109, y + 12],
+        [l.x, l.y + 38],
+        [l.x, 620],
+        [g.x, 620],
+        [g.x, 600],
       ],
-      "#edce87",
-      4,
+      yard.gateOpen ? "#77a38e" : "#bca27e",
+      3,
     );
-  gadgetLabel(c, yard.gateOpen ? "OPEN" : "BONUS GATE", 1100, gateY - 120);
-  round(c, 822, 565, 56, 32, 10, "#688e85", "#3f685d");
-  ellipse(c, 850, 564, 23, 12, yard.polarity === -1 ? "#df927c" : "#a4d0b6");
-  c.fillStyle = "#304c43";
-  c.font = "bold 20px DM";
-  c.textAlign = "center";
-  c.fillText("+ / −", 850, 568);
-  const compressed = yard.time - yard.bellowsAt < 0.3;
-  round(
-    c,
-    433,
-    compressed ? 586 : 576,
-    74,
-    compressed ? 12 : 22,
-    8,
-    "#c29cce",
-    "#815f8e",
-  );
-  line(
-    c,
-    [
-      [440, 586],
-      [454, 579],
-      [468, 586],
-      [482, 579],
-      [495, 586],
-    ],
-    "#f1d8e8",
-    3,
-  );
-  gadgetLabel(c, "BELLOWS ↑", 470, 646);
-  if (yard.time < yard.gustUntil)
-    for (let i = 0; i < 5; i++) {
-      const x = 420 + i * 25,
-        y = 550 - (reduced ? 70 : (time * 220 + i * 45) % 200);
+    round(c, l.x - 19, l.y + 25, 38, 15, 5, "#9e8060");
+    c.save();
+    c.translate(l.x, l.y + 25);
+    c.rotate(yard.gateOpen ? 0.7 : -0.5);
+    round(c, -5, -58, 10, 58, 5, "#8b7052");
+    ellipse(c, 0, -58, 17, 17, yard.gateOpen ? "#83b59d" : "#df9067");
+    c.restore();
+    gadgetLabel(c, "LEVER", l.x - 45, l.y + 60);
+    round(c, g.x - 12, g.y - 110, 24, 220, 5, "#a88a61", "#6f6247");
+    for (let y = g.y - 99; y < g.y + 104; y += 22)
       line(
         c,
         [
-          [x, y + 35],
-          [x + 5, y],
-          [x - 2, y + 8],
+          [g.x - 9, y],
+          [g.x + 9, y + 12],
         ],
-        "#e6fff1",
+        "#edce87",
         4,
       );
-    }
+    gadgetLabel(c, yard.gateOpen ? "OPEN" : "GATE", g.x, g.y - 120);
+  }
+  if (yard.hasMechanism("bellows")) {
+    const b = yard.bellows.position,
+      compressed = yard.time - yard.bellowsAt < 0.3;
+    round(
+      c,
+      b.x - 37,
+      compressed ? b.y + 6 : b.y - 4,
+      74,
+      compressed ? 12 : 22,
+      8,
+      "#c29cce",
+      "#815f8e",
+    );
+    line(
+      c,
+      [
+        [b.x - 30, b.y + 6],
+        [b.x - 16, b.y - 1],
+        [b.x - 2, b.y + 6],
+        [b.x + 12, b.y - 1],
+        [b.x + 25, b.y + 6],
+      ],
+      "#f1d8e8",
+      3,
+    );
+    gadgetLabel(c, "BELLOWS", b.x, b.y + 62);
+    if (yard.time < yard.gustUntil)
+      for (let i = 0; i < 5; i++) {
+        const x = b.x - 50 + i * 25,
+          y = 550 - (reduced ? 70 : (time * 220 + i * 45) % 200);
+        line(
+          c,
+          [
+            [x, y + 35],
+            [x + 5, y],
+            [x - 2, y + 8],
+          ],
+          "#e6fff1",
+          4,
+        );
+      }
+  }
   if (yard.mode === "flight" && yard.active === "magnet") {
     c.beginPath();
     c.arc(yard.dog.position.x, yard.dog.position.y, 170, 0, Math.PI * 2);
@@ -399,7 +381,7 @@ function gadgets(
   if (yard.mode === "flight" && yard.bounces > 0)
     gadgetLabel(
       c,
-      "↗ ".repeat(yard.bounces).trim(),
+      "Bounce " + yard.bounces,
       yard.dog.position.x,
       yard.dog.position.y - 80,
     );
@@ -541,7 +523,75 @@ export class WishboneRenderer {
         ellipse(c, b.position.x, 605, size, 5, "#4a684014");
       }
     ellipse(c, yard.dog.position.x, 606, 53, 8, "#435d4638");
-    // The patchwork cushion is the launch pad, not a second dog.
+    // Forked wooden launcher and elastic cradle; the same plush supplies the payload.
+    line(
+      c,
+      [
+        [162, 570],
+        [162, 505],
+        [104, 410],
+      ],
+      "#795435",
+      18,
+    );
+    line(
+      c,
+      [
+        [162, 505],
+        [240, 410],
+      ],
+      "#946943",
+      18,
+    );
+    line(
+      c,
+      [
+        [163, 567],
+        [163, 506],
+        [104, 411],
+      ],
+      "#c6965d",
+      7,
+    );
+    line(
+      c,
+      [
+        [164, 505],
+        [240, 411],
+      ],
+      "#d2a773",
+      7,
+    );
+    const heldX =
+      TUNE.origin.x -
+      (input ? (input.velocity.x / TUNE.launchScale) * 0.48 : 0);
+    const heldY =
+      TUNE.origin.y -
+      (input ? (input.velocity.y / TUNE.launchScale) * 0.48 : 0);
+    if (yard.mode === "ready") {
+      line(
+        c,
+        [
+          [104, 410],
+          [heldX, heldY + 12],
+          [240, 410],
+        ],
+        "#754c49",
+        8,
+      );
+      round(c, heldX - 20, heldY + 5, 40, 20, 8, "#ac7256", "#654733");
+    } else
+      line(
+        c,
+        [
+          [104, 410],
+          [164, 466],
+          [240, 410],
+        ],
+        "#754c49",
+        6,
+      );
+    // A soft patch below the launcher fits the plush-toy tone.
     round(c, 100, 540, 128, 34, 16, "#db9b80", "#a87059");
     round(c, 106, 539, 116, 22, 11, "#f1c7a2", "#c38b6a");
     const origin = TUNE.origin;
@@ -569,9 +619,9 @@ export class WishboneRenderer {
         line(
           c,
           [
-            [origin.x - 12, origin.y + 32],
+            [104, 410],
             [x, y],
-            [origin.x + 18, origin.y + 28],
+            [240, 410],
           ],
           "#b8724d",
           5,
@@ -583,7 +633,7 @@ export class WishboneRenderer {
         // Same fixed step, gravity and air drag as the sock, stopping at the first prop.
         const blockers = [
           ...yard.pieces,
-          ...(yard.gate ? [yard.gate] : []),
+          ...(yard.hasMechanism("lever") ? [yard.gate] : []),
         ].filter(
           (b) =>
             !(

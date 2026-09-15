@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
 import { RouteMotion } from "./motion";
+import { InteractiveFurnishing } from "./furnishings";
 import type { RoomSound } from "./audio";
 import { RoomNavigation, ROOM, footprint } from "./navigation";
 import { getFurniture, getPet } from "../core/catalog";
@@ -31,6 +32,15 @@ export class ClubhouseRoom {
   private camera = new THREE.OrthographicCamera();
   private renderer: THREE.WebGLRenderer;
   private furnitureRoot = new THREE.Group();
+  private furnishings = new Map<string, InteractiveFurnishing>();
+  private petPlay: {
+    pet: Actor;
+    itemId: string;
+    approach: Point;
+    center: Point;
+    time: number;
+    arrived: boolean;
+  } | null = null;
   private avatar: Actor;
   private pets: Actor[] = [];
   private ray = new THREE.Raycaster();
@@ -216,19 +226,33 @@ export class ClubhouseRoom {
       key = JSON.stringify(state.items);
     if (key !== this.signature) {
       this.signature = key;
+      const previousFurnishings = this.furnishings;
+      for (const controller of previousFurnishings.values())
+        this.furnitureRoot.remove(controller.root);
       RoomArt.release(this.furnitureRoot);
       this.furnitureRoot.clear();
+      this.furnishings = new Map();
       for (const item of state.items) {
         if (!item.placement) continue;
-        const group = RoomArt.furniture(
-          getFurniture(item.definitionId)!,
-          item.lampOn,
-        );
+        const def = getFurniture(item.definitionId)!;
+        const interactive = ["bowl", "aquarium", "trampoline"].includes(
+          def.kind,
+        )
+          ? (previousFurnishings.get(item.id) ??
+            new InteractiveFurnishing(def, item.filled))
+          : null;
+        if (interactive) {
+          interactive.setFilled(item.filled === true);
+          this.furnishings.set(item.id, interactive);
+        }
+        const group = interactive?.root ?? RoomArt.furniture(def, item.lampOn);
         group.position.set(item.placement.x, 0, item.placement.z);
         group.rotation.y = (item.placement.rotation * Math.PI) / 2;
         group.userData.itemId = item.id;
         this.furnitureRoot.add(group);
       }
+      for (const [id, controller] of previousFurnishings)
+        if (!this.furnishings.has(id)) RoomArt.release(controller.root);
       const layout = JSON.stringify(
         state.items.map(({ id, definitionId, placement }) => ({
           id,
@@ -237,6 +261,7 @@ export class ClubhouseRoom {
         })),
       );
       if (layout !== this.layoutSignature) {
+        this.cancelPetPlay();
         this.layoutSignature = layout;
         this.actors().forEach((a) => (a.path = []));
       }
@@ -368,6 +393,7 @@ export class ClubhouseRoom {
           return;
         }
         if (o?.userData.itemId) {
+          if (this.interactWithFurniture(o.userData.itemId)) return;
           const on = this.profile.toggleLamp(o.userData.itemId);
           if (on !== null) {
             this.sound("lamp");
@@ -397,7 +423,95 @@ export class ClubhouseRoom {
     this.destination.visible = true;
     this.destinationAge = 1.5;
   }
+  interactWithFurniture(id: string): boolean {
+    const furniture = this.furnishings.get(id);
+    const item = this.profile.state.items.find((i) => i.id === id);
+    if (!furniture || !item?.placement || this.editing || this.paused)
+      return false;
+    const kind = getFurniture(item.definitionId)!.kind;
+    if (kind === "bowl") {
+      this.profile.fillBowl(id);
+      this.notify("A bowl full of good things.");
+    } else if (kind === "aquarium") {
+      furniture.interact();
+      this.notify("There they go!");
+    } else {
+      this.cancelPetPlay();
+      const pet = this.pets[0];
+      if (!pet) {
+        this.notify("Bring a pet out to try the trampoline.");
+        return true;
+      }
+      const center = { x: item.placement.x, z: item.placement.z };
+      const approaches = [
+        [1.05, 0],
+        [-1.05, 0],
+        [0, 1.05],
+        [0, -1.05],
+      ]
+        .map(([x, z]) => ({ x: center.x + x, z: center.z + z }))
+        .filter((p) => this.nav.walkable(p))
+        .map((point) => ({ point, path: this.nav.path(pet.point, point) }))
+        .filter((p) => p.path.length)
+        .sort((a, b) => a.path.length - b.path.length);
+      if (!approaches.length) {
+        this.notify("Leave a little room beside the trampoline.");
+        return true;
+      }
+      pet.path = approaches[0].path;
+      this.petPlay = {
+        pet,
+        itemId: id,
+        approach: approaches[0].point,
+        center,
+        time: 0,
+        arrived: false,
+      };
+      this.notify(`${getPet(pet.id)!.name} is coming for a bounce!`);
+    }
+    this.sound("pet");
+    return true;
+  }
+  private cancelPetPlay() {
+    if (!this.petPlay) return;
+    const pet = this.petPlay.pet;
+    pet.path = [];
+    pet.wait = 3;
+    pet.rig.root.position.set(pet.point.x, 0, pet.point.z);
+    this.petPlay = null;
+  }
+  private animatePetPlay(dt: number) {
+    const play = this.petPlay;
+    if (!play) return;
+    if (!this.pets.includes(play.pet) || !this.furnishings.has(play.itemId)) {
+      this.cancelPetPlay();
+      return;
+    }
+    if (!play.arrived) {
+      if (play.pet.path.length) return;
+      play.arrived = true;
+      this.furnishings.get(play.itemId)!.interact();
+    }
+    play.time += dt;
+    const t = play.time;
+    if (t >= 3.4) {
+      this.cancelPetPlay();
+      return;
+    }
+    const blend = t < 0.45 ? t / 0.45 : t > 2.95 ? (3.4 - t) / 0.45 : 1;
+    const hop = Math.abs(Math.sin((t - 0.45) * Math.PI * 2.4));
+    const height =
+      t < 0.45 || t > 2.95
+        ? Math.sin(blend * Math.PI) * 0.25
+        : hop * (this.profile.state.reduced ? 0.12 : 0.45);
+    play.pet.rig.root.position.set(
+      play.approach.x + (play.center.x - play.approach.x) * blend,
+      0.35 * blend + height,
+      play.approach.z + (play.center.z - play.approach.z) * blend,
+    );
+  }
   setEditing(value: boolean) {
+    if (value) this.cancelPetPlay();
     this.editing = value;
     if (!value) this.cancelPlacement();
     this.host.classList.toggle("editing", value);
@@ -521,6 +635,7 @@ export class ClubhouseRoom {
     this.sound("jump");
   }
   pet(id: string) {
+    this.cancelPetPlay();
     const pet = this.pets.find((p) => p.id === id);
     if (!pet) return;
     pet.rig.pet();
@@ -530,6 +645,7 @@ export class ClubhouseRoom {
     this.notify(`${getPet(pet.id)!.name} loved that. ♥`);
   }
   callPets() {
+    this.cancelPetPlay();
     this.sound("call");
     for (const pet of this.pets) {
       pet.path = this.nav.path(pet.point, this.freeNear(this.avatar.point));
@@ -539,6 +655,7 @@ export class ClubhouseRoom {
     if (this.pets.length) this.notify("Here, little friend!");
   }
   setPaused(value: boolean) {
+    if (value) this.cancelPetPlay();
     this.paused = value;
     this.last = 0;
   }
@@ -547,7 +664,12 @@ export class ClubhouseRoom {
     this.last = timestamp;
     if (!this.paused && !document.hidden) {
       for (const actor of this.actors()) {
-        if (actor !== this.avatar && !actor.path.length && !this.draft) {
+        if (
+          actor !== this.avatar &&
+          actor !== this.petPlay?.pet &&
+          !actor.path.length &&
+          !this.draft
+        ) {
           actor.wait -= dt;
           if (actor.wait <= 0) {
             const target = {
@@ -572,6 +694,9 @@ export class ClubhouseRoom {
         actor.rig.update(dt, motion.moved, this.profile.state.reduced);
       }
       this.destinationAge -= dt;
+      for (const furnishing of this.furnishings.values())
+        furnishing.update(dt, this.profile.state.reduced);
+      this.animatePetPlay(dt);
       if (this.destinationAge <= 0) this.destination.visible = false;
       this.renderer.render(this.scene, this.camera);
     }
@@ -581,6 +706,11 @@ export class ClubhouseRoom {
     return {
       avatar: { ...this.avatar.point },
       facing: this.avatar.rig.root.rotation.y,
+      petPlaying: this.petPlay?.itemId ?? null,
+      furnishings: [...this.furnishings].map(([id, controller]) => ({
+        id,
+        ...controller.status(),
+      })),
       editing: this.editing,
       walking: this.avatar.path.length > 0,
       pets: this.pets.map((p) => ({ id: p.id, ...p.point })),

@@ -43,3 +43,6 @@ No physical iPhone, Android or iPad was available for this pass. Viewport emulat
 
 The complete larger first slice is still gated on checkpoint B (real accounts and shared visits) and user review. No deployment was performed.
 
+## Feedback 02 — 2026-09-15
+
+Current total: 47 passing tests and a successful production build. See [feedback-02-verification.md](feedback-02-verification.md) for five-yard simulations, browser checks, model delegation and remaining limits.
