@@ -1,5 +1,7 @@
 # Provenance and baseline
 
+The clubhouse ambient progression and six interaction sounds in src/room/audio.ts are newly authored procedural Web Audio compositions; no third-party recording or external audio download is used. The rounded action UI and expressive rig changes are authored source, documented in feedback-01.md.
+
 The preserved Wish repository is the source baseline, commit `dd3f939` (Trial saved powerups and collision-driven yard mechanisms in Wishbone Fling). Its original JavaScript files and saves are not modified by this application.
 
 The new `src/games/wishbone/` modules explicitly port the prior core solver, authored levels, articulated plush, powerups, 2D renderer, audio synthesis and milestone behavior to strict TypeScript classes. Dependency injection replaces script-order globals. The 120 Hz solver, launch tuning, target thresholds and power rules are retained. A differential regression compares both yards' trajectories and outcomes against the sibling original repository when available.

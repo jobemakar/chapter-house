@@ -1,0 +1,218 @@
+/* Expressive room actions sit in the quiet space just above the activity dock. */
+.room-page .emotes {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: 116px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.room-page .emotes button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  width: 68px;
+  height: 68px;
+  min-width: 68px;
+  min-height: 68px;
+  padding: 9px 4px;
+  border: 1px solid var(--action-border, #d7d7be);
+  border-radius: 47% 53% 46% 54%;
+  background: var(--action-fill, #f8dfb9);
+  color: var(--action-ink, #675641);
+  box-shadow:
+    0 7px 18px #5c61421f,
+    0 2px 0 #fff9e8b8 inset;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  pointer-events: auto;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
+}
+
+.room-page .emotes button:nth-child(2) {
+  border-radius: 54% 46% 52% 48%;
+  background: #d8e8ce;
+  border-color: #bfd2b7;
+  color: #49664e;
+}
+
+.room-page .emotes button:nth-child(3) {
+  border-radius: 48% 52% 45% 55%;
+  background: #d8e7ed;
+  border-color: #bed2d9;
+  color: #496777;
+}
+
+.room-page .emotes button:hover {
+  filter: saturate(1.06) brightness(1.02);
+  transform: translateY(-2px) rotate(-1deg);
+  box-shadow:
+    0 10px 20px #5c61422b,
+    0 2px 0 #fffdf0cc inset;
+}
+
+.room-page .emotes button:nth-child(2):hover {
+  transform: translateY(-2px) rotate(1deg);
+}
+
+.room-page .emotes button:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 4px 10px #5c61421c,
+    0 1px 0 #fff9e8a6 inset;
+}
+
+.room-page .emotes button:focus-visible {
+  outline: 3px solid #7ca68b;
+  outline-offset: 3px;
+}
+
+.room-page .emotes svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
+}
+
+.room-page .emotes button span {
+  display: block;
+}
+
+/* Actions should never compete with a panel or the active furniture editor. */
+.panel-open .room-page .emotes,
+.room-page:has(.room-world.editing) .emotes,
+.room-page:has(.placement-bar:not([hidden])) .emotes {
+  display: none;
+}
+
+/* The parent can add this alongside .placement-bar when editing is active. */
+.room-page .edit-mode-bar {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: 113px;
+  left: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: max-content;
+  max-width: calc(100% - 30px);
+  margin: 0 auto;
+  padding: 9px 10px 9px 16px;
+  border: 1px solid #d5dcc5;
+  border-radius: 18px 21px 19px 22px;
+  background: #fbfaf2f5;
+  box-shadow: var(--shadow);
+}
+
+.room-page:has(.room-world.editing) .edit-mode-bar {
+  display: flex;
+}
+
+.room-page:has(.placement-bar:not([hidden])) .edit-mode-bar {
+  display: none;
+}
+
+.room-page .edit-mode-bar span {
+  color: #65725f;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.room-page .edit-mode-bar button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-color: var(--green);
+  border-radius: 14px 16px 13px 15px;
+  background: var(--green);
+  color: #fffbed;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .room-page .emotes {
+    bottom: 105px;
+    gap: 8px;
+  }
+
+  .room-page .emotes button {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    min-height: 58px;
+    padding: 7px 3px;
+  }
+
+  .room-page .emotes button span {
+    display: inline;
+    font-size: 10px;
+  }
+
+  .room-page .emotes svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .room-page .edit-mode-bar {
+    bottom: 95px;
+    width: calc(100% - 24px);
+    max-width: none;
+    justify-content: space-between;
+    padding-left: 14px;
+  }
+
+  .room-page .edit-mode-bar button {
+    flex: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .room-page .emotes {
+    gap: 5px;
+  }
+
+  .room-page .emotes button {
+    padding-right: 8px;
+    padding-left: 8px;
+    gap: 5px;
+    font-size: 10px;
+  }
+}
+
+@media (max-height: 570px) and (min-width: 601px) {
+  .room-page .emotes {
+    right: 20px;
+    bottom: 20px;
+    left: auto;
+  }
+
+  .room-page .edit-mode-bar {
+    right: 20px;
+    bottom: 80px;
+    left: auto;
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-page .emotes button {
+    transition: none;
+  }
+
+  .room-page .emotes button:hover,
+  .room-page .emotes button:nth-child(2):hover {
+    transform: none;
+  }
+}

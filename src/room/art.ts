@@ -68,7 +68,7 @@ export class RoomArt {
     parent.add(mesh);
     return mesh;
   }
-  static furniture(def: FurnitureDefinition): THREE.Group {
+  static furniture(def: FurnitureDefinition, lampOn = false): THREE.Group {
     const g = new THREE.Group(),
       w = def.width,
       d = def.depth,
@@ -163,8 +163,30 @@ export class RoomArt {
     if (def.kind === "lamp") {
       this.cylinder(g, 0.24, 0.28, 0.08, 0x8e7651, 0, 0.04);
       this.cylinder(g, 0.027, 0.027, 1.5, 0xa78b5b, 0, 0.8);
-      this.cylinder(g, 0.22, 0.33, 0.42, c, 0, 1.63);
-      this.ball(g, 0.16, 0.06, 0.16, 0xffe9ae, 0, 1.43);
+      const shade = this.cylinder(g, 0.22, 0.33, 0.42, c, 0, 1.63);
+      const bulb = this.ball(g, 0.16, 0.06, 0.16, 0xffe9ae, 0, 1.43);
+      if (lampOn) {
+        shade.material.emissive.set(0xffb94e);
+        shade.material.emissiveIntensity = 0.8;
+        bulb.material.emissive.set(0xffe9ae);
+        bulb.material.emissiveIntensity = 2;
+        const light = new THREE.PointLight(0xffc977, 5, 4, 2);
+        light.position.set(0, 1.35, 0);
+        g.add(light);
+        // A soft pool keeps the on/off state readable in this sunlit room.
+        const glow = new THREE.Mesh(
+          new THREE.CircleGeometry(0.8, 40),
+          new THREE.MeshBasicMaterial({
+            color: 0xffd589,
+            transparent: true,
+            opacity: 0.22,
+            depthWrite: false,
+          }),
+        );
+        glow.rotation.x = -Math.PI / 2;
+        glow.position.y = 0.025;
+        g.add(glow);
+      }
       return g;
     }
     if (def.kind === "plant") {
@@ -332,6 +354,7 @@ export class AnimalRig {
   private jumpTime = 0;
   private waveTime = 0;
   private petTime = 0;
+  private petBody = false;
   constructor(
     color: THREE.ColorRepresentation,
     shape: "fox" | "cat" | "bunny" = "fox",
@@ -379,6 +402,7 @@ export class AnimalRig {
       arm.position.set(s * 0.23, 0.73, 0);
       this.body.add(arm);
       a.ball(arm, 0.08, 0.2, 0.09, color, s * 0.035, -0.15, 0);
+      a.ball(arm, 0.09, 0.085, 0.095, cream, s * 0.04, -0.3, 0.015);
       this.arms.push(arm);
     }
     const tail = a.ball(
@@ -402,43 +426,83 @@ export class AnimalRig {
       a.ball(this.body, 0.1, 0.06, 0.045, 0xba7867, 0.05, 1.27, 0.15);
     }
     if (pet) {
+      this.petBody = true;
       this.root.scale.setScalar(0.6);
       this.body.rotation.x = 0.08;
     }
   }
   jump() {
-    this.jumpTime = 0.65;
+    this.jumpTime = 0.9;
   }
   wave() {
     this.waveTime = 1.5;
   }
   pet() {
     this.petTime = 1.8;
-    this.jumpTime = 0.5;
+    this.jump();
   }
   update(dt: number, moving: boolean, reduced: boolean) {
     this.phase += dt * (moving ? 10 : 2);
     this.jumpTime = Math.max(0, this.jumpTime - dt);
     this.waveTime = Math.max(0, this.waveTime - dt);
     this.petTime = Math.max(0, this.petTime - dt);
+    const progress = this.jumpTime > 0 ? 1 - this.jumpTime / 0.9 : 1;
+    const strength = reduced ? 0.25 : 1;
+    const crouch = progress < 0.18 ? Math.sin((progress / 0.18) * Math.PI) : 0;
+    const flight =
+      progress >= 0.18 && progress < 0.8
+        ? Math.sin(((progress - 0.18) / 0.62) * Math.PI)
+        : 0;
+    const landing =
+      progress >= 0.8 && progress < 1
+        ? Math.sin(((progress - 0.8) / 0.2) * Math.PI)
+        : 0;
+    const squash = (crouch * 0.18 + landing * 0.16) * strength;
+    const stretch = flight * 0.08 * strength;
+    this.body.scale.set(
+      1 + squash * 0.5 - stretch * 0.5,
+      1 - squash + stretch,
+      1 + squash * 0.5,
+    );
     this.body.position.y =
-      this.jumpTime > 0
-        ? Math.sin((this.jumpTime / 0.65) * Math.PI) * 0.5
-        : moving && !reduced
+      flight * 0.62 * strength +
+      (this.jumpTime === 0 && !reduced
+        ? moving
           ? Math.abs(Math.sin(this.phase)) * 0.035
-          : !reduced
-            ? Math.sin(this.phase) * 0.007
-            : 0;
+          : Math.sin(this.phase) * 0.007
+        : 0);
+    this.body.rotation.x = (this.petBody ? 0.08 : 0) - flight * 0.12 * strength;
     this.legs.forEach(
       (l, i) =>
-        (l.rotation.x = moving ? Math.sin(this.phase + i * Math.PI) * 0.6 : 0),
+        (l.rotation.x =
+          flight > 0
+            ? (-0.8 + i * 0.25) * flight * strength
+            : moving
+              ? Math.sin(this.phase + i * Math.PI) * 0.6 * (reduced ? 0.4 : 1)
+              : 0),
     );
     this.arms.forEach((a, i) => {
-      a.rotation.x = moving ? Math.sin(this.phase + i * Math.PI) * -0.45 : 0;
+      a.rotation.x =
+        flight > 0
+          ? -flight * 0.35 * strength
+          : moving
+            ? Math.sin(this.phase + i * Math.PI) * -0.45
+            : 0;
+      const waveBlend = Math.min(
+        1,
+        (1.5 - this.waveTime) / 0.15,
+        this.waveTime / 0.2,
+      );
+      a.position.y =
+        0.73 + (i === 1 && this.waveTime > 0 ? waveBlend * 0.18 : 0);
       a.rotation.z =
         i === 1 && this.waveTime > 0
-          ? -0.95 + Math.sin(this.waveTime * 16) * 0.3
-          : 0;
+          ? (2.25 +
+              Math.sin(this.waveTime * (reduced ? 5 : 16)) *
+                (reduced ? 0.08 : 0.25)) *
+            waveBlend
+          : (i === 1 ? 1 : -1) * flight * 0.6 * strength;
+      if (i === 1 && this.waveTime > 0) a.rotation.x = -0.15;
     });
   }
 }

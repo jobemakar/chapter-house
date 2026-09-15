@@ -15,6 +15,8 @@ export interface OwnedItem {
   id: string;
   definitionId: string;
   placement: Placement | null;
+  /** Optional additive v1 field: old saves start with lamps off. */
+  lampOn?: boolean;
 }
 export interface Profile {
   version: 1;
@@ -173,6 +175,9 @@ export class ProfileRepository {
             return {
               id: String(item.id),
               definitionId: String(item.definitionId),
+              ...(getFurniture(String(item.definitionId))?.kind === "lamp"
+                ? { lampOn: item.lampOn === true }
+                : {}),
               placement:
                 item.placement &&
                 typeof p.x === "number" &&
@@ -222,6 +227,14 @@ export class ProfileRepository {
     }
     if (notify) for (const listener of this.listeners) listener();
     return this.saved;
+  }
+  toggleLamp(id: string): boolean | null {
+    const item = this.state.items.find((item) => item.id === id);
+    if (!item?.placement || getFurniture(item.definitionId)?.kind !== "lamp")
+      return null;
+    item.lampOn = !item.lampOn;
+    this.save();
+    return item.lampOn;
   }
   syncKeepsakes(notify = true): void {
     for (const item of furniture) {

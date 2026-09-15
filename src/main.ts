@@ -5,10 +5,12 @@ import {
   type OwnedItem,
 } from "./core/profile";
 import { ClubhouseRoom } from "./room/room";
+import { RoomAudio } from "./room/audio";
 import { CatalogPortraits } from "./room/portraits";
 import { WishboneGame } from "./games/wishbone/game";
 import { furniture, pets, getFurniture } from "./core/catalog";
 import "./styles.css";
+import "./room/actions.css";
 const paths: Record<string, string> = {
   book: "M4 4h6c2 0 2 2 2 2s0-2 2-2h6v15h-6c-2 0-2 2-2 2s0-2-2-2H4z M12 6v15",
   game: "M7 7h10c3 0 5 9 4 11s-4-1-5-3H8c-1 2-4 5-5 3S4 7 7 7z M7 9v5 M4.5 11.5h5 M16 10h.1 M19 13h.1",
@@ -26,6 +28,7 @@ function icon(name: string) {
 }
 class ChapterHouse {
   private profile = new ProfileRepository(browserStorage());
+  private audio = new RoomAudio(this.profile.state.muted);
   private room: ClubhouseRoom;
   private portraits = new CatalogPortraits();
   private game: WishboneGame | null = null;
@@ -77,6 +80,7 @@ class ChapterHouse {
 <button data-action="call" aria-label="Call pet">${icon("paw")}<span>Call pet</span>
 </button>
 </div>
+<div class="edit-mode-bar"><span>Decorating · Tap a piece to move it</span><button data-action="done-decorating">Done</button></div>
 <div class="placement-bar" hidden>
 <div>
 <b data-ui="placing">
@@ -144,16 +148,30 @@ class ChapterHouse {
       this.profile,
       this.notify,
       this.placementChanged,
+      (sound) => this.audio.play(sound),
     );
     root.addEventListener("click", this.click);
     root.addEventListener("change", this.change);
+    root.addEventListener("pointerdown", () => this.audio.unlock(), {
+      capture: true,
+    });
+    root.addEventListener("keydown", () => this.audio.unlock(), {
+      capture: true,
+    });
+    document.addEventListener("visibilitychange", () =>
+      this.audio.setHidden(document.hidden),
+    );
+    this.audio.setHidden(document.hidden);
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !this.game) {
         this.closePanel();
         this.room.cancelPlacement();
       }
     });
-    this.profile.subscribe(() => this.refreshHeader());
+    this.profile.subscribe(() => {
+      this.refreshHeader();
+      this.audio.setMuted(this.profile.state.muted);
+    });
     this.refreshHeader();
     if (!this.profile.state.starterChosen) {
       this.root.querySelector(".starter-options")!.innerHTML = pets
@@ -173,6 +191,7 @@ class ChapterHouse {
       profile: structuredClone(this.profile.state),
       saved: this.profile.saved,
       room: this.room.status(),
+      audio: this.audio.status(),
       game: this.game?.status() ?? null,
     });
     new LocalDiagnostics(debug.chapterHouseStatus);
@@ -199,6 +218,8 @@ class ChapterHouse {
     if (!el || el.closest(".game-page")) return;
     const action = el.dataset.action,
       id = el.dataset.id!;
+    if (!["wave", "jump", "call", "pet", "sound"].includes(action!))
+      this.audio.play("ui");
     if (
       ["games", "decorate", "pets", "style", "shop", "help"].includes(action!)
     ) {
@@ -256,6 +277,9 @@ class ChapterHouse {
         break;
       case "cancel-placement":
         this.room.cancelPlacement();
+        break;
+      case "done-decorating":
+        this.closePanel();
         this.room.setEditing(false);
         break;
       case "undo":
@@ -418,6 +442,7 @@ class ChapterHouse {
   }
   private enterGame() {
     this.closePanel();
+    this.audio.setRoomActive(false);
     this.room.setPaused(true);
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = true;
     const host = this.root.querySelector<HTMLElement>(".game-host")!;
@@ -439,6 +464,7 @@ class ChapterHouse {
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = false;
     this.root.classList.remove("playing");
     this.room.setPaused(false);
+    this.audio.setRoomActive(true);
   }
   private async fullscreen() {
     try {

@@ -27,6 +27,10 @@ Choose Clover the cat or Pip the bunny as a free starter. Tap open floor to walk
 
 Decorate lets you choose furniture, tap its new floor spot, rotate, place, cancel, or store it. Invalid placements preserve the item; Undo reverses the last room edit. Furniture is solid, navigation routes around it, and 3D depth handles occlusion. Floors and walls stay fixed.
 
+Cancel, placement and storage keep decorating active; tap another piece or choose Done to finish. Outside decorating, tap the reading lamp to toggle its locally saved light. Quiet room music begins with your first interaction; the shared sound button controls music and UI/pet/jump sounds. Room music stops while Wishbone is open.
+
+The [feedback pass](docs/feedback-01.md) adds expressive jump/wave poses, stable arrival direction and rounded action buttons. Larger or connected rooms are recorded for later. More avatar accessories are proposed, not included in this polish pass.
+
 Games opens Wishbone Fling. Pull back from the left of its yard, then release. The two original yards, floppy dog, recall, restack, three pocket powers and three collision mechanisms remain. Progress and powerups persist. Fourteen throws earn a Patchwork dog bed; return to Decorate to place it. All nine original keepsakes have floor display models. Game rewards cannot be bought.
 
 Active play earns one coin per ten counted seconds, independent of score. Idle, paused and hidden games stop earning. A fern costs 12, the cheapest additional pet 60; furniture copies are distinct, pet ownership is unique. These are named developer tuning values, not final economy balancing.
@@ -39,6 +43,8 @@ Active play earns one coin per ten counted seconds, independent of score. Idle, 
 - `src/core/catalog.ts`: furniture/pet metadata, prices and legacy reward mapping.
 - `src/room/room.ts`: orthographic Three.js room, actor paths, editor and camera controls.
 - `src/room/navigation.ts`: footprint validation and A*; diagonal corner cutting is rejected.
+- `src/room/motion.ts`: route following with stable arrival heading.
+- `src/room/audio.ts`: gesture-gated procedural ambient music and interaction sounds.
 - `src/room/art.ts`: reusable 3D furniture and animal rig factories; directional animation uses world rotation.
 - `src/room/portraits.ts`: cached catalog and wardrobe portraits from the actual room models.
 - `src/games/wishbone/`: explicit typed physics, articulated dog, powers, renderer, progression, audio and session controller. No iframe, legacy script imports or global script ordering.

@@ -99,13 +99,37 @@ export class RoomNavigation {
       }
     }
     if (!finish) return [];
-    const path: Point[] = [end];
+    const path: Point[] = [];
     while (finish !== key(sx, sz)) {
       const [x, z] = finish.split(",").map(Number);
       path.push({ x: x * step, z: z * step });
       finish = previous.get(finish)!;
     }
-    return path.reverse();
+    path.reverse();
+    // Join the real click to the final approach instead of adding a tiny sideways
+    // grid-to-click leg. Keep the corner waypoint when that join is obstructed.
+    if (path.length) {
+      const from = path.length > 1 ? path[path.length - 2] : start;
+      const samples = Math.max(
+        1,
+        Math.ceil(Math.hypot(end.x - from.x, end.z - from.z) / 0.04),
+      );
+      let clear = true;
+      for (let i = 1; i <= samples; i++) {
+        if (
+          !this.walkable({
+            x: from.x + ((end.x - from.x) * i) / samples,
+            z: from.z + ((end.z - from.z) * i) / samples,
+          })
+        ) {
+          clear = false;
+          break;
+        }
+      }
+      if (clear) path.pop();
+    }
+    path.push({ ...end });
+    return path;
   }
   validate(
     item: OwnedItem,

@@ -2,7 +2,7 @@
 
 ## Automated checks
 
-`npm run typecheck`, `npm test`, and `npm run build` are the reproducible commands. The suite currently contains 24 checks:
+`npm run typecheck`, `npm test`, and `npm run build` are the reproducible commands. The suite currently contains 35 checks:
 
 - Both yards clear with ordinary throws. Fixed-step outcomes agree at 30/60/120 Hz presentation rates; joints stay attached while independently flopping.
 - The TypeScript trajectories and rescued targets match the retained JavaScript baseline in both yards. This comparison ran with the original sibling repository present.
@@ -29,6 +29,17 @@ Codex's Chromium-based in-app browser was used to inspect and operate the applic
 
 ## Remaining validation
 
+### Clubhouse feedback pass
+
+Implemented ambient room music and six distinct interaction sounds; gesture unlock, mute, background suspension and game transitions share the existing setting. Automated audio tests use a simulated AudioContext, including delayed suspend, rapid unmute and rejected resume. Browser diagnostics confirmed ambient playback scheduling, zero room voices while muted/in Wishbone, and resumption on return. Actual speaker listening remains outstanding.
+
+Arrival tests cover all eight directions and duplicate terminal route points. Jump tests check crouch, airborne articulation, reduced-motion amplitude and full settling; wave tests check a paw outside the torso. Lamp tests cover old saves, separate owned copies, malformed values, storage and reload.
+
+Browser regression: opened Decorate, tapped the sofa in the world, canceled, then tapped the fern successfully without leaving editing. Canceled again and finished with Done. Tapped the lamp and reloaded: its light state persisted. Inspected round actions at 1081×938, 390×844 and 844×390; phone placement controls remained available without action-button overlap. No application errors were reported in the browser console. This pass does not certify physical-device ergonomics or audio quality.
+
+The primary agent planned, implemented motion/rig/save/editor changes, integrated and reviewed bounded sound/button work from less expensive implementation agents, and ran the full tests/build and browser checks.
+
 No physical iPhone, Android or iPad was available for this pass. Viewport emulation does not certify mobile GPU frame rate, Safari fullscreen behavior, actual touch ergonomics, audio quality, or child playtesting. Synthesized audio is retained and its lifecycle is exercised, but it was not listened to through speakers. Multiplayer, concurrent-account writes, disconnect recovery, Firebase costs and online presence are outside this local checkpoint.
 
 The complete larger first slice is still gated on checkpoint B (real accounts and shared visits) and user review. No deployment was performed.
+

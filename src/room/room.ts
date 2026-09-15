@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
+import { RouteMotion } from "./motion";
+import type { RoomSound } from "./audio";
 import { RoomNavigation, ROOM, footprint } from "./navigation";
 import { getFurniture, getPet } from "../core/catalog";
 import {
@@ -40,6 +42,7 @@ export class ClubhouseRoom {
   private abort = new AbortController();
   private unsub: () => void;
   private signature = "";
+  private layoutSignature = "";
   private appearance = "";
   private draft: Draft | null = null;
   private editing = false;
@@ -63,6 +66,7 @@ export class ClubhouseRoom {
     private profile: ProfileRepository,
     private notify: (text: string) => void,
     private editChanged: (item: OwnedItem | null, error: string | null) => void,
+    private sound: (sound: RoomSound) => void = () => {},
   ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -216,13 +220,26 @@ export class ClubhouseRoom {
       this.furnitureRoot.clear();
       for (const item of state.items) {
         if (!item.placement) continue;
-        const group = RoomArt.furniture(getFurniture(item.definitionId)!);
+        const group = RoomArt.furniture(
+          getFurniture(item.definitionId)!,
+          item.lampOn,
+        );
         group.position.set(item.placement.x, 0, item.placement.z);
         group.rotation.y = (item.placement.rotation * Math.PI) / 2;
         group.userData.itemId = item.id;
         this.furnitureRoot.add(group);
       }
-      this.actors().forEach((a) => (a.path = []));
+      const layout = JSON.stringify(
+        state.items.map(({ id, definitionId, placement }) => ({
+          id,
+          definitionId,
+          placement,
+        })),
+      );
+      if (layout !== this.layoutSignature) {
+        this.layoutSignature = layout;
+        this.actors().forEach((a) => (a.path = []));
+      }
     }
     const appearance = JSON.stringify(state.avatar);
     if (appearance !== this.appearance) {
@@ -235,6 +252,7 @@ export class ClubhouseRoom {
         "fox",
         state.avatar.accessory,
       );
+      this.avatar.rig.root.rotation.y = old.root.rotation.y;
       this.scene.add(this.avatar.rig.root);
     }
     for (const pet of this.pets.filter(
@@ -349,7 +367,15 @@ export class ClubhouseRoom {
           this.beginPlacement(o.userData.itemId);
           return;
         }
-        if (o?.userData.itemId) break;
+        if (o?.userData.itemId) {
+          const on = this.profile.toggleLamp(o.userData.itemId);
+          if (on !== null) {
+            this.sound("lamp");
+            this.notify(on ? "A little warm light." : "Lamp switched off.");
+            return;
+          }
+          break;
+        }
       }
     }
     if (!this.ray.ray.intersectPlane(this.plane, this.target)) return;
@@ -380,7 +406,7 @@ export class ClubhouseRoom {
     this.cancelPlacement();
     const item = this.profile.state.items.find((i) => i.id === id);
     if (!item) return;
-    this.editing = true;
+    this.setEditing(true);
     const def = getFurniture(item.definitionId)!;
     const placement = item.placement
       ? { ...item.placement }
@@ -447,7 +473,6 @@ export class ClubhouseRoom {
     d.item.placement = { ...d.placement };
     this.cancelPlacement();
     this.profile.save();
-    this.setEditing(false);
     this.notify("A lovely spot. Saved.");
   }
   storeSelected() {
@@ -456,7 +481,6 @@ export class ClubhouseRoom {
     this.draft.item.placement = null;
     this.cancelPlacement();
     this.profile.save();
-    this.setEditing(false);
     this.notify("Stored safely in Decorate.");
   }
   private remember() {
@@ -490,19 +514,23 @@ export class ClubhouseRoom {
   }
   wave() {
     this.avatar.rig.wave();
+    this.sound("wave");
   }
   jump() {
     this.avatar.rig.jump();
+    this.sound("jump");
   }
   pet(id: string) {
     const pet = this.pets.find((p) => p.id === id);
     if (!pet) return;
     pet.rig.pet();
+    this.sound("pet");
     pet.wait = 3;
     pet.path = [];
     this.notify(`${getPet(pet.id)!.name} loved that. ♥`);
   }
   callPets() {
+    this.sound("call");
     for (const pet of this.pets) {
       pet.path = this.nav.path(pet.point, this.freeNear(this.avatar.point));
       pet.wait = 4;
@@ -530,28 +558,18 @@ export class ClubhouseRoom {
             actor.wait = 3 + Math.random() * 4;
           }
         }
-        const dest = actor.path[0];
-        if (dest && !this.draft) {
-          const dx = dest.x - actor.point.x,
-            dz = dest.z - actor.point.z,
-            distance = Math.hypot(dx, dz),
-            step = dt * (actor === this.avatar ? 2.35 : 0.8);
-          if (distance <= step) {
-            actor.point = { ...dest };
-            actor.path.shift();
-          } else {
-            actor.point.x += (dx / distance) * step;
-            actor.point.z += (dz / distance) * step;
-          }
-          const angle = Math.atan2(dx, dz);
-          const change = Math.atan2(
-            Math.sin(angle - actor.rig.root.rotation.y),
-            Math.cos(angle - actor.rig.root.rotation.y),
-          );
-          actor.rig.root.rotation.y += change * Math.min(1, dt * 14);
-        }
+        const motion = !this.draft
+          ? RouteMotion.step(
+              actor.point,
+              actor.path,
+              actor.rig.root.rotation.y,
+              actor === this.avatar ? 2.35 : 0.8,
+              dt,
+            )
+          : { facing: actor.rig.root.rotation.y, moved: false };
+        actor.rig.root.rotation.y = motion.facing;
         actor.rig.root.position.set(actor.point.x, 0, actor.point.z);
-        actor.rig.update(dt, !!dest && !this.draft, this.profile.state.reduced);
+        actor.rig.update(dt, motion.moved, this.profile.state.reduced);
       }
       this.destinationAge -= dt;
       if (this.destinationAge <= 0) this.destination.visible = false;
@@ -562,6 +580,8 @@ export class ClubhouseRoom {
   status() {
     return {
       avatar: { ...this.avatar.point },
+      facing: this.avatar.rig.root.rotation.y,
+      editing: this.editing,
       walking: this.avatar.path.length > 0,
       pets: this.pets.map((p) => ({ id: p.id, ...p.point })),
       placing: this.draft?.item.id ?? null,
