@@ -5,6 +5,7 @@ import { InteractiveFurnishing } from "./furnishings";
 import { ActorReaction, type ReactionKind } from "./reactions";
 import type { RoomSound } from "./audio";
 import { RoomNavigation, ROOM, footprint } from "./navigation";
+import { PetAssets, PetRig, type PetAssetKey } from "./pet-assets";
 import { getFurniture, getPet } from "../core/catalog";
 import {
   ProfileRepository,
@@ -12,8 +13,8 @@ import {
   type Point,
   type Placement,
 } from "../core/profile";
-interface Actor {
-  rig: AnimalRig;
+interface Actor<Rig extends AnimalRig | PetRig = AnimalRig | PetRig> {
+  rig: Rig;
   point: Point;
   path: Point[];
   wait: number;
@@ -58,8 +59,8 @@ export class ClubhouseRoom {
     arrived: boolean;
     facing: number;
   } | null = null;
-  private avatar: Actor;
-  private pets: Actor[] = [];
+  private avatar: Actor<AnimalRig>;
+  private pets: Actor<AnimalRig | PetRig>[] = [];
   private ray = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   private target = new THREE.Vector3();
@@ -94,6 +95,7 @@ export class ClubhouseRoom {
     private notify: (text: string) => void,
     private editChanged: (item: OwnedItem | null, error: string | null) => void,
     private sound: (sound: RoomSound) => void = () => {},
+    private petAssets: PetAssets = new PetAssets(),
   ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -238,6 +240,39 @@ export class ClubhouseRoom {
   private actors() {
     return [this.avatar, ...this.pets];
   }
+  private createPetRig(id: string): AnimalRig | PetRig {
+    const def = getPet(id)!;
+    if (id === "cat" || id === "bunny" || id === "fox") {
+      try {
+        return this.petAssets.create(id as PetAssetKey);
+      } catch {
+        // The room is usable immediately while the local GLBs load, and this
+        // procedural stand-in remains available if they fail.
+      }
+    }
+    return new AnimalRig(def.color, def.shape, "none", true);
+  }
+  private releasePetRig(rig: AnimalRig | PetRig) {
+    rig.root.removeFromParent();
+    if (rig instanceof PetRig) rig.dispose();
+    else RoomArt.release(rig.root);
+  }
+  /** Swap initial stand-ins after the shared application asset load resolves. */
+  useLoadedPetAssets() {
+    for (const pet of this.pets) {
+      if (pet.rig instanceof PetRig) continue;
+      const previous = pet.rig;
+      const replacement = this.createPetRig(pet.id);
+      if (!(replacement instanceof PetRig)) continue;
+      replacement.root.position.copy(previous.root.position);
+      replacement.root.rotation.copy(previous.root.rotation);
+      const reaction = this.reactions.get(pet);
+      if (reaction) replacement.root.add(reaction.sprite);
+      this.releasePetRig(previous);
+      pet.rig = replacement;
+      this.scene.add(replacement.root);
+    }
+  }
   private refresh() {
     const state = this.profile.state,
       key = JSON.stringify(state.items);
@@ -300,14 +335,12 @@ export class ClubhouseRoom {
     for (const pet of this.pets.filter(
       (p) => !state.activePets.includes(p.id),
     )) {
-      this.scene.remove(pet.rig.root);
-      RoomArt.release(pet.rig.root);
+      this.releasePetRig(pet.rig);
     }
     this.pets = this.pets.filter((p) => state.activePets.includes(p.id));
     for (const id of state.activePets) {
       if (this.pets.some((p) => p.id === id)) continue;
-      const def = getPet(id)!;
-      const rig = new AnimalRig(def.color, def.shape, "none", true);
+      const rig = this.createPetRig(id);
       rig.root.userData.petId = id;
       const point = this.freeNear(this.avatar.point);
       const actor = { id, rig, point, path: [], wait: 1, following: false };
@@ -530,6 +563,7 @@ export class ClubhouseRoom {
   private cancelPetPlay() {
     if (!this.petPlay) return;
     const pet = this.petPlay.pet;
+    if (pet.rig instanceof PetRig) pet.rig.setActivity(null);
     pet.path = [];
     pet.wait = 3;
     if (this.petPlay.kind === "bowl") {
@@ -558,8 +592,12 @@ export class ClubhouseRoom {
           play.center.z - play.approach.z,
         );
         this.showReaction(play.pet, "nom");
+        if (play.pet.rig instanceof PetRig) play.pet.rig.setActivity("eat");
         this.notify(`${getPet(play.pet.id)!.name}: nom nom!`);
-      } else this.furnishings.get(play.itemId)!.interact();
+      } else {
+        if (play.pet.rig instanceof PetRig) play.pet.rig.setActivity("dance");
+        this.furnishings.get(play.itemId)!.interact();
+      }
     }
     play.time += dt;
     const t = play.time;
@@ -817,7 +855,14 @@ export class ClubhouseRoom {
       })),
       editing: this.editing,
       walking: this.avatar.path.length > 0,
-      pets: this.pets.map((p) => ({ id: p.id, ...p.point })),
+      pets: this.pets.map((p) => ({
+        id: p.id,
+        ...p.point,
+        visual:
+          p.rig instanceof PetRig
+            ? { renderer: "cube-pet", ...p.rig.status() }
+            : { renderer: "procedural-fallback" },
+      })),
       placing: this.draft?.item.id ?? null,
       placementError: this.draft?.error ?? null,
       zoom: this.zoom,
@@ -832,6 +877,8 @@ export class ClubhouseRoom {
     this.abort.abort();
     this.unsub();
     this.observer.disconnect();
+    for (const pet of this.pets) this.releasePetRig(pet.rig);
+    this.pets = [];
     RoomArt.release(this.scene);
     this.renderer.dispose();
     this.host.replaceChildren();

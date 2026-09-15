@@ -1,7 +1,14 @@
 import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
-import { getFurniture, getPet } from "../core/catalog";
-/** Cached portraits share the exact models used in the room and wardrobe. */
+import { getFurniture } from "../core/catalog";
+
+const PET_PORTRAITS: Record<string, string> = {
+  cat: "/assets/pets/previews/animal-cat.png",
+  bunny: "/assets/pets/previews/animal-bunny.png",
+  fox: "/assets/pets/previews/animal-fox.png",
+};
+
+/** Furniture and avatar portraits are rendered locally; pet art is packaged. */
 export class CatalogPortraits {
   private renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -17,11 +24,8 @@ export class CatalogPortraits {
     this.renderer.toneMappingExposure = 1.2;
   }
   image(id: string, pet = false): string {
+    if (pet) return PET_PORTRAITS[id] ?? PET_PORTRAITS.cat;
     return this.portrait((pet ? "pet-" : "") + id, () => {
-      if (pet) {
-        const p = getPet(id)!;
-        return new AnimalRig(p.color, p.shape).root;
-      }
       return RoomArt.furniture(getFurniture(id)!);
     });
   }

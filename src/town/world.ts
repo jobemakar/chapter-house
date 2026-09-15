@@ -6,6 +6,7 @@ import { TownNavigation } from "./navigation";
 import { AnimalRig, RoomArt } from "../room/art";
 import { ActorReaction, type ReactionKind } from "../room/reactions";
 import { RouteMotion } from "../room/motion";
+import { PetAssets, PetRig, type PetAssetKey } from "../room/pet-assets";
 import { getPet } from "../core/catalog";
 import type { ProfileRepository, Point } from "../core/profile";
 
@@ -18,7 +19,8 @@ export class TownWorld {
   private audio: TownAudio;
   private nav = new TownNavigation();
   private avatar: AnimalRig;
-  private pet: AnimalRig | null = null;
+  private pet: AnimalRig | PetRig | null = null;
+  private petId: PetAssetKey | null = null;
   private avatarReaction = new ActorReaction("avatar");
   private petReaction = new ActorReaction("pet");
   private point: Point = { ...TOWN.entry };
@@ -50,6 +52,7 @@ export class TownWorld {
     private profile: ProfileRepository,
     private home: () => void,
     private notify: (text: string) => void,
+    private petAssets: PetAssets = new PetAssets(),
   ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -87,7 +90,8 @@ export class TownWorld {
     this.scene.add(this.avatar.root);
     const selected = getPet(profile.state.activePets[0]);
     if (selected) {
-      this.pet = new AnimalRig(selected.color, selected.shape, "none", true);
+      this.petId = selected.id as PetAssetKey;
+      this.pet = this.createPetRig(this.petId);
       this.pet.root.userData.kind = "pet";
       this.pet.root.add(this.petReaction.sprite);
       this.scene.add(this.pet.root);
@@ -214,6 +218,29 @@ export class TownWorld {
       });
     this.resize();
     this.raf = requestAnimationFrame(this.frame);
+  }
+  private createPetRig(id: PetAssetKey): AnimalRig | PetRig {
+    const selected = getPet(id)!;
+    try {
+      return this.petAssets.create(id);
+    } catch {
+      return new AnimalRig(selected.color, selected.shape, "none", true);
+    }
+  }
+  /** Swap the initial stand-in if the shared pet package loaded after entry. */
+  useLoadedPetAssets() {
+    if (!this.pet || !this.petId || this.pet instanceof PetRig) return;
+    const previous = this.pet;
+    const replacement = this.createPetRig(this.petId);
+    if (!(replacement instanceof PetRig)) return;
+    replacement.root.position.copy(previous.root.position);
+    replacement.root.rotation.copy(previous.root.rotation);
+    replacement.root.userData.kind = "pet";
+    replacement.root.add(this.petReaction.sprite);
+    previous.root.removeFromParent();
+    RoomArt.release(previous.root);
+    this.pet = replacement;
+    this.scene.add(replacement.root);
   }
   setMuted(value: boolean) {
     this.audio.setMuted(value);
@@ -392,6 +419,12 @@ export class TownWorld {
       coinFlipping: this.coinCooldown > 0,
       audio: this.audio.status(),
       scenery: this.art.status(),
+      pet:
+        this.pet instanceof PetRig
+          ? { id: this.petId, renderer: "cube-pet", ...this.pet.status() }
+          : this.pet
+            ? { id: this.petId, renderer: "procedural-fallback" }
+            : null,
     };
   }
   dispose() {
@@ -403,6 +436,12 @@ export class TownWorld {
     this.avatarReaction.dispose();
     this.petReaction.dispose();
     this.art.dispose();
+    if (this.pet) {
+      this.pet.root.removeFromParent();
+      if (this.pet instanceof PetRig) this.pet.dispose();
+      else RoomArt.release(this.pet.root);
+      this.pet = null;
+    }
     RoomArt.release(this.scene);
     this.renderer.dispose();
     this.host.replaceChildren();

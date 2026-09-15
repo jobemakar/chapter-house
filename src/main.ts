@@ -7,6 +7,7 @@ import {
 import { ClubhouseRoom } from "./room/room";
 import { RoomAudio } from "./room/audio";
 import { CatalogPortraits } from "./room/portraits";
+import { PetAssets } from "./room/pet-assets";
 import { WishboneGame } from "./games/wishbone/game";
 import { TownWorld } from "./town/world";
 import { furniture, pets, getFurniture } from "./core/catalog";
@@ -31,6 +32,7 @@ function icon(name: string) {
 class ChapterHouse {
   private profile = new ProfileRepository(browserStorage());
   private audio = new RoomAudio(this.profile.state.muted);
+  private petAssets = new PetAssets();
   private room: ClubhouseRoom;
   private portraits = new CatalogPortraits();
   private game: WishboneGame | null = null;
@@ -160,7 +162,20 @@ class ChapterHouse {
       this.notify,
       this.placementChanged,
       (sound) => this.audio.play(sound),
+      this.petAssets,
     );
+    void this.petAssets
+      .load()
+      .then(() => {
+        this.room.useLoadedPetAssets();
+        this.town?.useLoadedPetAssets();
+      })
+      .catch((error: unknown) => {
+        console.error("Cube Pets failed to load", error);
+        this.notify(
+          "The new pets couldn't load, so their cozy stand-ins are still here.",
+        );
+      });
     root.addEventListener("click", this.click);
     root.addEventListener("change", this.change);
     root.addEventListener("pointerdown", () => this.audio.unlock(), {
@@ -579,6 +594,7 @@ class ChapterHouse {
       this.profile,
       () => this.leaveTown(),
       this.notify,
+      this.petAssets,
     );
   }
   private leaveTown() {
