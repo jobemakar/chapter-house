@@ -176,24 +176,18 @@ function prop(c: CanvasRenderingContext2D, b: PieceBody, life: Life) {
     ellipse(c, -w / 2 + 11, 1, 2, 2, "#735443");
     ellipse(c, w / 2 - 11, 1, 2, 2, "#735443");
   } else if (p.kind === "bucket") {
-    round(c, -w / 2 + 2, -h / 2 + 3, w - 4, h - 6, 8, "#8ba8aa", "#576f70");
-    round(c, -w / 2, -h / 2, w, 8, 3, "#bed0c3", "#667d7a");
-    line(
-      c,
-      [
-        [-17, -21],
-        [-17, 23],
-      ],
-      "#d1e0ca88",
-      5,
-    );
-    c.beginPath();
-    c.arc(0, -2, 20, 0, Math.PI);
-    c.strokeStyle = "#637d7c";
-    c.lineWidth = 3;
-    c.stroke();
-    ellipse(c, -20, -2, 3, 3, "#e8e4c8");
-    ellipse(c, 20, -2, 3, 3, "#e8e4c8");
+    // These keep the legacy "bucket" physics kind but read as magnetic blocks.
+    round(c, -w / 2, -h / 2, w, h, 5, "#78959a", "#405b62");
+    round(c, -w / 2 + 4, -h / 2 + 4, w - 8, h - 8, 3, "#a8c2c0", "#55737a");
+    c.fillStyle = "#e7f0df88";
+    c.fillRect(-w / 2 + 8, -h / 2 + 7, w - 16, 6);
+    c.fillStyle = "#48676f66";
+    c.fillRect(-w / 2 + 7, 2, w - 14, h / 2 - 6);
+    for (const x of [-w / 2 + 8, w / 2 - 8])
+      for (const y of [-h / 2 + 8, h / 2 - 8]) {
+        ellipse(c, x, y, 3, 3, "#e9e6ca");
+        ellipse(c, x - 0.7, y - 0.7, 1, 1, "#ffffff");
+      }
   } else if (p.kind === "cushion") {
     round(c, -w / 2, -h / 2, w, h, 12, "#de8e87", "#aa6d65");
     line(
@@ -262,10 +256,36 @@ function gadgets(
       yard.polarity === 0
         ? "MAGNET OFF"
         : yard.polarity === 1
-          ? "PULL IN +"
-          : "PUSH OUT -",
-      f.x,
-      f.y - f.r - 12,
+          ? "PULL IN"
+          : "PUSH OUT",
+      f.x + 90,
+      f.y - 6,
+    );
+    // A clear red horseshoe at the field centre, connected to its control.
+    c.save();
+    c.translate(f.x, f.y);
+    c.rotate(-0.22);
+    c.beginPath();
+    c.moveTo(-23, -22);
+    c.lineTo(-23, 5);
+    c.arc(0, 5, 23, Math.PI, 0, true);
+    c.lineTo(23, -22);
+    c.strokeStyle = "#c9473e";
+    c.lineWidth = 15;
+    c.lineCap = "round";
+    c.stroke();
+    c.lineCap = "butt";
+    round(c, -30, -28, 14, 14, 3, "#e7e7d9", "#657579");
+    round(c, 16, -28, 14, 14, 3, "#e7e7d9", "#657579");
+    c.restore();
+    line(
+      c,
+      [
+        [f.x + 17, f.y + 26],
+        [button.x - 22, button.y + 12],
+      ],
+      "#5d746b",
+      2,
     );
     round(c, button.x - 28, button.y - 1, 56, 32, 10, "#688e85", "#3f685d");
     ellipse(
@@ -277,9 +297,13 @@ function gadgets(
       yard.polarity === -1 ? "#df927c" : "#a4d0b6",
     );
     c.fillStyle = "#304c43";
-    c.font = "bold 20px DM";
+    c.font = "bold 16px DM";
     c.textAlign = "center";
-    c.fillText("+ / -", button.x, button.y + 2);
+    c.fillText(
+      yard.polarity === 0 ? "↔ OFF" : yard.polarity === 1 ? "⇢ PULL" : "⇠ PUSH",
+      button.x,
+      button.y + 3,
+    );
     for (const b of yard.pieces)
       if (b.game.kind === "bucket") {
         line(
@@ -332,29 +356,42 @@ function gadgets(
   if (yard.hasMechanism("bellows")) {
     const b = yard.bellows.position,
       compressed = yard.time - yard.bellowsAt < 0.3;
+    // Physics keeps its established bellows identifier; the player sees a spring pad.
+    round(c, b.x - 42, b.y + 17, 84, 15, 7, "#526d77", "#354f58");
+    line(
+      c,
+      [
+        [b.x - 29, b.y + 17],
+        [b.x - 18, compressed ? b.y + 9 : b.y - 2],
+        [b.x - 7, b.y + 17],
+        [b.x + 4, compressed ? b.y + 9 : b.y - 2],
+        [b.x + 15, b.y + 17],
+        [b.x + 26, compressed ? b.y + 9 : b.y - 2],
+        [b.x + 31, b.y + 17],
+      ],
+      "#e6d66f",
+      4,
+    );
     round(
       c,
-      b.x - 37,
-      compressed ? b.y + 6 : b.y - 4,
-      74,
-      compressed ? 12 : 22,
+      b.x - 38,
+      compressed ? b.y + 3 : b.y - 11,
+      76,
+      17,
       8,
-      "#c29cce",
-      "#815f8e",
+      "#df7954",
+      "#954f45",
     );
     line(
       c,
       [
-        [b.x - 30, b.y + 6],
-        [b.x - 16, b.y - 1],
-        [b.x - 2, b.y + 6],
-        [b.x + 12, b.y - 1],
-        [b.x + 25, b.y + 6],
+        [b.x - 25, compressed ? b.y + 11 : b.y - 3],
+        [b.x + 24, compressed ? b.y + 11 : b.y - 3],
       ],
-      "#f1d8e8",
-      3,
+      "#ffd59b",
+      2,
     );
-    gadgetLabel(c, "BELLOWS", b.x, b.y + 62);
+    gadgetLabel(c, "SPRING PAD", b.x, b.y + 62);
     if (yard.time < yard.gustUntil)
       for (let i = 0; i < 5; i++) {
         const x = b.x - 50 + i * 25,
@@ -477,10 +514,12 @@ export class WishboneRenderer {
     dt: number,
     reduced: boolean,
     paused: boolean,
+    camera?: { x: number; y: number; zoom: number },
   ) {
     const c = this.c,
       W = 1200,
       H = 720;
+    const view = camera ?? { x: W / 2, y: H / 2, zoom: 1 };
     if (!paused) this.clock += dt;
     c.setTransform(this.canvas.width / W, 0, 0, this.canvas.height / H, 0, 0);
     c.clearRect(0, 0, W, H);
@@ -492,8 +531,12 @@ export class WishboneRenderer {
       );
       this.shake = Math.max(0, this.shake - dt * 18);
     }
+    // The painted distance deliberately moves less than the playable yard.
+    // Overscan prevents an exposed edge when the camera reaches a boundary.
+    const farX = (W / 2 - view.x) * (reduced ? 0 : 0.2);
+    const farY = (H / 2 - view.y) * (reduced ? 0 : 0.2);
     if (this.background.complete && this.background.naturalWidth)
-      c.drawImage(this.background, 0, 0, W, H);
+      c.drawImage(this.background, -120 + farX, -72 + farY, W + 240, H + 144);
     else {
       c.fillStyle = "#dce8d0";
       c.fillRect(0, 0, W, H);
@@ -504,15 +547,51 @@ export class WishboneRenderer {
     wash.addColorStop(1, "#fbf7e608");
     c.fillStyle = wash;
     c.fillRect(0, 0, W, 600);
+    const nearX = (W / 2 - view.x) * (reduced ? 0 : 0.72);
+    const nearY = (H / 2 - view.y) * (reduced ? 0 : 0.72);
+    c.save();
+    c.beginPath();
+    c.rect(0, 575, W, H - 575);
+    c.clip();
     c.fillStyle = "#8cac7340";
-    c.fillRect(0, 601, 1200, 119);
+    c.fillRect(-160 + nearX, 601 + nearY, W + 320, 160);
+    // A soft near-grass fringe has depth without competing with the physical floor.
+    for (let y = 618; y < 720; y += 26) {
+      c.strokeStyle = "#e2edbd2b";
+      c.lineWidth = 10;
+      c.beginPath();
+      c.moveTo(-120 + nearX, y + nearY);
+      c.bezierCurveTo(
+        280 + nearX,
+        y - 9 + nearY,
+        790 + nearX,
+        y + 8 + nearY,
+        W + 140 + nearX,
+        y - 3 + nearY,
+      );
+      c.stroke();
+    }
+    c.restore();
+    // Every physical thing now shares the camera transform, including flight marks
+    // and labels. UI remains DOM-fixed above this canvas.
+    c.save();
+    c.translate(W / 2, H / 2);
+    c.scale(view.zoom, view.zoom);
+    c.translate(-view.x, -view.y);
+    // The collision floor is part of the world, so shadows and pieces never float
+    // when zooming or panning.
+    const ground = c.createLinearGradient(0, 602, 0, 720);
+    ground.addColorStop(0, "#9cb87a33");
+    ground.addColorStop(1, "#72955d55");
+    c.fillStyle = ground;
+    c.fillRect(0, 602, W, 118);
     line(
       c,
       [
         [20, 602],
         [1180, 602],
       ],
-      "#84956a70",
+      "#71855d99",
       3,
     );
     gadgets(c, yard, this.clock, reduced);
@@ -537,29 +616,11 @@ export class WishboneRenderer {
     line(
       c,
       [
-        [162, 505],
-        [240, 410],
-      ],
-      "#946943",
-      18,
-    );
-    line(
-      c,
-      [
         [163, 567],
         [163, 506],
         [104, 411],
       ],
       "#c6965d",
-      7,
-    );
-    line(
-      c,
-      [
-        [164, 505],
-        [240, 411],
-      ],
-      "#d2a773",
       7,
     );
     const heldX =
@@ -574,7 +635,6 @@ export class WishboneRenderer {
         [
           [104, 410],
           [heldX, heldY + 12],
-          [240, 410],
         ],
         "#754c49",
         8,
@@ -586,7 +646,6 @@ export class WishboneRenderer {
         [
           [104, 410],
           [164, 466],
-          [240, 410],
         ],
         "#754c49",
         6,
@@ -621,7 +680,6 @@ export class WishboneRenderer {
           [
             [104, 410],
             [x, y],
-            [240, 410],
           ],
           "#b8724d",
           5,
@@ -760,6 +818,37 @@ export class WishboneRenderer {
         : 0,
       sway: this.pullSway,
     });
+    // Near fork and band cross the plush to make the pouch visibly sit inside it.
+    if (yard.mode === "ready") {
+      line(
+        c,
+        [
+          [240, 410],
+          [heldX + 12, heldY + 10],
+        ],
+        "#5d3830",
+        7,
+      );
+      line(
+        c,
+        [
+          [162, 506],
+          [240, 410],
+        ],
+        "#765033",
+        19,
+      );
+      line(
+        c,
+        [
+          [164, 505],
+          [240, 411],
+        ],
+        "#d5a873",
+        7,
+      );
+      ellipse(c, 240, 410, 8, 8, "#e0b57c");
+    }
     for (const p of this.particles) {
       if (!paused && !input) {
         p.life -= dt;
@@ -790,6 +879,8 @@ export class WishboneRenderer {
     c.globalAlpha = 1;
     this.labels = this.labels.filter((p) => p.life > 0);
     c.restore();
+    c.restore();
+    c.setTransform(1, 0, 0, 1, 0, 0);
   }
 }
 export function drawItem(

@@ -254,6 +254,19 @@ export class ProfileRepository {
     this.save();
     return true;
   }
+  /** Food only leaves durable bowl state after a room interaction finishes. */
+  emptyBowl(id: string): boolean {
+    const item = this.state.items.find((item) => item.id === id);
+    if (
+      !item?.placement ||
+      getFurniture(item.definitionId)?.kind !== "bowl" ||
+      item.filled !== true
+    )
+      return false;
+    item.filled = false;
+    this.save();
+    return true;
+  }
   syncKeepsakes(notify = true): void {
     for (const item of furniture) {
       if (

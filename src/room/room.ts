@@ -36,10 +36,12 @@ export class ClubhouseRoom {
   private petPlay: {
     pet: Actor;
     itemId: string;
+    kind: "bowl" | "trampoline";
     approach: Point;
     center: Point;
     time: number;
     arrived: boolean;
+    facing: number;
   } | null = null;
   private avatar: Actor;
   private pets: Actor[] = [];
@@ -430,53 +432,92 @@ export class ClubhouseRoom {
       return false;
     const kind = getFurniture(item.definitionId)!.kind;
     if (kind === "bowl") {
-      this.profile.fillBowl(id);
-      this.notify("A bowl full of good things.");
+      if (!item.filled) {
+        this.profile.fillBowl(id);
+        furniture.setFilled(true);
+        this.notify("A bowl full of good things.");
+      } else if (!this.petPlay) {
+        this.startPetPlay(id, "bowl");
+      }
     } else if (kind === "aquarium") {
       furniture.interact();
       this.notify("There they go!");
     } else {
-      this.cancelPetPlay();
-      const pet = this.pets[0];
-      if (!pet) {
-        this.notify("Bring a pet out to try the trampoline.");
-        return true;
-      }
-      const center = { x: item.placement.x, z: item.placement.z };
-      const approaches = [
-        [1.05, 0],
-        [-1.05, 0],
-        [0, 1.05],
-        [0, -1.05],
-      ]
-        .map(([x, z]) => ({ x: center.x + x, z: center.z + z }))
-        .filter((p) => this.nav.walkable(p))
-        .map((point) => ({ point, path: this.nav.path(pet.point, point) }))
-        .filter((p) => p.path.length)
-        .sort((a, b) => a.path.length - b.path.length);
-      if (!approaches.length) {
-        this.notify("Leave a little room beside the trampoline.");
-        return true;
-      }
-      pet.path = approaches[0].path;
-      this.petPlay = {
-        pet,
-        itemId: id,
-        approach: approaches[0].point,
-        center,
-        time: 0,
-        arrived: false,
-      };
-      this.notify(`${getPet(pet.id)!.name} is coming for a bounce!`);
+      this.startPetPlay(id, "trampoline");
     }
     this.sound("pet");
     return true;
+  }
+  /** Route one free pet to an accessible edge and reserve it until the action ends. */
+  private startPetPlay(id: string, kind: "bowl" | "trampoline") {
+    if (this.petPlay) return;
+    const item = this.profile.state.items.find((candidate) => candidate.id === id);
+    if (!item?.placement) return;
+    const pet = this.pets.find((candidate) => !candidate.following);
+    if (!pet) {
+      this.notify(
+        kind === "bowl"
+          ? "Bring a pet out to enjoy the food."
+          : "Bring a pet out to try the trampoline.",
+      );
+      return;
+    }
+    const center = { x: item.placement.x, z: item.placement.z };
+    const edge = kind === "bowl" ? 0.68 : 1.05;
+    const approaches = [
+      [edge, 0],
+      [-edge, 0],
+      [0, edge],
+      [0, -edge],
+    ]
+      .map(([x, z]) => ({ x: center.x + x, z: center.z + z }))
+      .filter((point) => this.nav.walkable(point))
+      .map((point) => {
+        const path = this.nav.path(pet.point, point);
+        return {
+          point,
+          path,
+          // A pet already standing at an edge has arrived even though A* has
+          // no waypoint to return. An empty route elsewhere stays unavailable.
+          reached: Math.hypot(pet.point.x - point.x, pet.point.z - point.z) < 0.04,
+        };
+      })
+      .filter((route) => route.path.length || route.reached)
+      .sort((a, b) => a.path.length - b.path.length);
+    if (!approaches.length) {
+      this.notify(
+        kind === "bowl"
+          ? "Leave a little room beside the bowl."
+          : "Leave a little room beside the trampoline.",
+      );
+      return;
+    }
+    pet.path = approaches[0].path;
+    this.petPlay = {
+      pet,
+      itemId: id,
+      kind,
+      approach: approaches[0].point,
+      center,
+      time: 0,
+      arrived: false,
+      facing: pet.rig.root.rotation.y,
+    };
+    this.notify(
+      kind === "bowl"
+        ? `${getPet(pet.id)!.name} is coming to eat!`
+        : `${getPet(pet.id)!.name} is coming for a bounce!`,
+    );
   }
   private cancelPetPlay() {
     if (!this.petPlay) return;
     const pet = this.petPlay.pet;
     pet.path = [];
     pet.wait = 3;
+    if (this.petPlay.kind === "bowl") {
+      pet.rig.root.rotation.y = this.petPlay.facing;
+      pet.rig.root.position.y = 0;
+    }
     pet.rig.root.position.set(pet.point.x, 0, pet.point.z);
     this.petPlay = null;
   }
@@ -490,10 +531,42 @@ export class ClubhouseRoom {
     if (!play.arrived) {
       if (play.pet.path.length) return;
       play.arrived = true;
-      this.furnishings.get(play.itemId)!.interact();
+      if (play.kind === "bowl") {
+        // The rig faces +Z, so turn the pet's face toward the bowl before it
+        // starts dipping. Keep this separately from route heading so cancel
+        // can return normal roaming transforms exactly.
+        play.pet.rig.root.rotation.y = Math.atan2(
+          play.center.x - play.approach.x,
+          play.center.z - play.approach.z,
+        );
+        this.notify(`${getPet(play.pet.id)!.name}: nom nom!`);
+      } else this.furnishings.get(play.itemId)!.interact();
     }
     play.time += dt;
     const t = play.time;
+    if (play.kind === "bowl") {
+      const reduced = this.profile.state.reduced;
+      const bite = (1 - Math.cos(t * Math.PI * (reduced ? 2 : 4))) / 2;
+      const toward = {
+        x: play.center.x - play.approach.x,
+        z: play.center.z - play.approach.z,
+      };
+      const distance = Math.hypot(toward.x, toward.z) || 1;
+      // A small forward/downward dip is readable as eating without competing
+      // with the normal walk and idle rig motions.
+      play.pet.rig.root.position.set(
+        play.approach.x + (toward.x / distance) * bite * (reduced ? 0.018 : 0.06),
+        bite * (reduced ? 0.009 : 0.03),
+        play.approach.z + (toward.z / distance) * bite * (reduced ? 0.018 : 0.06),
+      );
+      if (t >= 2) {
+        // Do not spend food until arrival and the visible nibble both completed.
+        if (this.profile.emptyBowl(play.itemId))
+          this.furnishings.get(play.itemId)?.setFilled(false);
+        this.cancelPetPlay();
+      }
+      return;
+    }
     if (t >= 3.4) {
       this.cancelPetPlay();
       return;

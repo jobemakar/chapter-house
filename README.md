@@ -69,3 +69,7 @@ See `docs/verification.md`, `docs/provenance.md`, and the collection's `plans/19
 ## Interactive furnishings and five-yard pass
 
 Decorate includes a free local preview bowl, aquarium and pet trampoline. Tap a placed bowl to fill it (saved locally), a tank to make swimming fish dart, or a trampoline to invite a pet to bounce. Duplicate pieces are available in the shop. The currency uses a round gold coin. See [plan](docs/feedback-02-plan.md) and [verification](docs/feedback-02-verification.md). Scrolling/parallax remains a future iteration.
+
+## Camera and feeding update
+
+Restack and Keepsakes now use large icons. Drag away from the launcher to pan; use +/−, wheel or pinch to zoom, and the overview button to see the whole yard. Detailed views follow a throw and return to the launcher. Background layers move at different rates. The upward-boost gadget is now a spring pad. Magnet levels show a horseshoe and metal blocks; classics have fewer incidental gadgets. Tap an empty bowl to fill it, then a full bowl to send a pet to eat and empty it. See docs/feedback-03-plan.md and docs/feedback-03-verification.md. This supersedes the earlier camera deferral.

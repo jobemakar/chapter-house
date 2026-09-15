@@ -196,7 +196,7 @@ export class PowerYard extends FloppyYard {
             this.gustUntil = this.time + 0.8;
             this.events.push({
               type: "mechanism",
-              text: "Whooosh!",
+              text: "Boing!",
               x: bellows.x,
               y: bellows.y - 60,
             });
@@ -306,11 +306,8 @@ export class PowerYard extends FloppyYard {
         }
     }
     if (this.hasMechanism("magnet") && this.polarity)
-      for (const b of [
-        ...this.pieces,
-        ...(this.mode === "flight" ? [this.dog] : []),
-      ]) {
-        if (b !== this.dog && b.game?.kind !== "bucket") continue;
+      for (const b of this.pieces) {
+        if (b.game?.kind !== "bucket") continue;
         if (
           Math.hypot(b.position.x - this.field.x, b.position.y - this.field.y) <
           this.field.r

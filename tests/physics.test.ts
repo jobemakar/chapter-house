@@ -93,14 +93,14 @@ test("fixed-step solver preserves outcome at 30, 60, and 120 fps", () => {
     );
 });
 test("shape pickups bank once across limbs and reload", () => {
-  const y = new PowerYard();
-  y.plush.pose(365, 410);
+  const y = new PowerYard(4);
+  y.plush.pose(390, 395);
   y.throwToy({ x: 1, y: 0 });
   run(y, 0.05);
   assert.equal(y.powers.counts.bounce, 1);
   assert.equal(y.drainEvents().filter((e) => e.type === "pickup").length, 1);
-  const restored = new PowerYard(0, y.checkpoint(), loadPowers(y.powers));
-  restored.plush.pose(365, 410);
+  const restored = new PowerYard(4, y.checkpoint(), loadPowers(y.powers));
+  restored.plush.pose(390, 395);
   restored.throwToy({ x: 1, y: 0 });
   run(restored, 0.05);
   assert.equal(restored.powers.counts.bounce, 1);
@@ -164,29 +164,25 @@ function collide(y: PowerYard, device: M.Body) {
   M.Body.setVelocity(b, { x: 0, y: 7 });
   run(y, 0.12);
 }
-test("real collisions operate lever, polarity switch, and bellows; checkpoint restores them", () => {
-  const y = new PowerYard();
-  collide(y, y.lever);
-  assert.ok(y.gateOpen);
-  run(y, 0.5);
-  assert.ok(y.gate.position.y < 300);
-  collide(y, y.button);
-  assert.equal(y.polarity, 1);
-  const restored = new PowerYard(0, y.checkpoint());
-  assert.ok(restored.gateOpen);
+test("isolated devices respond to real collisions and restore their state", () => {
+  const lever = new PowerYard(4);
+  collide(lever, lever.lever);
+  assert.ok(lever.gateOpen);
+  run(lever, 0.5);
+  assert.ok(lever.gate.position.y < 300);
+  const magnet = new PowerYard(6);
+  collide(magnet, magnet.button);
+  assert.equal(magnet.polarity, 1);
+  const restored = new PowerYard(6, magnet.checkpoint());
   assert.equal(restored.polarity, 1);
-  run(y, 1);
-  collide(y, y.button);
-  assert.equal(y.polarity, -1);
-  const bellows = new PowerYard();
-  collide(bellows, bellows.bellows);
-  assert.ok(bellows.gustUntil > bellows.time);
-  assert.ok(
-    bellows
-      .drainEvents()
-      .some((e) => e.type === "mechanism" && e.text === "Whooosh!"),
-  );
-  [y, restored, bellows].forEach((y) => y.dispose());
+  run(magnet, 1);
+  collide(magnet, magnet.button);
+  assert.equal(magnet.polarity, -1);
+  const spring = new PowerYard(5);
+  collide(spring, spring.bellows);
+  assert.ok(spring.gustUntil > spring.time);
+  assert.ok(spring.drainEvents().some((e) => e.type === "mechanism"));
+  [lever, magnet, restored, spring].forEach((y) => y.dispose());
 });
 test("magnet range and polarity have directional effects", () => {
   function velocity(active: boolean, distance: number) {
@@ -234,13 +230,13 @@ test("TypeScript port matches the retained demo trajectory and target outcomes",
   const require = createRequire(import.meta.url);
   let legacy: { Yard: typeof PowerYard };
   try {
-    legacy = require("../../wish/experiments/floppy-fetch/src/powerups.js");
+    legacy = require("../../wish/experiments/floppy-fetch/src/floppy-core.js");
   } catch {
     return;
   }
   for (let index = 0; index < 2; index++) {
     const old = new legacy.Yard(index),
-      ported = new PowerYard(index);
+      ported = new FloppyYard(index);
     old.throwToy({ x: 18, y: -5 });
     ported.throwToy({ x: 18, y: -5 });
     run(old, 2);

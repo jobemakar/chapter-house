@@ -270,3 +270,76 @@ test("hidden games freeze progress and credits until resumed", () => {
     h.finish();
   }
 });
+
+test("camera gestures never launch or earn idle currency and pinch cancels aiming", () => {
+  const h = new Harness();
+  try {
+    h.advance(2);
+    const money = h.profile.state.currency;
+    h.startAim();
+    h.pointer("pointerdown", 210, 170, 2);
+    assert.equal(h.game.status().aiming, false);
+    h.pointer("pointermove", 310, 170, 2);
+    assert.ok(h.game.status().camera.zoom > 1);
+    h.pointer("pointerup", 310, 170, 2);
+    h.pointer("pointermove", 10, 270, 1);
+    h.pointer("pointerup", 10, 270, 1);
+    assert.equal(h.game.status().throws, 0);
+    h.click("camera-home");
+    h.click("zoom-in");
+    const start = h.game.status().camera.x;
+    h.pointer("pointerdown", 450, 180);
+    h.pointer("pointermove", 300, 180);
+    h.pointer("pointerup", 300, 180);
+    assert.ok(h.game.status().camera.x > start);
+    h.advance(1200);
+    assert.equal(h.game.status().throws, 0);
+    // Initial aim may count a small activity window, but camera-only input cannot extend it.
+    const after = h.profile.state.currency;
+    for (let i = 0; i < 8; i++) {
+      h.click("zoom-in");
+      h.click("zoom-out");
+      h.advance(120);
+    }
+    assert.equal(h.profile.state.currency, after);
+    assert.ok(after >= money);
+  } finally {
+    h.finish();
+  }
+});
+
+test("zoomed launcher input uses inverse camera coordinates and wheel stays presentation-only", () => {
+  const h = new Harness();
+  try {
+    h.click("zoom-in");
+    const c = h.game.status().camera;
+    const screen = (x: number, y: number) => ({
+      x: ((x - c.x) * c.zoom + 600) / 2,
+      y: ((y - c.y) * c.zoom + 360) / 2,
+    });
+    const start = screen(162, 478),
+      end = screen(32, 514);
+    h.pointer("pointerdown", start.x, start.y);
+    assert.equal(h.game.status().aiming, true);
+    h.pointer("pointermove", end.x, end.y);
+    const frozen = h.game.status().camera;
+    h.advance(30);
+    assert.deepEqual(h.game.status().camera, frozen);
+    h.pointer("pointerup", end.x, end.y);
+    assert.equal(h.game.status().throws, 1);
+    h.advance(400);
+    assert.ok(h.game.status().rescued > 0);
+    const wheel = new Event("wheel", { cancelable: true });
+    Object.defineProperties(wheel, {
+      clientX: { value: 300 },
+      clientY: { value: 180 },
+      deltaY: { value: -250 },
+    });
+    h.host.querySelector("canvas")!.dispatchEvent(wheel);
+    assert.equal(wheel.defaultPrevented, true);
+    assert.ok(h.game.status().camera.zoom > c.zoom);
+    assert.equal(h.game.status().throws, 1);
+  } finally {
+    h.finish();
+  }
+});

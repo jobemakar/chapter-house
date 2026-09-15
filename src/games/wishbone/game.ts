@@ -7,6 +7,7 @@ import { WishboneRenderer, drawItem } from "./renderer";
 import { WishboneProgression, keepsakes } from "./progression";
 import { GameAudio } from "./audio";
 import type { AimInput } from "./types";
+import { WishboneCamera, type ViewPoint } from "./camera";
 
 export type WishboneShellCallbacks = {
   toggleSound: () => void;
@@ -20,6 +21,11 @@ export class WishboneGame implements GameSession {
   private sound: GameAudio;
   private canvas: HTMLCanvasElement;
   private input: AimInput | null = null;
+  private camera = new WishboneCamera();
+  private pointers = new Map<number, ViewPoint>();
+  private gesture: "aim" | "pan" | "pinch" | null = null;
+  private pinchDistance = 0;
+  private pinchCenter: ViewPoint | null = null;
   private paused = false;
   private abort = new AbortController();
   private observer: ResizeObserver;
@@ -64,7 +70,10 @@ export class WishboneGame implements GameSession {
 </div>
 </header>
 <button data-action="levels" class="levels-toggle" aria-expanded="false">Levels</button>
-<nav class="yard-switcher" data-ui="yard-list" aria-label="Choose a Wishbone yard" hidden>${[...yards.slice(2), ...yards.slice(0, 2)]
+<nav class="yard-switcher" data-ui="yard-list" aria-label="Choose a Wishbone yard" hidden>${[
+      ...yards.slice(2),
+      ...yards.slice(0, 2),
+    ]
       .map(
         (yard, index) =>
           `<button data-action="yard${yards.indexOf(yard)}" aria-pressed="false"><span>${yards.indexOf(yard) < 2 ? "Classic" : `Yard ${yards.indexOf(yard) - 1}`}</span>${yard.name}</button>`,
@@ -76,8 +85,13 @@ export class WishboneGame implements GameSession {
 </div>
 <button data-action="gust" class="stage-gust" hidden>Gust ↑</button>
 <div class="stage-tools">
-<button data-action="restack" class="stage-tool" aria-label="Restack this yard"><span aria-hidden="true">↺</span>Restack</button>
-<button data-action="collection" class="stage-tool" aria-label="Open keepsakes"><span aria-hidden="true">♥</span>Keepsakes</button>
+<button data-action="restack" class="stage-tool" aria-label="Restack this yard" title="Restack"><span aria-hidden="true">↺</span></button>
+<button data-action="collection" class="stage-tool" aria-label="Open keepsakes" title="Keepsakes"><span aria-hidden="true">♥</span></button>
+</div>
+<div class="camera-tools" aria-label="Camera controls">
+<button data-action="zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+<button data-action="camera-home" aria-label="Show whole yard" title="Show whole yard">⤢</button>
+<button data-action="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
 </div>
 <button data-action="recall" class="stage-recall" hidden>Recall</button>
 <div class="game-status" role="status"><b data-ui="hint">Pull back. Let him fly.</b><small data-ui="milestone">Unlimited tumbles. Everything you earn stays yours.</small></div>
@@ -129,11 +143,15 @@ export class WishboneGame implements GameSession {
     });
     this.canvas.addEventListener(
       "lostpointercapture",
-      () => {
-        this.input = null;
+      (event) => {
+        if (this.pointers.has(event.pointerId)) this.cancelAim();
       },
       { signal: this.abort.signal },
     );
+    this.canvas.addEventListener("wheel", this.wheel, {
+      passive: false,
+      signal: this.abort.signal,
+    });
     document.addEventListener(
       "visibilitychange",
       () => {
@@ -209,7 +227,10 @@ export class WishboneGame implements GameSession {
     if (action === "powers") {
       this.powersOpen = !this.powersOpen;
       this.ui("power-tray").hidden = !this.powersOpen;
-      this.button("powers").setAttribute("aria-expanded", String(this.powersOpen));
+      this.button("powers").setAttribute(
+        "aria-expanded",
+        String(this.powersOpen),
+      );
       return;
     }
     if (action === "levels") {
@@ -218,13 +239,33 @@ export class WishboneGame implements GameSession {
       this.button("levels").setAttribute("aria-expanded", String(!list.hidden));
       return;
     }
+    if (
+      action === "zoom-in" ||
+      action === "zoom-out" ||
+      action === "camera-home"
+    ) {
+      this.cancelAim();
+      if (action === "camera-home") this.camera.home();
+      else {
+        const anchor =
+          this.camera.zoom === 1 && action === "zoom-in"
+            ? this.camera.toScreen(TUNE.origin)
+            : { x: 600, y: 360 };
+        this.camera.zoomAt(
+          this.camera.zoom + (action === "zoom-in" ? 0.25 : -0.25),
+          anchor,
+        );
+      }
+      return;
+    }
     if (this.paused) return;
     this.activity.interact();
     this.sound.start();
     const yardMatch = /^yard(\d+)$/.exec(action);
     if (yardMatch) {
       const index = Number(yardMatch[1]);
-      if (!Number.isInteger(index) || index < 0 || index >= yards.length) return;
+      if (!Number.isInteger(index) || index < 0 || index >= yards.length)
+        return;
       if (index !== this.yard.index) this.switchYard(index);
       this.ui("yard-list").hidden = true;
       this.button("levels").setAttribute("aria-expanded", "false");
@@ -242,7 +283,7 @@ export class WishboneGame implements GameSession {
       this.yard.arm(action);
     this.refresh();
   };
-  private point(event: PointerEvent) {
+  private point(event: { clientX: number; clientY: number }) {
     const rect = this.canvas.getBoundingClientRect();
     return {
       x: ((event.clientX - rect.left) * TUNE.width) / rect.width,
@@ -250,36 +291,87 @@ export class WishboneGame implements GameSession {
     };
   }
   private down = (event: PointerEvent) => {
-    if (
-      event.button !== 0 ||
-      this.input ||
-      this.paused ||
-      this.yard.cooldown > 0
-    )
-      return;
+    if (event.button !== 0 || this.paused) return;
     const p = this.point(event);
-    if (p.x > 350 || p.y < 270) return;
     event.preventDefault();
-    this.sound.start();
-    this.activity.interact();
+    this.pointers.set(event.pointerId, p);
     this.canvas.setPointerCapture(event.pointerId);
-    this.input = { id: event.pointerId, start: p, velocity: aim(0, 0) };
+    if (this.pointers.size > 1) {
+      this.input = null;
+      this.gesture = "pinch";
+      this.measurePinch();
+      return;
+    }
+    const world = this.camera.toWorld(p);
+    if (this.yard.mode === "ready" && world.x <= 350 && world.y >= 270) {
+      this.gesture = "aim";
+      this.sound.start();
+      this.activity.interact();
+      this.input = { id: event.pointerId, start: world, velocity: aim(0, 0) };
+    } else this.gesture = "pan";
+  };
+  private measurePinch() {
+    const [a, b] = [...this.pointers.values()];
+    if (!a || !b) return;
+    this.pinchDistance = Math.hypot(b.x - a.x, b.y - a.y);
+    this.pinchCenter = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+  private wheel = (event: WheelEvent) => {
+    if (this.paused || this.input || this.pointers.size) return;
+    event.preventDefault();
+    this.camera.zoomAt(
+      this.camera.zoom * Math.exp(-event.deltaY * 0.001),
+      this.point(event),
+    );
   };
   private move = (event: PointerEvent) => {
-    if (this.input?.id !== event.pointerId) return;
+    const previous = this.pointers.get(event.pointerId);
+    if (!previous) return;
     const p = this.point(event);
-    this.input.velocity = aim(
-      this.input.start.x - p.x,
-      p.y - this.input.start.y,
-    );
-    this.activity.interact();
+    this.pointers.set(event.pointerId, p);
+    if (this.gesture === "pinch") {
+      const oldDistance = this.pinchDistance,
+        oldCenter = this.pinchCenter;
+      this.measurePinch();
+      if (
+        this.pointers.size >= 2 &&
+        oldDistance > 0 &&
+        oldCenter &&
+        this.pinchCenter
+      ) {
+        this.camera.zoomAt(
+          (this.camera.zoom * this.pinchDistance) / oldDistance,
+          oldCenter,
+        );
+        this.camera.pan(
+          this.pinchCenter.x - oldCenter.x,
+          this.pinchCenter.y - oldCenter.y,
+        );
+      }
+    } else if (this.input?.id === event.pointerId) {
+      const world = this.camera.toWorld(p);
+      this.input.velocity = aim(
+        this.input.start.x - world.x,
+        world.y - this.input.start.y,
+      );
+      this.activity.interact();
+    } else if (this.gesture === "pan")
+      this.camera.pan(p.x - previous.x, p.y - previous.y);
   };
   private up = (event: PointerEvent) => {
-    if (this.input?.id !== event.pointerId) return;
+    if (this.input?.id !== event.pointerId) {
+      this.pointers.delete(event.pointerId);
+      if (this.pointers.size >= 2) this.measurePinch();
+      if (this.canvas.hasPointerCapture(event.pointerId))
+        this.canvas.releasePointerCapture(event.pointerId);
+      if (!this.pointers.size) this.gesture = null;
+      return;
+    }
     const v = this.input.velocity;
     this.cancelAim();
     if (v.power < 0.06) return;
     if (this.yard.throwToy(v)) {
+      this.camera.launched();
       this.activity.interact();
       this.profile.state.wishbone.throws++;
       this.cascade = 0;
@@ -289,10 +381,14 @@ export class WishboneGame implements GameSession {
     }
   };
   private cancelAim() {
-    const old = this.input;
+    const ids = [...this.pointers.keys()];
     this.input = null;
-    if (old && this.canvas.hasPointerCapture(old.id))
-      this.canvas.releasePointerCapture(old.id);
+    this.pointers.clear();
+    this.gesture = null;
+    this.pinchCenter = null;
+    for (const id of ids)
+      if (this.canvas.hasPointerCapture(id))
+        this.canvas.releasePointerCapture(id);
   }
   private save() {
     this.profile.state.wishbone.checkpoints[this.yard.layout.id] =
@@ -324,6 +420,7 @@ export class WishboneGame implements GameSession {
     );
     this.renderer.particles = [];
     this.renderer.labels = [];
+    this.camera.home();
     this.cascade = 0;
     this.cascadeTime = 0;
     this.save();
@@ -353,7 +450,7 @@ export class WishboneGame implements GameSession {
     this.setPaused(true);
     if (kind === "help")
       this.ui("dialog").innerHTML =
-        `<span class="eyebrow">A LITTLE HELP</span><h2>One happy tumble at a time.</h2><p>Touch the left side of the yard, near Wishbone. Pull left and down, then release. Aim low to tip the supports, or high to reach the top.</p><p>Hit floating powerups to keep them. Choose one before a throw; the pinwheel gives you a Gust button during flight. The lever, bellows, and magnet switch respond to collisions.</p><p>Wishbone comes back automatically after each toss. Recall brings him back sooner. Restack whenever you like. Make fourteen throws to earn a Patchwork dog bed for your clubhouse.</p>`;
+        `<span class="eyebrow">A LITTLE HELP</span><h2>One happy tumble at a time.</h2><p>Touch the left side of the yard, near Wishbone. Pull left and down, then release. Aim low to tip the supports, or high to reach the top.</p><p>Hit floating powerups to keep them. Choose one before a throw; the pinwheel gives you a Gust button during flight. The lever, spring pad, and magnet switch respond to collisions. The horseshoe pulls or pushes metal blocks; the separate Magnet Bandana power gathers loose toys.</p><p>Drag away from the launcher to look around. Use + and −, the mouse wheel, or pinch to zoom. The four-arrow button shows the whole yard. Zoom in before a throw to follow Wishbone across the scene.</p><p>Wishbone comes back automatically after each toss. Recall brings him back sooner. Restack whenever you like. Make fourteen throws to earn a Patchwork dog bed for your clubhouse.</p>`;
     else {
       this.ui("dialog").innerHTML =
         '<span class="eyebrow">YOUR WISHBONE COLLECTION</span><h2>Little stories to keep.</h2><div class="collection-grid"></div>';
@@ -515,12 +612,20 @@ export class WishboneGame implements GameSession {
       }
     } else this.activity.step(dt, true, false);
     this.refresh();
+    this.camera.update(
+      dt,
+      this.yard.mode,
+      this.yard.dog.position,
+      this.paused || document.hidden || this.pointers.size > 0,
+      this.profile.state.reduced,
+    );
     this.renderer.draw(
       this.yard,
       this.input,
       dt,
       this.profile.state.reduced,
       this.paused || document.hidden,
+      this.camera,
     );
     this.raf = requestAnimationFrame(this.frame);
   };
@@ -536,6 +641,7 @@ export class WishboneGame implements GameSession {
       rescued: this.yard.rescued.size,
       powers: this.profile.state.wishbone.powers,
       aiming: !!this.input,
+      camera: { x: this.camera.x, y: this.camera.y, zoom: this.camera.zoom },
     };
   }
   dispose() {

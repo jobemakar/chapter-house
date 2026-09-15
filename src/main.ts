@@ -422,7 +422,7 @@ class ChapterHouse {
           "",
         )}<button class="empty-pet" data-action="shop"><span>+</span><b>Room for a friend</b><small>Meet more pets in the shop</small></button><div class="empty-pet decorative" aria-hidden="true"><span>+</span></div></div>`;
     if (name === "pets") {
-      content.innerHTML += `<h3>A little pet corner</h3><p>Your new bowl, fish tank and trampoline are ready in Decorate.</p><div class="accessories">${this.profile.state.items
+      content.innerHTML += `<h3>A little pet corner</h3><p>Fill an empty bowl, then tap it again to send an available pet over for a little nom nom.</p><div class="accessories">${this.profile.state.items
         .filter(
           (i) =>
             i.placement &&
@@ -432,7 +432,7 @@ class ChapterHouse {
         )
         .map(
           (i) =>
-            `<button data-action="interact-furniture" data-id="${i.id}">${getFurniture(i.definitionId)!.kind === "bowl" ? "Fill bowl" : getFurniture(i.definitionId)!.kind === "aquarium" ? "Watch fish dart" : "Trampoline time"}</button>`,
+            `<button data-action="interact-furniture" data-id="${i.id}">${getFurniture(i.definitionId)!.kind === "bowl" ? (i.filled ? "Feed pet" : "Fill bowl") : getFurniture(i.definitionId)!.kind === "aquarium" ? "Watch fish dart" : "Trampoline time"}</button>`,
         )
         .join("")}</div>`;
     }

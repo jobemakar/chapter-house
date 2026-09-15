@@ -21,6 +21,7 @@
   display: none !important;
 }
 .wishbone-game .yard-wrap {
+  grid-area: 1 / 1;
   position: relative;
   width: auto;
   height: min(100%, 60vw);
@@ -180,11 +181,34 @@
   background: #fff9dfed;
   color: #50482f;
   box-shadow: 0 3px 10px #5549262e;
-  font-size: 8px;
+  font-size: 0;
   line-height: 1;
 }
 .wishbone-game .stage-tool span {
-  font-size: 18px;
+  font-size: 34px;
+  line-height: 1;
+}
+.camera-tools {
+  position: absolute;
+  z-index: 5;
+  top: 70px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+}
+.wishbone-game .camera-tools button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid #d8dfcc;
+  border-radius: 50%;
+  background: #fffdf5ed;
+  color: var(--wish-ink);
+  box-shadow: 0 2px 8px #34462d24;
+  font-size: 20px;
+  line-height: 1;
 }
 .wishbone-game .stage-recall {
   position: absolute;
@@ -319,6 +343,10 @@
     top: calc(100% + 12px);
     bottom: auto;
     display: grid;
+  }
+  .camera-tools {
+    top: calc(100% + 134px);
+    right: 10px;
   }
   .wishbone-game .stage-recall {
     top: calc(100% + 72px);

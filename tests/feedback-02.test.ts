@@ -61,6 +61,36 @@ test("all yard identities and selections persist, with classics and earned keeps
     yard.dispose();
   }
 });
+
+test("simplified classics retain old claimed powers and partial checkpoint identities", () => {
+  for (const index of [0, 1]) {
+    const yard = new PowerYard(index);
+    assert.equal(yard.gadgets.length, 0);
+    assert.equal(yard.pickups.length, 0);
+    yard.throwToy({ x: 18, y: -5 });
+    step(yard, 2);
+    const checkpoint = yard.checkpoint();
+    checkpoint.gadgets = {
+      claimed: ["bounce", "magnet"],
+      clearPaid: true,
+      reward: "wind",
+      gateOpen: true,
+      polarity: 1,
+    };
+    const restored = new PowerYard(index, checkpoint);
+    assert.deepEqual([...restored.claimed], ["bounce", "magnet"]);
+    assert.equal(restored.clearPaid, true);
+    assert.equal(restored.gateOpen, true);
+    assert.equal(restored.polarity, 1);
+    assert.deepEqual(restored.rescued, yard.rescued);
+    assert.deepEqual(
+      restored.pieces.map((b) => b.game.id),
+      yard.pieces.map((b) => b.game.id),
+    );
+    yard.dispose();
+    restored.dispose();
+  }
+});
 test("preview furniture grants once and bowl filling persists without spending currency", () => {
   const values = new Map<string, string>();
   const store: StoragePort = {

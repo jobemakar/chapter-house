@@ -50,6 +50,8 @@ export const yards: YardDefinition[] = [
   {
     id: "teeter",
     name: "The Teeter Tower",
+    mechanisms: [],
+    pickups: [],
     subtitle: "One little nudge. One big tumble.",
     pieces: [
       box(590, 548, 76, 104),
@@ -71,6 +73,8 @@ export const yards: YardDefinition[] = [
   {
     id: "domino",
     name: "The Domino Picnic",
+    mechanisms: [],
+    pickups: [],
     subtitle: "Start a wobble. Follow the ripple.",
     pieces: [
       box(518, 535, 40, 130, 0),
@@ -153,7 +157,7 @@ yards.push(
   },
   {
     id: "bellows-hop",
-    name: "The Whoosh Perch",
+    name: "The Spring Perch",
     subtitle: "Land low. Bounce into the treetops.",
     mechanisms: ["bellows"],
     devices: { bellows: { x: 520, y: 580 } },
@@ -173,9 +177,9 @@ yards.push(
   {
     id: "magnet-picnic",
     name: "The Magnetic Picnic",
-    subtitle: "Move the buckets. Tumble the picnic.",
+    subtitle: "Move the metal blocks. Tumble the picnic.",
     mechanisms: ["magnet"],
-    devices: { button: { x: 600, y: 566 }, field: { x: 890, y: 450, r: 225 } },
+    devices: { button: { x: 600, y: 566 }, field: { x: 890, y: 335, r: 270 } },
     pickups: [{ id: "magnet", x: 410, y: 395 }],
     pieces: [
       bucket(800, 568),
