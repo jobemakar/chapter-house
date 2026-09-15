@@ -26,9 +26,9 @@ export class TownWorld {
   private route: Point[] = [];
   private petRoute: Point[] = [];
   private petWait = 0;
-  private focus: Point = { ...TOWN.entry };
-  private zoom = 1;
-  private following = true;
+  private focus: Point = { x: 14.5, z: 11.5 };
+  private zoom = 0.8;
+  private following = false;
   private pointer: {
     id: number;
     x: number;
@@ -54,6 +54,8 @@ export class TownWorld {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setClearColor(0xdce8cd);
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.12;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     host.append(this.renderer.domElement);
@@ -194,6 +196,22 @@ export class TownWorld {
       },
       { signal: this.abort.signal },
     );
+    const loading = document.createElement("div");
+    loading.className = "town-loading";
+    loading.setAttribute("role", "status");
+    loading.textContent = "Growing your woodland…";
+    host.append(loading);
+    void this.art
+      .load()
+      .then(() => {
+        if (!this.disposed) loading.remove();
+      })
+      .catch((error: unknown) => {
+        if (this.disposed) return;
+        loading.textContent =
+          "The woodland couldn't load. Return to the clubhouse and try again.";
+        console.error("Town scenery failed to load", error);
+      });
     this.resize();
     this.raf = requestAnimationFrame(this.frame);
   }
@@ -260,6 +278,7 @@ export class TownWorld {
     this.walk({ x: p.x, z: p.z });
   }
   private walk(p: Point) {
+    if (this.art.status() !== "ready") return;
     const path = this.nav.path(this.point, p);
     if (!path.length) {
       this.avatarReaction.show("question");
@@ -372,6 +391,7 @@ export class TownWorld {
       zoom: this.zoom,
       coinFlipping: this.coinCooldown > 0,
       audio: this.audio.status(),
+      scenery: this.art.status(),
     };
   }
   dispose() {
@@ -382,8 +402,8 @@ export class TownWorld {
     this.audio.dispose();
     this.avatarReaction.dispose();
     this.petReaction.dispose();
-    RoomArt.release(this.scene);
     this.art.dispose();
+    RoomArt.release(this.scene);
     this.renderer.dispose();
     this.host.replaceChildren();
   }

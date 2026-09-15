@@ -19,7 +19,10 @@ test("town routes around the full fountain and trees, never through stream or bu
     ],
     [TOWN.entry, { x: 4, z: 10 }],
     [TOWN.entry, { x: 26, z: 10 }],
-    [TOWN.entry, {x:17.31,z:10}],
+    [TOWN.entry, { x: 17.31, z: 10 }],
+    [TOWN.entry, { x: 7, z: 8.6 }],
+    [TOWN.entry, { x: 24, z: 7.7 }],
+    [TOWN.entry, { x: 25, z: 16.5 }],
   ]) {
     const path = nav.path(start, end);
     assert.ok(path.length > 0);

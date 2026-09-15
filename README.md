@@ -79,3 +79,6 @@ Restack and Keepsakes now use large icons. Drag away from the launcher to pan; u
 Outside opens Willowbrook square: walk or drag to explore, visit the fountain, toss a free cosmetic coin, and return to the clubhouse. Trees, buildings, stream and fountain constrain routes; water sound attenuates with the view. Avatar thought-cloud reactions and pet speech bubbles accompany actions and feeding.
 
 Levels → The Long Walk Home is the new wide spring-only yard. Overview, pan/zoom and flight follow show its full width. The Y-fork launcher holds Wishbone in a lower leather pouch, and dog/block impacts use a short procedural rustle. Pocket power collection and activation are removed; archived data and already-owned displays remain. See docs/feedback-04-plan.md and docs/feedback-04-verification.md.
+
+## Outdoor woodland pass — 2026-09-15
+The outdoor houses have been replaced with a Kenney-based woodland setting. See docs/woodland-village-plan.md, docs/woodland-assets.md and docs/woodland-village-verification.md. Twelve locally packaged GLBs plus their texture and license files total about 272 kB. No external requests are needed at play time. Assets are loaded per outdoor scene and shared between clones; terrain streaming remains future work.

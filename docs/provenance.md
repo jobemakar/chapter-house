@@ -17,3 +17,8 @@ The book connection, spoiler policy and keepsake invention boundaries remain in 
 Feedback 02: bowl, aquarium, fish and trampoline are original procedural Three.js geometry; the wooden launcher is original canvas drawing. New yard layouts are invented play spaces, not representations of scenes from the novel. Existing licensed/source assets are unchanged.
 
 Feedback 04: village buildings, water, trees, coin, reaction textures, launcher and grass are authored procedural Three.js/canvas graphics. User-provided reference images guided the pouch and bubble silhouettes; they were not copied into distributed assets. Fountain water/coin and dog-block rustle are original procedural Web Audio. Pocket-power gameplay is removed; prior documentation describes the historical baseline.
+
+## Kenney outdoor assets — 2026-09-15
+Mini Forest (1.0): https://kenney.nl/assets/mini-forest
+Nature Kit (archive 2.1): https://kenney.nl/assets/nature-kit
+Both CC0; supplied licenses retained in public/assets/town/licenses. See woodland-assets.md for model mapping. Nature materials are made nonmetallic and recolored to sage/stone. Mini Forest palette remains supplied. Custom fountain, ground/path geometry, entrance details and signs remain authored TypeScript. The earlier all-procedural description is historical; the outdoor scenery now includes imported models. Room avatars/furnishings remain procedural.

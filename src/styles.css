@@ -1650,3 +1650,10 @@ dialog::backdrop {
 .reaction-choices small {display:block;font-size:14px;}
 @media(max-width:700px){.town-page{height:calc(100% - 69px)}.town-heading{top:70px;left:10px;padding:8px 12px}.town-heading h2{font-size:19px}.town-controls{top:10px;left:8px;right:8px;justify-content:center;gap:4px}.town-controls button{padding:8px;font-size:11px}.town-emotes{bottom:12px;gap:4px;padding:5px}.town-emotes button{padding:7px 9px;font-size:11px;min-width:40px}.room-page .emotes{gap:6px}.room-page .emotes button{min-width:58px;width:58px;height:58px;min-height:58px}}
 @media(max-height:450px) and (orientation:landscape){.town-page{height:calc(100% - 54px)}.town-heading{display:none}.town-controls{top:8px}.town-emotes{bottom:8px}}
+
+.town-loading {
+  position: absolute; inset: 42% 12% auto; z-index: 3;
+  padding: 1rem 1.4rem; border-radius: 1.5rem;
+  color: #40594a; background: #fff8e9ed; text-align: center;
+  box-shadow: 0 8px 28px #233c3020; pointer-events: none;
+}

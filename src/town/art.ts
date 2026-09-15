@@ -1,14 +1,19 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { TOWN, type TownBuilding } from "./layout";
+import { TownAssets } from "./assets";
 
 const material = (color: THREE.ColorRepresentation, roughness = 0.82) =>
   new THREE.MeshStandardMaterial({ color, roughness });
 
-/** Procedural, low-poly scenery for the walkable outdoor village. */
+/** Composes curated Kenney scenery with the interactive village landmarks. */
 export class TownArt {
   readonly root = new THREE.Group();
   private elapsed = 0;
+  private readonly assets = new TownAssets();
+  private readonly imported = new THREE.Group();
+  private disposed = false;
+  private assetState: "loading" | "ready" | "failed" = "loading";
   private readonly water: THREE.MeshStandardMaterial[] = [];
   private readonly jets: THREE.Mesh[] = [];
   private readonly ripples: THREE.Mesh[] = [];
@@ -21,9 +26,29 @@ export class TownArt {
     this.makeGround();
     this.makeStream();
     this.makePlaza();
-    TOWN.trees.forEach((tree) => this.makeTree(tree.x, tree.z, tree.radius, tree.variant ?? 0));
-    TOWN.buildings.forEach((building) => this.makeBuilding(building));
+    this.makePaths();
+    this.root.add(this.imported);
     this.makeFountain();
+  }
+
+  async load(): Promise<void> {
+    try {
+      await this.assets.load();
+      if (this.disposed) return;
+      TOWN.trees.forEach((tree) =>
+        this.makeTree(tree.x, tree.z, tree.radius, tree.variant ?? 0),
+      );
+      TOWN.buildings.forEach((building) => this.makeBuilding(building));
+      this.makeGardenAccents();
+      this.assetState = "ready";
+    } catch (error) {
+      this.assetState = "failed";
+      throw error;
+    }
+  }
+
+  status() {
+    return this.assetState;
   }
 
   update(dt: number, reducedMotion: boolean): void {
@@ -31,7 +56,8 @@ export class TownArt {
     this.elapsed += safeDt;
     const calm = reducedMotion ? 0.22 : 1;
     this.water.forEach((water, index) => {
-      water.emissiveIntensity = 0.075 + Math.sin(this.elapsed * 1.8 + index) * 0.025 * calm;
+      water.emissiveIntensity =
+        0.075 + Math.sin(this.elapsed * 1.8 + index) * 0.025 * calm;
     });
     this.jets.forEach((jet, index) => {
       const wave = Math.sin(this.elapsed * 4.1 + index * 1.5) * 0.035 * calm;
@@ -49,7 +75,8 @@ export class TownArt {
     const p = Math.min(this.coinAge / 1.2, 1);
     const arc = Math.sin(p * Math.PI);
     this.coinMesh.position.y = 1.05 + arc * 2.25;
-    this.coinMesh.position.x = TOWN.fountain.x + Math.sin(p * Math.PI * 2.4) * 0.3;
+    this.coinMesh.position.x =
+      TOWN.fountain.x + Math.sin(p * Math.PI * 2.4) * 0.3;
     this.coinMesh.position.z = TOWN.fountain.z - 0.25 + p * 0.9;
     this.coinMesh.rotation.y += safeDt * (reducedMotion ? 5 : 18);
     if (p >= 1) {
@@ -65,7 +92,11 @@ export class TownArt {
     if (this.coinMesh) return;
     const coin = new THREE.Mesh(
       new THREE.CylinderGeometry(0.14, 0.14, 0.045, 20),
-      new THREE.MeshStandardMaterial({ color: 0xffd567, metalness: 0.55, roughness: 0.28 }),
+      new THREE.MeshStandardMaterial({
+        color: 0xffd567,
+        metalness: 0.55,
+        roughness: 0.28,
+      }),
     );
     coin.castShadow = true;
     coin.position.set(TOWN.fountain.x, 1.05, TOWN.fountain.z - 0.25);
@@ -76,8 +107,13 @@ export class TownArt {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.imported.removeFromParent();
+    this.assets.dispose();
     if (this.coinMesh) {
       this.coinMesh.parent?.remove(this.coinMesh);
+      this.coinMesh.geometry.dispose();
+      (this.coinMesh.material as THREE.Material).dispose();
       this.coinMesh = null;
     }
     this.signTextures.forEach((texture) => texture.dispose());
@@ -102,18 +138,120 @@ export class TownArt {
   }
 
   private makeGround() {
-    this.mesh(this.root, new THREE.PlaneGeometry(TOWN.width, TOWN.depth), 0x82aa6e, 15, -0.025, 12).rotation.x = -Math.PI / 2;
-    for (let z = 0.9; z < TOWN.streamZ; z += 2.1) {
-      for (let x = 1; x < TOWN.width; x += 2.4) {
-        const dot = this.mesh(this.root, new THREE.CircleGeometry(0.055, 8), (x + z) % 4 > 2 ? 0xbac66e : 0xd8c56c, x + Math.sin(z * 2) * 0.22, 0.004, z + Math.cos(x) * 0.14, { shadow: false });
-        dot.rotation.x = -Math.PI / 2;
-      }
+    this.mesh(
+      this.root,
+      new THREE.PlaneGeometry(TOWN.width, TOWN.depth),
+      0x88ae77,
+      15,
+      -0.025,
+      12,
+    ).rotation.x = -Math.PI / 2;
+    // Broad low patches give the lawn variation without hundreds of individual dots.
+    for (const [x, z, r] of [
+      [3, 4, 3.5],
+      [7, 16, 3],
+      [25, 14, 3.5],
+      [24, 4, 4],
+      [15, 2, 3],
+    ]) {
+      const patch = this.mesh(
+        this.root,
+        new THREE.CircleGeometry(r, 32),
+        0x7fa56c,
+        x,
+        -0.018,
+        z,
+        { shadow: false },
+      );
+      patch.rotation.x = -Math.PI / 2;
     }
   }
 
+  private makePaths() {
+    this.path(
+      [
+        [15, 19.6],
+        [14.2, 17.3],
+        [12.8, 15.8],
+        [13, 13.7],
+      ],
+      1.8,
+    );
+    this.path(
+      [
+        [11, 11],
+        [9.4, 10.2],
+        [7, 9],
+        [7, 7.9],
+      ],
+      1.7,
+    );
+    this.path(
+      [
+        [19, 10],
+        [21, 9],
+        [23.8, 8],
+        [24, 7],
+      ],
+      1.5,
+    );
+    this.path(
+      [
+        [18.6, 13.3],
+        [21, 14.7],
+        [23.2, 16.4],
+        [25, 16.4],
+      ],
+      1.45,
+    );
+  }
+
+  private path(points: number[][], width: number) {
+    const curve = new THREE.CatmullRomCurve3(
+      points.map(([x, z]) => new THREE.Vector3(x, 0, z)),
+    );
+    const vertices: number[] = [],
+      indices: number[] = [];
+    for (let i = 0; i <= 40; i++) {
+      const p = curve.getPoint(i / 40),
+        t = curve.getTangent(i / 40);
+      for (const side of [-1, 1])
+        vertices.push(
+          p.x - t.z * width * 0.5 * side,
+          0.018,
+          p.z + t.x * width * 0.5 * side,
+        );
+      if (i < 40) {
+        const n = i * 2;
+        indices.push(n, n + 1, n + 2, n + 1, n + 3, n + 2);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+    this.mesh(this.root, geo, 0xd7c399, 0, 0, 0, { shadow: false });
+  }
+
   private makeStream() {
-    const bank = this.mesh(this.root, new THREE.BoxGeometry(TOWN.width, 0.12, 1.05), 0x6f8757, 15, 0.015, TOWN.streamZ - 0.12, { shadow: false });
-    const stream = this.mesh(this.root, new THREE.PlaneGeometry(TOWN.width, TOWN.depth - TOWN.streamZ + 0.65), 0x5ba7b6, 15, 0.06, (TOWN.streamZ + TOWN.depth) / 2, { shadow: false, roughness: 0.38 });
+    const bank = this.mesh(
+      this.root,
+      new THREE.BoxGeometry(TOWN.width, 0.12, 1.05),
+      0x6f8757,
+      15,
+      0.015,
+      TOWN.streamZ - 0.12,
+      { shadow: false },
+    );
+    const stream = this.mesh(
+      this.root,
+      new THREE.PlaneGeometry(TOWN.width, TOWN.depth - TOWN.streamZ + 0.65),
+      0x5ba7b6,
+      15,
+      0.06,
+      (TOWN.streamZ + TOWN.depth) / 2,
+      { shadow: false, roughness: 0.38 },
+    );
     stream.rotation.x = -Math.PI / 2;
     const streamMaterial = stream.material as THREE.MeshStandardMaterial;
     streamMaterial.emissive.set(0x17485a);
@@ -123,72 +261,247 @@ export class TownArt {
     this.water.push(streamMaterial);
     bank.receiveShadow = true;
     for (let x = 1.2; x < 30; x += 2.1) {
-      const stone = this.mesh(this.root, new THREE.DodecahedronGeometry(0.17, 0), 0x97a28a, x, 0.12, 20.1 + Math.sin(x * 1.7) * 0.23);
+      const stone = this.mesh(
+        this.root,
+        new THREE.DodecahedronGeometry(0.17, 0),
+        0x97a28a,
+        x,
+        0.12,
+        20.1 + Math.sin(x * 1.7) * 0.23,
+      );
       stone.scale.set(1.4, 0.55, 0.9);
     }
   }
 
   private makePlaza() {
-    const plaza = this.mesh(this.root, new THREE.CircleGeometry(5.35, 48), 0xc9b48d, TOWN.fountain.x, 0.015, TOWN.fountain.z, { shadow: false });
+    const plaza = this.mesh(
+      this.root,
+      new THREE.CircleGeometry(5.35, 48),
+      0xc9b48d,
+      TOWN.fountain.x,
+      0.015,
+      TOWN.fountain.z,
+      { shadow: false },
+    );
     plaza.rotation.x = -Math.PI / 2;
-    for (let r = 1; r < 5.2; r += 0.64) for (let n = 0; n < Math.max(9, r * 8); n++) {
-      const angle = (n / Math.max(9, r * 8)) * Math.PI * 2 + (Math.floor(r * 4) % 2) * 0.15;
-      const cobble = this.mesh(this.root, new RoundedBoxGeometry(0.38, 0.025, 0.28, 2, 0.045), n % 3 ? 0xd9c59f : 0xbba581, TOWN.fountain.x + Math.cos(angle) * r, 0.034, TOWN.fountain.z + Math.sin(angle) * r, { shadow: false });
-      cobble.rotation.y = angle + Math.PI / 2;
-    }
+    for (let r = 1; r < 5.2; r += 0.64)
+      for (let n = 0; n < Math.max(9, r * 8); n++) {
+        const angle =
+          (n / Math.max(9, r * 8)) * Math.PI * 2 +
+          (Math.floor(r * 4) % 2) * 0.15;
+        const cobble = this.mesh(
+          this.root,
+          new RoundedBoxGeometry(0.38, 0.025, 0.28, 2, 0.045),
+          n % 3 ? 0xd9c59f : 0xbba581,
+          TOWN.fountain.x + Math.cos(angle) * r,
+          0.034,
+          TOWN.fountain.z + Math.sin(angle) * r,
+          { shadow: false },
+        );
+        cobble.rotation.y = angle + Math.PI / 2;
+      }
+  }
+
+  private place(
+    key: Parameters<TownAssets["create"]>[0],
+    x: number,
+    z: number,
+    options: Parameters<TownAssets["create"]>[1],
+    y = 0,
+    turn = 0,
+  ) {
+    const model = this.assets.create(key, options);
+    model.position.set(x, y, z);
+    model.rotation.y = turn;
+    this.imported.add(model);
+    return model;
   }
 
   private makeTree(x: number, z: number, radius: number, variant: number) {
-    const tree = new THREE.Group();
-    tree.position.set(x, 0, z);
-    this.root.add(tree);
-    this.mesh(tree, new THREE.CylinderGeometry(radius * 0.82, radius, 0.12, 12), 0x6c8056, 0, 0.06, 0, { shadow: false });
-    this.mesh(tree, new THREE.CylinderGeometry(radius * 0.17, radius * 0.24, 1.45, 10), 0x75513b, 0, 0.74, 0);
-    const hues = [0x527c55, 0x638b59, 0x789d61];
+    this.place(
+      variant === 1 ? "mini-tree-high" : "mini-tree",
+      x,
+      z,
+      { height: variant === 2 ? 3.3 : variant === 1 ? 4.1 : 3.5 },
+      0,
+      x * 0.7,
+    );
+    const ring = this.mesh(
+      this.root,
+      new THREE.CircleGeometry(radius, 16),
+      0x6e925c,
+      x,
+      0.004,
+      z,
+      { shadow: false },
+    );
+    ring.rotation.x = -Math.PI / 2;
     for (let i = 0; i < 3; i++) {
-      const crown = this.mesh(tree, new THREE.IcosahedronGeometry(radius * (0.82 - i * 0.07), 1), hues[(variant + i) % hues.length], Math.sin(i * 2.15) * radius * 0.22, 1.58 + i * 0.3, Math.cos(i * 1.7) * radius * 0.22);
-      crown.scale.y = 1.02;
+      const a = i * 2.1 + x;
+      this.place(
+        i === 1 ? "flower-yellow" : "grass",
+        x + Math.cos(a) * radius * 0.7,
+        z + Math.sin(a) * radius * 0.7,
+        { height: i === 1 ? 0.25 : 0.18 },
+      );
     }
-    if (variant === 2) for (let i = 0; i < 3; i++) this.mesh(tree, new THREE.SphereGeometry(0.08, 8, 6), 0xe9b85d, Math.sin(i * 2.1) * radius * 0.55, 1.88 + (i % 2) * 0.28, Math.cos(i * 1.9) * radius * 0.55);
   }
 
   private makeBuilding(def: TownBuilding) {
-    const g = new THREE.Group();
-    g.position.set(def.x, 0, def.z);
-    g.rotation.y = def.facing ?? 0;
-    this.root.add(g);
-    const colors: Record<NonNullable<TownBuilding["style"]>, number> = { clubhouse: 0xd78464, bookshop: 0x809c92, bakery: 0xe5b36d, cottage: 0xb98da0, greenhouse: 0x9cad85 };
-    const wall = colors[def.style ?? "cottage"];
-    this.mesh(g, new RoundedBoxGeometry(def.width, 1.65, def.depth, 3, 0.12), wall, 0, 0.825, 0);
-    const roof = this.mesh(g, new THREE.ConeGeometry(Math.max(def.width, def.depth) * 0.78, 1.15, 4), def.style === "greenhouse" ? 0x6d9b85 : 0x8e6250, 0, 2.05, 0);
-    roof.rotation.y = Math.PI / 4;
-    const door = this.mesh(g, new RoundedBoxGeometry(0.62, 1.03, 0.07, 2, 0.045), 0x6b4a39, 0, 0.515, def.depth / 2 + 0.045);
-    if (def.style === "clubhouse") door.userData.kind = "home";
-    for (const side of [-1, 1]) {
-      const window = this.mesh(g, new RoundedBoxGeometry(0.46, 0.48, 0.055, 2, 0.035), 0xa9d5d3, side * Math.min(0.92, def.width * 0.27), 1.06, def.depth / 2 + 0.055, { roughness: 0.3 });
-      (window.material as THREE.MeshStandardMaterial).emissive.set(0x244a4f);
-      (window.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.16;
-    }
-    const signText = { clubhouse: "HOME", bookshop: "BOOKS", bakery: "BAKE", cottage: "TEA", greenhouse: "GROW" }[def.style ?? "cottage"];
-    this.makeShopSign(g, signText, 0, 1.53, def.depth / 2 + 0.09, Math.min(1.12, def.width * 0.38));
-    const awning = this.mesh(g, new RoundedBoxGeometry(Math.min(2.0, def.width * 0.62), 0.12, 0.46, 2, 0.04), def.style === "bakery" ? 0xe7d6a8 : def.style === "bookshop" ? 0xc56455 : 0xeff0d5, 0, 1.31, def.depth / 2 + 0.24, { shadow: false });
-    awning.rotation.x = -0.18;
-    if (def.style === "bookshop") {
-      for (let i = 0; i < 5; i++) this.mesh(g, new RoundedBoxGeometry(0.16, 0.44 + (i % 2) * 0.08, 0.08, 1, 0.015), [0xd7af5f, 0x638c88, 0xc86e61, 0xe8d7ac, 0x92786b][i], -def.width * 0.35 + i * 0.18, 0.34, def.depth / 2 + 0.13, { shadow: false });
-    }
-    if (def.style === "bakery") {
-      for (const x of [-0.95, 0.95]) this.mesh(g, new THREE.SphereGeometry(0.17, 10, 8), 0xd7984d, x, 0.31, def.depth / 2 + 0.14, { shadow: false });
-    }
-    if (def.style === "greenhouse") {
-      for (const x of [-0.95, 0.95]) {
-        this.mesh(g, new THREE.CylinderGeometry(0.15, 0.19, 0.26, 10), 0xc77f5f, x, 0.14, def.depth / 2 + 0.15, { shadow: false });
-        this.mesh(g, new THREE.SphereGeometry(0.2, 9, 7), 0x5b965c, x, 0.43, def.depth / 2 + 0.15, { shadow: false });
+    const { x, z, width, depth } = def;
+    if (def.style === "clubhouse") {
+      // The Kenney roof already includes its four posts. Keep its open silhouette.
+      const roof = this.place("mini-roof", x, z, { width, depth }, 0.12);
+      roof.userData.kind = "home";
+      const porch = this.mesh(
+        this.root,
+        new RoundedBoxGeometry(width - 0.35, 0.16, depth - 0.25, 2, 0.08),
+        0xb99262,
+        x,
+        0.08,
+        z,
+      );
+      porch.userData.kind = "home";
+      // Back wall of individual timber boards makes a warm, readable entrance.
+      for (let i = 0; i < 9; i++)
+        this.mesh(
+          this.root,
+          new RoundedBoxGeometry(0.38, 1.7, 0.12, 2, 0.035),
+          i % 2 ? 0xb88353 : 0xc18e5f,
+          x - 1.52 + i * 0.38,
+          0.99,
+          z + 1.35,
+        );
+      const door = this.mesh(
+        this.root,
+        new RoundedBoxGeometry(0.95, 1.6, 0.18, 3, 0.15),
+        0x526b68,
+        x,
+        0.96,
+        z + 1.48,
+      );
+      door.userData.kind = "home";
+      this.mesh(
+        this.root,
+        new THREE.SphereGeometry(0.065, 10, 8),
+        0xf2c778,
+        x + 0.29,
+        0.87,
+        z + 1.6,
+      );
+      this.makeShopSign(this.root, "CLUBHOUSE", x, 1.85, z + 1.65, 1.65);
+      for (const side of [-1, 1]) {
+        const lamp = this.mesh(
+          this.root,
+          new RoundedBoxGeometry(0.21, 0.32, 0.21, 2, 0.025),
+          0xffd38b,
+          x + side * 1.05,
+          1.32,
+          z + 1.6,
+        );
+        (lamp.material as THREE.MeshStandardMaterial).emissive.set(0xffbb57);
+        (lamp.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5;
+        this.place(
+          "mini-plant",
+          x + side * 1.75,
+          z + 0.85,
+          { height: 0.62 },
+          0.17,
+        );
       }
+    } else if (def.style === "reading") {
+      this.place("mini-tent", x, z, { width, depth });
+      this.makeShopSign(
+        this.root,
+        "READ & REST",
+        x,
+        0.42,
+        z + depth / 2 + 0.12,
+        1.45,
+      );
+    } else {
+      this.mesh(
+        this.root,
+        new RoundedBoxGeometry(width, 0.25, depth, 2, 0.08),
+        0xa5754a,
+        x,
+        0.125,
+        z,
+      );
+      this.mesh(
+        this.root,
+        new RoundedBoxGeometry(width - 0.18, 0.05, depth - 0.18, 2, 0.04),
+        0x725642,
+        x,
+        0.265,
+        z,
+      );
+      for (let row = 0; row < 2; row++)
+        for (let col = 0; col < 5; col++)
+          this.place(
+            col % 2 ? "flower-purple" : "flower-yellow",
+            x - 1.3 + col * 0.65,
+            z - 0.65 + row * 1.25,
+            { height: 0.48 },
+            0.29,
+            col * 0.6,
+          );
+      this.makeShopSign(
+        this.root,
+        "GROW TOGETHER",
+        x,
+        0.5,
+        z + depth / 2 + 0.08,
+        1.5,
+      );
     }
   }
 
-  private makeShopSign(parent: THREE.Object3D, text: string, x: number, y: number, z: number, width: number) {
-    const board = this.mesh(parent, new RoundedBoxGeometry(width + 0.12, 0.34, 0.055, 2, 0.035), 0x6b4b39, x, y, z, { shadow: false });
+  private makeGardenAccents() {
+    // Decorative clusters stay within existing tree/landmark footprints or along the stream.
+    for (let i = 0; i < 18; i++) {
+      const x = 0.6 + i * 1.65,
+        z = 20.05 + Math.sin(i * 1.6) * 0.13;
+      this.place(
+        i % 3 === 0 ? "mini-rocks" : "rock",
+        x,
+        z,
+        { height: i % 3 === 0 ? 0.43 : 0.22 },
+        0,
+        i * 0.9,
+      );
+      if (i % 2 === 0)
+        this.place("grass", x + 0.25, z - 0.12, { height: 0.35 });
+    }
+    for (const [x, z] of [
+      [2, 2.5],
+      [2.6, 12.7],
+      [18.7, 2.4],
+      [27.8, 3],
+      [22, 18.2],
+    ]) {
+      this.place("mushroom", x + 0.25, z + 0.1, { height: 0.26 });
+      this.place("bush", x - 0.25, z - 0.15, { height: 0.45 });
+    }
+  }
+
+  private makeShopSign(
+    parent: THREE.Object3D,
+    text: string,
+    x: number,
+    y: number,
+    z: number,
+    width: number,
+  ) {
+    const board = this.mesh(
+      parent,
+      new RoundedBoxGeometry(width + 0.12, 0.34, 0.055, 2, 0.035),
+      0x6b4b39,
+      x,
+      y,
+      z,
+      { shadow: false },
+    );
     board.userData.label = text;
     if (typeof document === "undefined") return;
     const canvas = document.createElement("canvas");
@@ -206,7 +519,10 @@ export class TownArt {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     this.signTextures.add(texture);
-    const label = new THREE.Mesh(new THREE.PlaneGeometry(width, 0.27), new THREE.MeshBasicMaterial({ map: texture }));
+    const label = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, 0.27),
+      new THREE.MeshBasicMaterial({ map: texture }),
+    );
     label.position.set(x, y, z + 0.033);
     parent.add(label);
   }
@@ -217,22 +533,68 @@ export class TownArt {
     f.userData.kind = "fountain";
     f.position.set(TOWN.fountain.x, 0, TOWN.fountain.z);
     this.root.add(f);
-    this.mesh(f, new THREE.CylinderGeometry(2.0, 2.1, 0.38, 40), 0xa9aab0, 0, 0.19, 0);
-    this.mesh(f, new THREE.CylinderGeometry(1.7, 1.78, 0.12, 40), 0xd3d0c4, 0, 0.42, 0);
-    const pool = this.mesh(f, new THREE.CylinderGeometry(1.55, 1.55, 0.025, 40), 0x5daec0, 0, 0.495, 0, { shadow: false, roughness: 0.3 });
+    this.mesh(
+      f,
+      new THREE.CylinderGeometry(2.0, 2.1, 0.38, 40),
+      0xa9aab0,
+      0,
+      0.19,
+      0,
+    );
+    this.mesh(
+      f,
+      new THREE.CylinderGeometry(1.7, 1.78, 0.12, 40),
+      0xd3d0c4,
+      0,
+      0.42,
+      0,
+    );
+    const pool = this.mesh(
+      f,
+      new THREE.CylinderGeometry(1.55, 1.55, 0.025, 40),
+      0x5daec0,
+      0,
+      0.495,
+      0,
+      { shadow: false, roughness: 0.3 },
+    );
     const poolMaterial = pool.material as THREE.MeshStandardMaterial;
     poolMaterial.emissive.set(0x1a6174);
     poolMaterial.emissiveIntensity = 0.15;
     this.water.push(poolMaterial);
-    this.mesh(f, new THREE.CylinderGeometry(0.42, 0.56, 0.88, 18), 0xc8c7c2, 0, 0.84, 0);
+    this.mesh(
+      f,
+      new THREE.CylinderGeometry(0.42, 0.56, 0.88, 18),
+      0xc8c7c2,
+      0,
+      0.84,
+      0,
+    );
     this.mesh(f, new THREE.SphereGeometry(0.3, 18, 12), 0xe0d8c4, 0, 1.38, 0);
     for (let i = 0; i < 5; i++) {
       const a = (i / 5) * Math.PI * 2;
-      const jet = this.mesh(f, new THREE.CylinderGeometry(0.036, 0.07, 0.72, 8), 0xd2f4ed, Math.cos(a) * 0.48, 0.95, Math.sin(a) * 0.48, { shadow: false, roughness: 0.15 });
+      const jet = this.mesh(
+        f,
+        new THREE.CylinderGeometry(0.036, 0.07, 0.72, 8),
+        0xd2f4ed,
+        Math.cos(a) * 0.48,
+        0.95,
+        Math.sin(a) * 0.48,
+        { shadow: false, roughness: 0.15 },
+      );
       jet.rotation.z = Math.cos(a) * 0.28;
       jet.rotation.x = -Math.sin(a) * 0.28;
       this.jets.push(jet);
-      const ripple = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.31, 24), new THREE.MeshBasicMaterial({ color: 0xe1ffff, transparent: true, opacity: 0.24, side: THREE.DoubleSide, depthWrite: false }));
+      const ripple = new THREE.Mesh(
+        new THREE.RingGeometry(0.25, 0.31, 24),
+        new THREE.MeshBasicMaterial({
+          color: 0xe1ffff,
+          transparent: true,
+          opacity: 0.24,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        }),
+      );
       ripple.position.set(Math.cos(a) * 0.75, 0.514, Math.sin(a) * 0.75);
       ripple.rotation.x = -Math.PI / 2;
       f.add(ripple);
@@ -240,3 +602,4 @@ export class TownArt {
     }
   }
 }
+
