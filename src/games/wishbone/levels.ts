@@ -51,7 +51,6 @@ export const yards: YardDefinition[] = [
     id: "teeter",
     name: "The Teeter Tower",
     mechanisms: [],
-    pickups: [],
     subtitle: "One little nudge. One big tumble.",
     pieces: [
       box(590, 548, 76, 104),
@@ -74,7 +73,6 @@ export const yards: YardDefinition[] = [
     id: "domino",
     name: "The Domino Picnic",
     mechanisms: [],
-    pickups: [],
     subtitle: "Start a wobble. Follow the ripple.",
     pieces: [
       box(518, 535, 40, 130, 0),
@@ -104,7 +102,6 @@ yards.push(
     name: "The Wobbly Bridge",
     subtitle: "Nudge a foot. Spill a bridge.",
     mechanisms: [],
-    pickups: [],
     pieces: [
       box(610, 540, 52, 120),
       box(850, 540, 72, 120, 1),
@@ -122,7 +119,6 @@ yards.push(
     name: "The Picnic Ripple",
     subtitle: "One tip starts a happy chain.",
     mechanisms: [],
-    pickups: [],
     pieces: [
       box(490, 535, 32, 130),
       box(585, 535, 32, 130, 1),
@@ -142,7 +138,6 @@ yards.push(
     subtitle: "Flip the paddle. Open the way.",
     mechanisms: ["lever"],
     devices: { lever: { x: 490, y: 485 }, gate: { x: 770, y: 490 } },
-    pickups: [{ id: "bounce", x: 390, y: 395 }],
     pieces: [
       box(870, 548, 64, 104, 1),
       box(1020, 548, 64, 104),
@@ -161,7 +156,6 @@ yards.push(
     subtitle: "Land low. Bounce into the treetops.",
     mechanisms: ["bellows"],
     devices: { bellows: { x: 520, y: 580 } },
-    pickups: [{ id: "wind", x: 575, y: 310 }],
     pieces: [
       box(700, 515, 70, 170),
       box(880, 515, 70, 170, 1),
@@ -180,7 +174,6 @@ yards.push(
     subtitle: "Move the metal blocks. Tumble the picnic.",
     mechanisms: ["magnet"],
     devices: { button: { x: 600, y: 566 }, field: { x: 890, y: 335, r: 270 } },
-    pickups: [{ id: "magnet", x: 410, y: 395 }],
     pieces: [
       bucket(800, 568),
       bucket(950, 568),
@@ -195,3 +188,22 @@ yards.push(
     ],
   },
 );
+
+// Append only: old level indices/checkpoints remain meaningful. This deliberately
+// extends well past the launch viewport, so camera exploration has real work to do.
+yards.push({
+  id: "long-yard",
+  name: "The Long Walk Home",
+  subtitle: "A long, loose tumble across the whole lawn.",
+  world: { width: 2400, height: 720 },
+  mechanisms: ["bellows"],
+  devices: {
+    bellows: { x: 1180, y: 580 },
+  },
+  pieces: [
+    box(790, 545, 64, 110), plank(865, 484, 250), toy(720, 580, 0), toy(970, 580, 1),
+    box(1210, 540, 74, 118, 2), plank(1310, 475, 270), toy(1190, 580, 2), toy(1450, 580, 3),
+    box(1710, 545, 72, 108, 1), plank(1810, 488, 280), toy(1660, 580, 0), toy(1960, 580, 1),
+    box(2110, 540, 70, 120, 1), plank(2110, 465, 180), toy(2070, 580, 2), toy(2220, 580, 3),
+  ],
+});

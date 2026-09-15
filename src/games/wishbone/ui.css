@@ -54,8 +54,7 @@
 }
 .wishbone-hud button,
 .levels-toggle,
-.yard-switcher button,
-.power-toggle {
+.yard-switcher button {
   border: 1px solid #d8dfcc;
   background: #fffdf5ed;
   color: var(--wish-ink);
@@ -241,50 +240,6 @@
   color: #687662;
   font-size: 9px;
 }
-.power-tray-wrap {
-  position: absolute;
-  z-index: 5;
-  bottom: 12px;
-  left: 50%;
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  transform: translateX(-50%);
-  width: min(510px, calc(100% - 176px));
-}
-.power-toggle {
-  min-width: 132px;
-}
-.power-shelf {
-  width: 100%;
-  padding: 7px;
-  border: 1px solid #d8dfcc;
-  border-radius: 14px;
-  background: #fffdf5f5;
-  box-shadow: 0 8px 20px #34462d3b;
-}
-.power-buttons {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.power-buttons button,
-.power-buttons label {
-  min-height: 48px;
-  font-size: 10px;
-}
-.power-buttons label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #63715d;
-}
-.power-shelf small {
-  margin-top: 5px;
-  color: #697660;
-  font-size: 9px;
-}
 .wishbone-game .pause-cover {
   z-index: 10;
 }
@@ -351,15 +306,6 @@
   .wishbone-game .stage-recall {
     top: calc(100% + 72px);
     bottom: auto;
-  }
-  .power-tray-wrap {
-    top: calc(100% + 12px);
-    bottom: auto;
-    width: min(510px, calc(100% - 176px));
-  }
-  .power-shelf {
-    max-height: min(330px, calc((100dvh - min(60vw, 390px)) / 2 - 76px));
-    overflow: auto;
   }
 }
 @media (max-height: 450px) and (orientation: landscape) {

@@ -15,3 +15,5 @@ Room furniture, characters, catalog portraits, icon paths and the favicon are au
 The book connection, spoiler policy and keepsake invention boundaries remain in the collection's plans/08-book-connections.md and plans/11-collectible-catalog.md. This integration introduces no new game concept or altered mechanical signature.
 
 Feedback 02: bowl, aquarium, fish and trampoline are original procedural Three.js geometry; the wooden launcher is original canvas drawing. New yard layouts are invented play spaces, not representations of scenes from the novel. Existing licensed/source assets are unchanged.
+
+Feedback 04: village buildings, water, trees, coin, reaction textures, launcher and grass are authored procedural Three.js/canvas graphics. User-provided reference images guided the pouch and bubble silhouettes; they were not copied into distributed assets. Fountain water/coin and dog-block rustle are original procedural Web Audio. Pocket-power gameplay is removed; prior documentation describes the historical baseline.

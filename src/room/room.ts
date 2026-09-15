@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
 import { RouteMotion } from "./motion";
 import { InteractiveFurnishing } from "./furnishings";
+import { ActorReaction, type ReactionKind } from "./reactions";
 import type { RoomSound } from "./audio";
 import { RoomNavigation, ROOM, footprint } from "./navigation";
 import { getFurniture, getPet } from "../core/catalog";
@@ -28,6 +29,20 @@ interface Draft {
 }
 /** World coordinates are authoritative; Three's depth buffer handles occlusion. */
 export class ClubhouseRoom {
+  private reactions = new Map<Actor, ActorReaction>();
+  private showReaction(actor: Actor, kind: ReactionKind) {
+    if (!this.reactions) return;
+    let reaction = this.reactions.get(actor);
+    if (!reaction) {
+      reaction = new ActorReaction(actor === this.avatar ? "avatar" : "pet");
+      this.reactions.set(actor, reaction);
+    }
+    actor.rig.root.add(reaction.sprite);
+    reaction.show(kind);
+  }
+  react(kind: ReactionKind) {
+    this.showReaction(this.avatar, kind);
+  }
   private scene = new THREE.Scene();
   private camera = new THREE.OrthographicCamera();
   private renderer: THREE.WebGLRenderer;
@@ -451,7 +466,9 @@ export class ClubhouseRoom {
   /** Route one free pet to an accessible edge and reserve it until the action ends. */
   private startPetPlay(id: string, kind: "bowl" | "trampoline") {
     if (this.petPlay) return;
-    const item = this.profile.state.items.find((candidate) => candidate.id === id);
+    const item = this.profile.state.items.find(
+      (candidate) => candidate.id === id,
+    );
     if (!item?.placement) return;
     const pet = this.pets.find((candidate) => !candidate.following);
     if (!pet) {
@@ -479,7 +496,8 @@ export class ClubhouseRoom {
           path,
           // A pet already standing at an edge has arrived even though A* has
           // no waypoint to return. An empty route elsewhere stays unavailable.
-          reached: Math.hypot(pet.point.x - point.x, pet.point.z - point.z) < 0.04,
+          reached:
+            Math.hypot(pet.point.x - point.x, pet.point.z - point.z) < 0.04,
         };
       })
       .filter((route) => route.path.length || route.reached)
@@ -539,6 +557,7 @@ export class ClubhouseRoom {
           play.center.x - play.approach.x,
           play.center.z - play.approach.z,
         );
+        this.showReaction(play.pet, "nom");
         this.notify(`${getPet(play.pet.id)!.name}: nom nom!`);
       } else this.furnishings.get(play.itemId)!.interact();
     }
@@ -555,9 +574,11 @@ export class ClubhouseRoom {
       // A small forward/downward dip is readable as eating without competing
       // with the normal walk and idle rig motions.
       play.pet.rig.root.position.set(
-        play.approach.x + (toward.x / distance) * bite * (reduced ? 0.018 : 0.06),
+        play.approach.x +
+          (toward.x / distance) * bite * (reduced ? 0.018 : 0.06),
         bite * (reduced ? 0.009 : 0.03),
-        play.approach.z + (toward.z / distance) * bite * (reduced ? 0.018 : 0.06),
+        play.approach.z +
+          (toward.z / distance) * bite * (reduced ? 0.018 : 0.06),
       );
       if (t >= 2) {
         // Do not spend food until arrival and the visible nibble both completed.
@@ -701,10 +722,12 @@ export class ClubhouseRoom {
   }
   wave() {
     this.avatar.rig.wave();
+    this.react("hello");
     this.sound("wave");
   }
   jump() {
     this.avatar.rig.jump();
+    this.react("surprise");
     this.sound("jump");
   }
   pet(id: string) {
@@ -712,6 +735,7 @@ export class ClubhouseRoom {
     const pet = this.pets.find((p) => p.id === id);
     if (!pet) return;
     pet.rig.pet();
+    this.showReaction(pet, "heart");
     this.sound("pet");
     pet.wait = 3;
     pet.path = [];
@@ -723,6 +747,7 @@ export class ClubhouseRoom {
     for (const pet of this.pets) {
       pet.path = this.nav.path(pet.point, this.freeNear(this.avatar.point));
       pet.wait = 4;
+      this.showReaction(pet, "question");
     }
     this.avatar.rig.wave();
     if (this.pets.length) this.notify("Here, little friend!");
@@ -770,6 +795,12 @@ export class ClubhouseRoom {
       for (const furnishing of this.furnishings.values())
         furnishing.update(dt, this.profile.state.reduced);
       this.animatePetPlay(dt);
+      for (const [actor, reaction] of this.reactions) {
+        if (!this.actors().includes(actor)) {
+          reaction.dispose();
+          this.reactions.delete(actor);
+        } else reaction.update(dt, this.profile.state.reduced);
+      }
       if (this.destinationAge <= 0) this.destination.visible = false;
       this.renderer.render(this.scene, this.camera);
     }
@@ -795,6 +826,8 @@ export class ClubhouseRoom {
     };
   }
   dispose() {
+    for (const reaction of this.reactions.values()) reaction.dispose();
+    this.reactions.clear();
     cancelAnimationFrame(this.raf);
     this.abort.abort();
     this.unsub();

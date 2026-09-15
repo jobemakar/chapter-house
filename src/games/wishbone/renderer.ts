@@ -408,51 +408,6 @@ function gadgets(
         );
       }
   }
-  if (yard.mode === "flight" && yard.active === "magnet") {
-    c.beginPath();
-    c.arc(yard.dog.position.x, yard.dog.position.y, 170, 0, Math.PI * 2);
-    c.strokeStyle = "#83c5b077";
-    c.lineWidth = 3;
-    c.stroke();
-  }
-  if (yard.mode === "flight" && yard.bounces > 0)
-    gadgetLabel(
-      c,
-      "Bounce " + yard.bounces,
-      yard.dog.position.x,
-      yard.dog.position.y - 80,
-    );
-  c.restore();
-}
-
-function drawPickups(
-  c: CanvasRenderingContext2D,
-  yard: PowerYard,
-  time: number,
-  reduced: boolean,
-) {
-  if (!yard.pickups) return;
-  c.save();
-  for (const p of yard.pickups)
-    if (!yard.claimed.has(p.id)) {
-      const bob = reduced ? 0 : Math.sin(time * 3 + p.x) * 3;
-      c.beginPath();
-      c.arc(p.x, p.y, 30, 0, Math.PI * 2);
-      c.strokeStyle = "#fff5d9";
-      c.lineWidth = 3;
-      c.stroke();
-      powerIcon(c, p.id, p.x, p.y + bob);
-      gadgetLabel(
-        c,
-        p.id === "bounce"
-          ? "BOUNCE"
-          : p.id === "magnet"
-            ? "MAGNET"
-            : "TAILWIND",
-        p.x,
-        p.y + 47,
-      );
-    }
   c.restore();
 }
 export class WishboneRenderer {
@@ -518,7 +473,8 @@ export class WishboneRenderer {
   ) {
     const c = this.c,
       W = 1200,
-      H = 720;
+      H = 720,
+      worldW = yard.world.width;
     const view = camera ?? { x: W / 2, y: H / 2, zoom: 1 };
     if (!paused) this.clock += dt;
     c.setTransform(this.canvas.width / W, 0, 0, this.canvas.height / H, 0, 0);
@@ -535,8 +491,15 @@ export class WishboneRenderer {
     // Overscan prevents an exposed edge when the camera reaches a boundary.
     const farX = (W / 2 - view.x) * (reduced ? 0 : 0.2);
     const farY = (H / 2 - view.y) * (reduced ? 0 : 0.2);
+    const farOverscan = 120 + Math.abs(worldW - W) * (reduced ? 0 : 0.2);
     if (this.background.complete && this.background.naturalWidth)
-      c.drawImage(this.background, -120 + farX, -72 + farY, W + 240, H + 144);
+      c.drawImage(
+        this.background,
+        -farOverscan + farX,
+        -72 + farY,
+        W + farOverscan * 2,
+        H + 144,
+      );
     else {
       c.fillStyle = "#dce8d0";
       c.fillRect(0, 0, W, H);
@@ -581,19 +544,34 @@ export class WishboneRenderer {
     // The collision floor is part of the world, so shadows and pieces never float
     // when zooming or panning.
     const ground = c.createLinearGradient(0, 602, 0, 720);
-    ground.addColorStop(0, "#9cb87a33");
-    ground.addColorStop(1, "#72955d55");
+    ground.addColorStop(0, "#b9d093");
+    ground.addColorStop(0.18, "#a8c781");
+    ground.addColorStop(1, "#7fa366");
     c.fillStyle = ground;
-    c.fillRect(0, 602, W, 118);
+    c.fillRect(0, 602, worldW, 118);
     line(
       c,
       [
         [20, 602],
-        [1180, 602],
+        [worldW - 20, 602],
       ],
       "#71855d99",
       3,
     );
+    // This platform belongs to the world, rather than the screen-painted
+    // backdrop, so distant structures stay visibly grounded while panning.
+    for (let x = 25; x < worldW; x += 46) {
+      line(
+        c,
+        [
+          [x, 603],
+          [x + 7, 594],
+          [x + 13, 603],
+        ],
+        "#6d925b",
+        2,
+      );
+    }
     gadgets(c, yard, this.clock, reduced);
     // Shadows establish one consistent ground line.
     for (const b of yard.pieces)
@@ -602,13 +580,14 @@ export class WishboneRenderer {
         ellipse(c, b.position.x, 605, size, 5, "#4a684014");
       }
     ellipse(c, yard.dog.position.x, 606, 53, 8, "#435d4638");
-    // Forked wooden launcher and elastic cradle; the same plush supplies the payload.
+    // A crooked fork is planted to Wishbone's right. The leather pouch and dog
+    // sit left of it, so the fork never cuts over his face.
     line(
       c,
       [
-        [162, 570],
-        [162, 505],
-        [104, 410],
+        [242, 570],
+        [242, 438],
+        [268, 390],
       ],
       "#795435",
       18,
@@ -616,13 +595,17 @@ export class WishboneRenderer {
     line(
       c,
       [
-        [163, 567],
-        [163, 506],
-        [104, 411],
+        [242, 568],
+        [242, 438],
+        [268, 391],
       ],
       "#c6965d",
       7,
     );
+    // The left branch makes the rear band a real part of the planted fork,
+    // rather than a floating anchor.
+    line(c, [[242, 438], [215, 390]], "#795435", 18);
+    line(c, [[242, 438], [215, 391]], "#c6965d", 7);
     const heldX =
       TUNE.origin.x -
       (input ? (input.velocity.x / TUNE.launchScale) * 0.48 : 0);
@@ -633,19 +616,31 @@ export class WishboneRenderer {
       line(
         c,
         [
-          [104, 410],
-          [heldX, heldY + 12],
+          [215, 390],
+          [heldX - 23, heldY + 15],
         ],
         "#754c49",
         8,
       );
-      round(c, heldX - 20, heldY + 5, 40, 20, 8, "#ac7256", "#654733");
+      round(c, heldX - 32, heldY + 9, 53, 25, 9, "#8d5b42", "#56382b");
+      // Both elastic bands sit behind the payload. The front band attaches at
+      // the pouch edge, leaving Wishbone's head completely unobstructed.
+      line(
+        c,
+        [
+          [heldX + 23, heldY + 16],
+          [242, 438],
+        ],
+        "#5d3830",
+        7,
+      );
+      ellipse(c, 242, 438, 8, 8, "#e0b57c");
     } else
       line(
         c,
         [
-          [104, 410],
-          [164, 466],
+          [215, 390],
+          [142, 460],
         ],
         "#754c49",
         6,
@@ -678,7 +673,7 @@ export class WishboneRenderer {
         line(
           c,
           [
-            [104, 410],
+            [215, 390],
             [x, y],
           ],
           "#b8724d",
@@ -704,7 +699,7 @@ export class WishboneRenderer {
           vy = vy * 0.9985 + 0.145833;
           px += vx * 0.5;
           py += vy * 0.5;
-          if (py > 585 || px > 1180 || px < 20) break;
+          if (py > 585 || px > worldW - 20 || px < 20) break;
           if (n % 9 === 0) {
             ellipse(
               c,
@@ -785,7 +780,6 @@ export class WishboneRenderer {
           ),
         });
       }
-    drawPickups(c, yard, this.clock, reduced);
     const pull = input
       ? {
           x: (-input.velocity.x / TUNE.launchScale) * 0.48,
@@ -818,36 +812,29 @@ export class WishboneRenderer {
         : 0,
       sway: this.pullSway,
     });
-    // Near fork and band cross the plush to make the pouch visibly sit inside it.
+    // The pouch rim deliberately covers only Wishbone's lower body. His face
+    // and ears remain clear at rest and at full draw.
     if (yard.mode === "ready") {
       line(
         c,
         [
-          [240, 410],
-          [heldX + 12, heldY + 10],
+          [heldX - 30, heldY + 10],
+          [heldX - 19, heldY + 25],
+          [heldX + 7, heldY + 29],
+          [heldX + 23, heldY + 16],
         ],
-        "#5d3830",
-        7,
+        "#5d382b",
+        5,
       );
       line(
         c,
         [
-          [162, 506],
-          [240, 410],
+          [heldX - 25, heldY + 13],
+          [heldX + 12, heldY + 19],
         ],
-        "#765033",
-        19,
+        "#d6a06d",
+        2,
       );
-      line(
-        c,
-        [
-          [164, 505],
-          [240, 411],
-        ],
-        "#d5a873",
-        7,
-      );
-      ellipse(c, 240, 410, 8, 8, "#e0b57c");
     }
     for (const p of this.particles) {
       if (!paused && !input) {

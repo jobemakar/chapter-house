@@ -1,6 +1,6 @@
 import type { GameSession } from "../../core/game-session";
 import { ProfileRepository, ActivityClock } from "../../core/profile";
-import { PowerYard, definitions } from "./powers";
+import { PowerYard } from "./powers";
 import { yards } from "./levels";
 import { aim, TUNE } from "./yard";
 import { WishboneRenderer, drawItem } from "./renderer";
@@ -36,9 +36,7 @@ export class WishboneGame implements GameSession {
   private cascade = 0;
   private cascadeTime = 0;
   private impactWait = 0;
-  private powersOpen = false;
   private activity: ActivityClock;
-  private powerKey = "";
   private statusKey = "";
   constructor(
     private host: HTMLElement,
@@ -54,6 +52,7 @@ export class WishboneGame implements GameSession {
       progress.checkpoints[yards[progress.yard].id],
       progress.powers,
     );
+    this.camera.setWorld(this.yard.world);
     host.innerHTML = `<section class="wishbone-game game-page">
 <div class="yard-wrap">
 <canvas aria-label="Wishbone physics yard. Pull left and down from Wishbone, then release." tabindex="0">
@@ -83,7 +82,6 @@ export class WishboneGame implements GameSession {
 <h2>A little breather</h2>
 <button data-action="resume" class="primary">Keep playing</button>
 </div>
-<button data-action="gust" class="stage-gust" hidden>Gust ↑</button>
 <div class="stage-tools">
 <button data-action="restack" class="stage-tool" aria-label="Restack this yard" title="Restack"><span aria-hidden="true">↺</span></button>
 <button data-action="collection" class="stage-tool" aria-label="Open keepsakes" title="Keepsakes"><span aria-hidden="true">♥</span></button>
@@ -95,21 +93,6 @@ export class WishboneGame implements GameSession {
 </div>
 <button data-action="recall" class="stage-recall" hidden>Recall</button>
 <div class="game-status" role="status"><b data-ui="hint">Pull back. Let him fly.</b><small data-ui="milestone">Unlimited tumbles. Everything you earn stays yours.</small></div>
-<section class="power-tray-wrap">
-<button data-action="powers" class="power-toggle" aria-expanded="false">Pocket powers <span data-ui="power-count"></span></button>
-<div class="power-shelf" data-ui="power-tray" hidden>
-<div class="power-buttons">${definitions
-      .map(
-        (p) => `<button data-action="${p.id}" title="${p.detail}">
-</button>`,
-      )
-      .join("")}<label>
-<input type="checkbox" data-ui="auto"> Auto gust</label>
-</div>
-<small data-ui="power-hint">
-</small>
-</div>
-</section>
 </div>
 <dialog class="game-dialog">
 <button class="dialog-close" data-action="close-dialog" aria-label="Close">×</button>
@@ -121,14 +104,6 @@ export class WishboneGame implements GameSession {
     this.renderer = new WishboneRenderer(this.canvas);
     this.sound = new GameAudio("summer", profile.state.muted);
     host.addEventListener("click", this.click, { signal: this.abort.signal });
-    host.querySelector<HTMLInputElement>('[data-ui="auto"]')!.addEventListener(
-      "change",
-      (e) => {
-        progress.powers.autoGust = (e.target as HTMLInputElement).checked;
-        this.save();
-      },
-      { signal: this.abort.signal },
-    );
     this.canvas.addEventListener("pointerdown", this.down, {
       signal: this.abort.signal,
     });
@@ -224,15 +199,6 @@ export class WishboneGame implements GameSession {
       this.dialog(action);
       return;
     }
-    if (action === "powers") {
-      this.powersOpen = !this.powersOpen;
-      this.ui("power-tray").hidden = !this.powersOpen;
-      this.button("powers").setAttribute(
-        "aria-expanded",
-        String(this.powersOpen),
-      );
-      return;
-    }
     if (action === "levels") {
       const list = this.ui("yard-list");
       list.hidden = !list.hidden;
@@ -275,12 +241,6 @@ export class WishboneGame implements GameSession {
       this.cancelAim();
       this.yard.recall();
     }
-    if (action === "gust") {
-      this.yard.gust();
-      this.save();
-    }
-    if (action === "bounce" || action === "magnet" || action === "wind")
-      this.yard.arm(action);
     this.refresh();
   };
   private point(event: { clientX: number; clientY: number }) {
@@ -418,6 +378,7 @@ export class WishboneGame implements GameSession {
       rebuild ? null : this.profile.state.wishbone.checkpoints[yards[index].id],
       this.profile.state.wishbone.powers,
     );
+    this.camera.setWorld(this.yard.world);
     this.renderer.particles = [];
     this.renderer.labels = [];
     this.camera.home();
@@ -440,7 +401,6 @@ export class WishboneGame implements GameSession {
   }
   setMuted(value: boolean) {
     this.sound.muted = value;
-    this.powerKey = "";
     if (value) this.sound.suspend();
     else if (!this.paused) this.sound.start();
   }
@@ -450,13 +410,16 @@ export class WishboneGame implements GameSession {
     this.setPaused(true);
     if (kind === "help")
       this.ui("dialog").innerHTML =
-        `<span class="eyebrow">A LITTLE HELP</span><h2>One happy tumble at a time.</h2><p>Touch the left side of the yard, near Wishbone. Pull left and down, then release. Aim low to tip the supports, or high to reach the top.</p><p>Hit floating powerups to keep them. Choose one before a throw; the pinwheel gives you a Gust button during flight. The lever, spring pad, and magnet switch respond to collisions. The horseshoe pulls or pushes metal blocks; the separate Magnet Bandana power gathers loose toys.</p><p>Drag away from the launcher to look around. Use + and −, the mouse wheel, or pinch to zoom. The four-arrow button shows the whole yard. Zoom in before a throw to follow Wishbone across the scene.</p><p>Wishbone comes back automatically after each toss. Recall brings him back sooner. Restack whenever you like. Make fourteen throws to earn a Patchwork dog bed for your clubhouse.</p>`;
+        `<span class="eyebrow">A LITTLE HELP</span><h2>One happy tumble at a time.</h2><p>Touch the left side of the yard, near Wishbone. Pull left and down, then release. Aim low to tip the supports, or high to reach the top.</p><p>The lever, spring pad, and magnet switch respond to collisions. The horseshoe pulls or pushes metal blocks.</p><p>Drag away from the launcher to look around. Use + and −, the mouse wheel, or pinch to zoom. The four-arrow button shows the whole yard. On the Long Walk Home, pan to find distant structures and follow Wishbone across the lawn.</p><p>Wishbone comes back automatically after each toss. Recall brings him back sooner. Restack whenever you like. Make fourteen throws to earn a Patchwork dog bed for your clubhouse.</p>`;
     else {
       this.ui("dialog").innerHTML =
         '<span class="eyebrow">YOUR WISHBONE COLLECTION</span><h2>Little stories to keep.</h2><div class="collection-grid"></div>';
       const grid = this.ui("dialog").querySelector(".collection-grid")!;
       for (const k of keepsakes) {
         const owned = this.profile.state.wishbone.owned.includes(k.id);
+        // Historical power displays remain visible to owners, but are never
+        // presented as a discovery path in the current game.
+        if (k.metric === "power" && !owned) continue;
         const card = document.createElement("div");
         card.className = "keepsake " + (owned ? "owned" : "");
         const art = document.createElement("canvas");
@@ -505,22 +468,6 @@ export class WishboneGame implements GameSession {
       this.button("restack").disabled = this.paused;
       this.ui("coins").textContent = String(this.profile.state.currency);
     }
-    const powerKey = JSON.stringify([
-      p.powers,
-      this.yard.armed,
-      this.yard.active,
-      this.yard.mode,
-      this.paused,
-    ]);
-    if (powerKey === this.powerKey) return;
-    this.powerKey = powerKey;
-    for (const d of definitions) {
-      const b = this.button(d.id);
-      b.textContent = `${d.icon} ${d.name} · ${p.powers.counts[d.id]}`;
-      b.disabled =
-        this.paused || this.yard.mode !== "ready" || p.powers.counts[d.id] < 1;
-      b.setAttribute("aria-pressed", String(this.yard.armed === d.id));
-    }
     this.button("sound").textContent = this.profile.state.muted
       ? "Sound off"
       : "Sound on";
@@ -528,18 +475,6 @@ export class WishboneGame implements GameSession {
       "aria-pressed",
       String(!this.profile.state.muted),
     );
-    this.ui("power-count").textContent = String(
-      definitions.reduce((total, d) => total + p.powers.counts[d.id], 0),
-    );
-    this.button("gust").hidden =
-      this.paused || this.yard.mode !== "flight" || this.yard.active !== "wind";
-    this.ui<HTMLInputElement>("auto").checked = p.powers.autoGust;
-    const selected = definitions.find(
-      (d) => d.id === (this.yard.armed || this.yard.active),
-    );
-    this.ui("power-hint").textContent =
-      selected?.detail ??
-      "Hit a floating pickup or clear a yard. Save powerups for any yard.";
   }
   private frame = (timestamp: number) => {
     const dt = this.last ? Math.min((timestamp - this.last) / 1000, 0.06) : 0;
@@ -551,31 +486,15 @@ export class WishboneGame implements GameSession {
       this.cascadeTime -= dt;
       if (this.cascadeTime <= 0) this.cascade = 0;
       for (const event of this.yard.drainEvents()) {
-        if (event.type === "pickup" || event.type === "clear-power") {
-          const p = definitions.find((p) => p.id === event.id)!;
-          this.renderer.burst(
-            event.x,
-            event.y,
-            p.color,
-            this.profile.state.reduced,
-          );
-          this.renderer.label("+1 " + p.name, event.x, event.y - 30);
-          this.rewards();
-        }
-        if (event.type === "mechanism" || event.type === "power-used") {
+        if (event.type === "mechanism") {
           this.renderer.label(event.text, event.x, event.y);
           this.sound.note(420, 0.2, 0.04, "triangle");
           this.save();
         }
-        if (event.type === "impact" && this.impactWait <= 0) {
+        if (event.type === "impact" && event.kind === "dog-block" && this.impactWait <= 0) {
           this.impactWait = 0.055;
           this.yard.squash = Math.min(1, event.speed / 10);
-          this.sound.note(
-            event.kind === "bucket" ? 430 : 90,
-            0.1,
-            Math.min(0.07, event.speed * 0.004),
-            "sine",
-          );
+          this.sound.kshh(event.speed);
           if (!this.profile.state.reduced && event.speed > 5)
             this.renderer.shake = Math.min(3.5, event.speed * 0.18);
         }

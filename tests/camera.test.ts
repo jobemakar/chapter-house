@@ -50,3 +50,21 @@ test("reduced motion uses a steady overview during flight", () => {
   assert.equal(c.zoom, 1);
   assert.equal(c.x, 600);
 });
+
+test("a wide world has an overview, bounded panning, flight follow, and launcher return", () => {
+  const c = new WishboneCamera();
+  c.setWorld({ width: 2400, height: 720 });
+  c.home();
+  assert.equal(c.zoom, 0.5);
+  assert.equal(c.x, 1200);
+  c.zoomAt(0.75);
+  assert.equal(c.y, 360);
+  c.home();
+  c.pan(-10000, 0);
+  assert.equal(c.x, 1200);
+  c.launched();
+  for (let i = 0; i < 80; i++) c.update(0.05, "flight", { x: 2050, y: 420 }, false, false);
+  assert.ok(c.x > 1700);
+  for (let i = 0; i < 100; i++) c.update(0.05, "ready", { x: 162, y: 478 }, false, false);
+  assert.equal(c.x, 600);
+});

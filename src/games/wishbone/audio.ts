@@ -2,6 +2,7 @@ export class GameAudio {
   context: AudioContext | null;
   step: number;
   elapsed: number;
+  private kshhAt = -Infinity;
   dispose() {
     void this.context?.close();
     this.context = null;
@@ -59,6 +60,40 @@ export class GameAudio {
     [1, 1.25, 1.5, 2].forEach((f, i) =>
       this.note(392 * f, 0.45, 0.055, "sine", i * 0.09),
     );
+  }
+  /** A short clothy scrape for a real Wishbone-to-block collision only. */
+  kshh(speed: number) {
+    if (
+      !this.context ||
+      this.context.state !== "running" ||
+      this.muted ||
+      this.context.currentTime - this.kshhAt < 0.16
+    )
+      return;
+    this.kshhAt = this.context.currentTime;
+    const at = this.context.currentTime,
+      noise = this.context.createBufferSource(),
+      buffer = this.context.createBuffer(1, 1500, this.context.sampleRate),
+      gain = this.context.createGain(),
+      filter = this.context.createBiquadFilter();
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    noise.buffer = buffer;
+    filter.type = "bandpass";
+    filter.frequency.value = 1250;
+    filter.Q.value = 0.7;
+    gain.gain.setValueAtTime(Math.min(0.055, speed * 0.004), at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.09);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.context.destination);
+    noise.start(at);
+    noise.stop(at + 0.1);
+    noise.onended = () => {
+      noise.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
   }
   tick(dt: number) {
     if (this.muted || !this.context || this.context.state !== "running") return;

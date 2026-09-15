@@ -28,7 +28,8 @@ export interface YardDefinition {
     button?: { x: number; y: number };
     field?: { x: number; y: number; r: number };
   };
-  pickups?: { id: PowerId; x: number; y: number }[];
+  /** Authored world dimensions. Old yards omit this and retain the classic field. */
+  world?: { width: number; height?: number };
 }
 export interface PieceMetadata extends PieceDefinition {
   id: number;
@@ -66,8 +67,7 @@ export type GameEvent =
   | { type: "throw" | "hop" }
   | { type: "fetch"; x: number; y: number }
   | { type: "rescue"; id: string; x: number; y: number; color: number }
-  | { type: "mechanism" | "power-used"; text: string; x: number; y: number }
-  | { type: "pickup" | "clear-power"; id: PowerId; x: number; y: number };
+  | { type: "mechanism"; text: string; x: number; y: number };
 export interface AimInput {
   id: number;
   start: { x: number; y: number };

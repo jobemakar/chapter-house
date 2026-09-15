@@ -49,9 +49,14 @@ export class Yard {
   projectiles: M.Body[];
   activeToy: M.Body | null;
   facing: number;
+  world: { width: number; height: number };
   constructor(index = 0, checkpoint: Checkpoint | null = null) {
     this.index = index;
     this.layout = yards[index];
+    this.world = {
+      width: this.layout.world?.width ?? TUNE.width,
+      height: this.layout.world?.height ?? TUNE.height,
+    };
     this.events = [];
     this.time = 0;
     this.accumulator = 0;
@@ -67,12 +72,12 @@ export class Yard {
     });
     this.engine.gravity.y = TUNE.gravity;
     this.bounds = [
-      Bodies.rectangle(600, 638, 1600, 76, {
+      Bodies.rectangle(this.world.width / 2, 638, this.world.width + 400, 76, {
         isStatic: true,
         friction: 0.75,
       }),
       Bodies.rectangle(-45, 250, 80, 900, { isStatic: true }),
-      Bodies.rectangle(1245, 250, 80, 900, { isStatic: true }),
+      Bodies.rectangle(this.world.width + 45, 250, 80, 900, { isStatic: true }),
     ];
     Composite.add(this.engine.world, this.bounds);
     this.pieces = this.layout.pieces.map((p, i) => {
@@ -127,14 +132,19 @@ export class Yard {
           a.velocity.x - b.velocity.x,
           a.velocity.y - b.velocity.y,
         );
-        if (speed > 2.2 && (a.game || b.game))
+        const plush = a.game?.kind === "plush" || b.game?.kind === "plush";
+        const other = a.game?.kind === "plush" ? b : a;
+        if (
+          plush &&
+          speed > 3.6 &&
+          !other.isStatic &&
+          !other.isSensor &&
+          other.game?.kind !== "plush"
+        )
           this.events.push({
             type: "impact",
             speed,
-            kind:
-              a.game?.kind === "bucket" || b.game?.kind === "bucket"
-                ? "bucket"
-                : "wood",
+            kind: "dog-block",
             x: (a.position.x + b.position.x) / 2,
             y: (a.position.y + b.position.y) / 2,
           });
@@ -194,7 +204,7 @@ export class Yard {
     const dog = this.dog,
       toy = this.activeToy;
     let target =
-      this.dogMode === "chase" && toy ? clamp(toy.position.x, 65, 1160) : 92;
+      this.dogMode === "chase" && toy ? clamp(toy.position.x, 65, this.world.width - 40) : 92;
     if (
       this.dogMode === "chase" &&
       toy &&
@@ -298,7 +308,7 @@ export class Yard {
         Number.isFinite(p.y) &&
         Number.isFinite(p.angle) &&
         p.x > 0 &&
-        p.x < 1200 &&
+        p.x < this.world.width &&
         p.y > -1000 &&
         p.y < 650
       ) {

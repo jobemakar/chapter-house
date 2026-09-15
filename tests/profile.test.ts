@@ -49,7 +49,7 @@ test("legacy Fling progress imports once while all original saves remain untouch
     version: 2,
     throws: 16,
     rescued: ["teeter:1"],
-    owned: ["sock", "bed"],
+    owned: ["sock", "bed", "power-magnet"],
     powers: { counts: { bounce: 3 }, discovered: ["bounce"] },
   });
   store.setItem("wishbone-floppy-fetch-v1", legacy);
@@ -57,7 +57,8 @@ test("legacy Fling progress imports once while all original saves remain untouch
   const p = new ProfileRepository(store);
   assert.equal(p.state.wishbone.throws, 16);
   assert.equal(p.state.wishbone.powers.counts.bounce, 3);
-  assert.ok(p.state.wishbone.owned.includes("power-bounce"));
+  assert.ok(p.state.wishbone.owned.includes("power-magnet"));
+  assert.ok(!p.state.wishbone.owned.includes("power-bounce"));
   assert.equal(store.getItem("wishbone-floppy-fetch-v1"), legacy);
   assert.equal(store.getItem("wishbones-big-fetch-v2"), "untouched");
   p.state.wishbone.throws = 20;

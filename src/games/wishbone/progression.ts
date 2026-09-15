@@ -136,20 +136,17 @@ export class WishboneProgression {
       checkpoints,
       powers,
     };
-    for (const power of powers.discovered)
-      if (!state.owned.includes("power-" + power))
-        state.owned.push("power-" + power);
     this.award(state);
     return state;
   }
   static award(state: WishboneProgress): string[] {
     const earned: string[] = [];
     for (const k of keepsakes) {
+      // Power displays are archival collection entries only. Existing ownership
+      // survives load, but discoveries never create a new keepsake.
       const qualifies =
-        k.metric === "power"
-          ? state.powers.discovered.some((p) => "power-" + p === k.id)
-          : (k.metric === "rescued" ? state.rescued.length : state.throws) >=
-            k.at;
+        k.metric !== "power" &&
+        (k.metric === "rescued" ? state.rescued.length : state.throws) >= k.at;
       if (qualifies && !state.owned.includes(k.id)) {
         state.owned.push(k.id);
         earned.push(k.id);

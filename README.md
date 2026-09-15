@@ -31,7 +31,7 @@ Cancel, placement and storage keep decorating active; tap another piece or choos
 
 The [feedback pass](docs/feedback-01.md) adds expressive jump/wave poses, stable arrival direction and rounded action buttons. Larger or connected rooms are recorded for later. More avatar accessories are proposed, not included in this polish pass.
 
-Games opens Wishbone Fling. Pull back from the left of its yard, then release. Five new focused yards showcase a bridge, domino chain, lever gate, bellows and magnet; the two original yards remain under Classics. A forked wooden slingshot and compact overlay controls replace the heavier framing. Recall appears only while Wishbone is away; keepsakes remain accessible. Progress and powerups persist. Fourteen throws earn a Patchwork dog bed; return to Decorate to place it. All nine original keepsakes have floor display models. Game rewards cannot be bought.
+Games opens Wishbone Fling. Pull back from the left of its yard, then release. Five new focused yards showcase a bridge, domino chain, lever gate, bellows and magnet; the two original yards remain under Classics. A forked wooden slingshot and compact overlay controls replace the heavier framing. Recall appears only while Wishbone is away; keepsakes remain accessible. Durable progress persists; collectible pocket powers have been removed. Fourteen throws earn a Patchwork dog bed; return to Decorate to place it. All nine original keepsakes have floor display models. Game rewards cannot be bought.
 
 Active play earns one coin per ten counted seconds, independent of score. Idle, paused and hidden games stop earning. A fern costs 12, the cheapest additional pet 60; furniture copies are distinct, pet ownership is unique. These are named developer tuning values, not final economy balancing.
 
@@ -47,7 +47,7 @@ Active play earns one coin per ten counted seconds, independent of score. Idle, 
 - `src/room/audio.ts`: gesture-gated procedural ambient music and interaction sounds.
 - `src/room/art.ts`: reusable 3D furniture and animal rig factories; directional animation uses world rotation.
 - `src/room/portraits.ts`: cached catalog and wardrobe portraits from the actual room models.
-- `src/games/wishbone/`: explicit typed physics, articulated dog, powers, renderer, progression, audio and session controller. No iframe, legacy script imports or global script ordering.
+- `src/games/wishbone/`: explicit typed physics, articulated dog, renderer, progression, audio and session controller. No iframe, legacy script imports or global script ordering.
 - `tests/`: real physics/regression, save/economy/navigation and controller lifecycle tests. The DOM harness does not claim to be a real browser or audio listening test.
 
 ## Saves and migration
@@ -68,8 +68,14 @@ See `docs/verification.md`, `docs/provenance.md`, and the collection's `plans/19
 
 ## Interactive furnishings and five-yard pass
 
-Decorate includes a free local preview bowl, aquarium and pet trampoline. Tap a placed bowl to fill it (saved locally), a tank to make swimming fish dart, or a trampoline to invite a pet to bounce. Duplicate pieces are available in the shop. The currency uses a round gold coin. See [plan](docs/feedback-02-plan.md) and [verification](docs/feedback-02-verification.md). Scrolling/parallax remains a future iteration.
+Decorate includes a free local preview bowl, aquarium and pet trampoline. Tap a placed bowl to fill it (saved locally), a tank to make swimming fish dart, or a trampoline to invite a pet to bounce. Duplicate pieces are available in the shop. The currency uses a round gold coin. See [plan](docs/feedback-02-plan.md) and [verification](docs/feedback-02-verification.md). The camera update below supersedes the original scrolling deferral.
 
 ## Camera and feeding update
 
 Restack and Keepsakes now use large icons. Drag away from the launcher to pan; use +/−, wheel or pinch to zoom, and the overview button to see the whole yard. Detailed views follow a throw and return to the launcher. Background layers move at different rates. The upward-boost gadget is now a spring pad. Magnet levels show a horseshoe and metal blocks; classics have fewer incidental gadgets. Tap an empty bowl to fill it, then a full bowl to send a pet to eat and empty it. See docs/feedback-03-plan.md and docs/feedback-03-verification.md. This supersedes the earlier camera deferral.
+
+## Village and simpler Fling update
+
+Outside opens Willowbrook square: walk or drag to explore, visit the fountain, toss a free cosmetic coin, and return to the clubhouse. Trees, buildings, stream and fountain constrain routes; water sound attenuates with the view. Avatar thought-cloud reactions and pet speech bubbles accompany actions and feeding.
+
+Levels → The Long Walk Home is the new wide spring-only yard. Overview, pan/zoom and flight follow show its full width. The Y-fork launcher holds Wishbone in a lower leather pouch, and dog/block impacts use a short procedural rustle. Pocket power collection and activation are removed; archived data and already-owned displays remain. See docs/feedback-04-plan.md and docs/feedback-04-verification.md.

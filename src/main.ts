@@ -8,6 +8,7 @@ import { ClubhouseRoom } from "./room/room";
 import { RoomAudio } from "./room/audio";
 import { CatalogPortraits } from "./room/portraits";
 import { WishboneGame } from "./games/wishbone/game";
+import { TownWorld } from "./town/world";
 import { furniture, pets, getFurniture } from "./core/catalog";
 import "./styles.css";
 import "./room/actions.css";
@@ -33,6 +34,7 @@ class ChapterHouse {
   private room: ClubhouseRoom;
   private portraits = new CatalogPortraits();
   private game: WishboneGame | null = null;
+  private town: TownWorld | null = null;
   private panel: string | null = null;
   private toastTimer = 0;
   private panelFocus: HTMLElement | null = null;
@@ -74,6 +76,7 @@ class ChapterHouse {
 <button data-action="zoomin" aria-label="Zoom in">+</button>
 </div>
 <div class="emotes">
+<button data-action="reactions" aria-label="Reactions"><span style="font-size:26px">☺</span><span>React</span></button>
 <button data-action="wave" aria-label="Wave">${icon("wave")}<span>Wave</span>
 </button>
 <button data-action="jump" aria-label="Jump">${icon("jump")}<span>Jump</span>
@@ -98,6 +101,7 @@ class ChapterHouse {
 </div>
 <nav class="dock" aria-label="Clubhouse activities">${[
       ["games", "game", "Games"],
+      ["outside", "book", "Outside"],
       ["decorate", "sofa", "Decorate"],
       ["pets", "paw", "Pets"],
       ["style", "style", "Your look"],
@@ -116,6 +120,11 @@ class ChapterHouse {
       .join("")}</nav>
 </main>
 <main class="game-host" hidden>
+</main>
+<main class="town-page" hidden><div class="town-world"></div>
+<div class="town-heading"><span class="eyebrow">A LITTLE FURTHER AFIELD</span><h2>Willowbrook square</h2><p>Tap a path to walk · drag to explore</p></div>
+<div class="town-controls"><button data-action="inside">← Clubhouse</button><button data-action="plaza">Fountain square</button><button data-action="town-center" aria-label="Center on avatar">◎</button><button data-action="town-out" aria-label="Town zoom out">−</button><button data-action="town-in" aria-label="Town zoom in">+</button></div>
+<div class="town-emotes"><button data-action="town-wave">Wave</button><button data-action="town-jump">Jump</button><button data-action="town-heart" aria-label="Heart reaction">♥</button><button data-action="town-question" aria-label="Curious reaction">?</button><button data-action="fountain-coin">Toss a coin</button></div>
 </main>
 <aside class="panel" aria-label="Clubhouse options" hidden>
 <header>
@@ -142,6 +151,7 @@ class ChapterHouse {
 </dialog>`;
     this.root.querySelector(".brand")!.addEventListener("click", (e) => {
       e.preventDefault();
+      this.leaveTown();
       this.leaveGame();
     });
     this.room = new ClubhouseRoom(
@@ -172,6 +182,7 @@ class ChapterHouse {
     this.profile.subscribe(() => {
       this.refreshHeader();
       this.audio.setMuted(this.profile.state.muted);
+      this.town?.setMuted(this.profile.state.muted);
     });
     this.refreshHeader();
     if (!this.profile.state.starterChosen) {
@@ -188,12 +199,13 @@ class ChapterHouse {
     }
     const debug = window as unknown as { chapterHouseStatus: () => unknown };
     debug.chapterHouseStatus = () => ({
-      screen: this.game ? "wishbone" : "clubhouse",
+      screen: this.game ? "wishbone" : this.town ? "town" : "clubhouse",
       profile: structuredClone(this.profile.state),
       saved: this.profile.saved,
       room: this.room.status(),
       audio: this.audio.status(),
       game: this.game?.status() ?? null,
+      town: this.town?.status() ?? null,
     });
     new LocalDiagnostics(debug.chapterHouseStatus);
   }
@@ -222,12 +234,65 @@ class ChapterHouse {
     if (!["wave", "jump", "call", "pet", "sound"].includes(action!))
       this.audio.play("ui");
     if (
-      ["games", "decorate", "pets", "style", "shop", "help"].includes(action!)
+      [
+        "games",
+        "decorate",
+        "pets",
+        "style",
+        "shop",
+        "help",
+        "reactions",
+      ].includes(action!)
     ) {
       this.openPanel(action!);
       return;
     }
     switch (action) {
+      case "outside":
+        this.enterTown();
+        break;
+      case "inside":
+        this.leaveTown();
+        break;
+      case "plaza":
+        this.town?.visitSquare();
+        break;
+      case "town-center":
+        this.town?.center();
+        break;
+      case "town-out":
+        this.town?.setZoom(-0.15);
+        break;
+      case "town-in":
+        this.town?.setZoom(0.15);
+        break;
+      case "town-wave":
+        this.town?.wave();
+        break;
+      case "town-jump":
+        this.town?.jump();
+        break;
+      case "town-heart":
+        this.town?.react("heart");
+        break;
+      case "town-question":
+        this.town?.react("question");
+        break;
+      case "fountain-coin":
+        this.town?.tossCoin();
+        break;
+      case "react-heart":
+        this.closePanel();
+        this.room.react("heart");
+        break;
+      case "react-question":
+        this.closePanel();
+        this.room.react("question");
+        break;
+      case "react-surprise":
+        this.closePanel();
+        this.room.react("surprise");
+        break;
       case "close-panel":
         this.closePanel();
         break;
@@ -391,6 +456,7 @@ class ChapterHouse {
       style: ["HELLO, YOU", "Make yourself at home"],
       shop: ["THE CORNER SHOP", "Something lovely"],
       help: ["SETTLE RIGHT IN", "A little help"],
+      reactions: ["SAY IT WITH A LITTLE FEELING", "How do you feel?"],
     };
     this.ui("panel-label").textContent = labels[name][0];
     this.ui("panel-title").textContent = labels[name][1];
@@ -455,10 +521,13 @@ class ChapterHouse {
         .join(
           "",
         )}</div><p class="quiet">Small decorations take a few active minutes. Your first additional pet is about ten minutes away.</p>`;
+    if (name === "reactions")
+      content.innerHTML = `<div class="reaction-choices"><button data-action="react-heart" aria-label="Love reaction">♥<small>Love</small></button><button data-action="react-surprise" aria-label="Excited reaction">!<small>Wow</small></button><button data-action="react-question" aria-label="Curious reaction">?<small>Curious</small></button></div><p>Your bubbles are fluffy thought clouds. Pets have little rounded speech bubbles when you pet, call or feed them.</p>`;
     if (name === "help")
       content.innerHTML = `<p>This is your local clubhouse. Tap the floor to walk, or focus the room and use the arrow keys. Drag the room to pan; use + and − to zoom. Wave, jump, and call your pet with the buttons by the room.</p><h3>Make a little space</h3><p>Open Decorate to move, rotate, or store furniture. Choose a spot on the floor, then Place here. Undo reverses your last room change.</p><h3>Play. Collect. Come home.</h3><p>Open Games for Wishbone Fling. Earn coins through active play and special keepsakes through game progress. Your collection and room save automatically on this device.</p><label class="setting"><input type="checkbox" data-action="reduced" ${this.profile.state.reduced ? "checked" : ""}> Reduce motion</label><p class="quiet">${this.profile.saved ? "Saved on this device." : "Saving is unavailable in this browser. Keep this tab open to retain this session."} Accounts and shared visits are planned for the next checkpoint.</p>`;
   }
   private enterGame() {
+    this.leaveTown();
     this.closePanel();
     this.audio.setRoomActive(false);
     this.room.setPaused(true);
@@ -494,6 +563,33 @@ class ChapterHouse {
     this.profile.state.muted = !this.profile.state.muted;
     this.profile.save();
     this.game?.setMuted(this.profile.state.muted);
+  }
+  private enterTown() {
+    if (this.town) return;
+    this.leaveGame();
+    this.closePanel();
+    this.room.cancelPlacement();
+    this.room.setPaused(true);
+    this.audio.setRoomActive(false);
+    this.root.querySelector<HTMLElement>(".room-page")!.hidden = true;
+    this.root.querySelector<HTMLElement>(".town-page")!.hidden = false;
+    this.root.classList.add("outside");
+    this.town = new TownWorld(
+      this.root.querySelector<HTMLElement>(".town-world")!,
+      this.profile,
+      () => this.leaveTown(),
+      this.notify,
+    );
+  }
+  private leaveTown() {
+    if (!this.town) return;
+    this.town.dispose();
+    this.town = null;
+    this.root.classList.remove("outside");
+    this.root.querySelector<HTMLElement>(".town-page")!.hidden = true;
+    this.root.querySelector<HTMLElement>(".room-page")!.hidden = false;
+    this.room.setPaused(false);
+    this.audio.setRoomActive(true);
   }
   private async fullscreen() {
     try {
