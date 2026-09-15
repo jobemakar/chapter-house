@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
+import { assetUrl } from "../core/asset-url";
 
 const PET_SOURCES = {
-  cat: "/assets/pets/animal-cat.glb",
-  bunny: "/assets/pets/animal-bunny.glb",
-  fox: "/assets/pets/animal-fox.glb",
+  cat: assetUrl("pets/animal-cat.glb"),
+  bunny: assetUrl("pets/animal-bunny.glb"),
+  fox: assetUrl("pets/animal-fox.glb"),
 } as const;
 
 const REQUIRED_CLIPS = [

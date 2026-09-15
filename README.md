@@ -1,6 +1,13 @@
-# Chapter House — local integrated slice
+# Chapter House — integrated slice
 
-A TypeScript application connecting a cozy 3D library clubhouse to Wishbone Fling. This is checkpoint BOB-SLICE-01A: the shared space plus one game, playable locally. Accounts, Firebase and live visits are checkpoint B. No other game has been integrated or changed.
+A TypeScript application connecting a cozy 3D library clubhouse to Wishbone Fling. This is checkpoint BOB-SLICE-01A: the shared space plus one game, playable locally or from the static public demo. Accounts, Firebase and live visits are checkpoint B. No other game has been integrated or changed.
+
+## Public demo
+
+The current committed build is published at
+[jobemakar.github.io/chapter-house](https://jobemakar.github.io/chapter-house/).
+This is static GitHub Pages hosting: progress is saved only in that browser and
+there are no accounts, shared visits or server-side synchronization yet.
 
 ## Run and develop
 

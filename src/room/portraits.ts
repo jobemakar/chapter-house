@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
 import { getFurniture } from "../core/catalog";
+import { assetUrl } from "../core/asset-url";
 
 const PET_PORTRAITS: Record<string, string> = {
-  cat: "/assets/pets/previews/animal-cat.png",
-  bunny: "/assets/pets/previews/animal-bunny.png",
-  fox: "/assets/pets/previews/animal-fox.png",
+  cat: assetUrl("pets/previews/animal-cat.png"),
+  bunny: assetUrl("pets/previews/animal-bunny.png"),
+  fox: assetUrl("pets/previews/animal-fox.png"),
 };
 
 /** Furniture and avatar portraits are rendered locally; pet art is packaged. */

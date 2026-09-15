@@ -1,19 +1,20 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { assetUrl } from "../core/asset-url";
 
 const ASSET_SOURCES = {
-  "mini-tree": "/assets/town/mini/tree.glb",
-  "mini-tree-high": "/assets/town/mini/tree-high.glb",
-  "mini-roof": "/assets/town/mini/building-roof.glb",
-  "mini-tent": "/assets/town/mini/tent.glb",
-  "mini-rocks": "/assets/town/mini/rocks-low.glb",
-  "mini-plant": "/assets/town/mini/plant.glb",
-  "flower-yellow": "/assets/town/nature/flower_yellowA.glb",
-  "flower-purple": "/assets/town/nature/flower_purpleA.glb",
-  mushroom: "/assets/town/nature/mushroom_redGroup.glb",
-  grass: "/assets/town/nature/grass_leafs.glb",
-  bush: "/assets/town/nature/plant_bush.glb",
-  rock: "/assets/town/nature/rock_smallA.glb",
+  "mini-tree": assetUrl("town/mini/tree.glb"),
+  "mini-tree-high": assetUrl("town/mini/tree-high.glb"),
+  "mini-roof": assetUrl("town/mini/building-roof.glb"),
+  "mini-tent": assetUrl("town/mini/tent.glb"),
+  "mini-rocks": assetUrl("town/mini/rocks-low.glb"),
+  "mini-plant": assetUrl("town/mini/plant.glb"),
+  "flower-yellow": assetUrl("town/nature/flower_yellowA.glb"),
+  "flower-purple": assetUrl("town/nature/flower_purpleA.glb"),
+  mushroom: assetUrl("town/nature/mushroom_redGroup.glb"),
+  grass: assetUrl("town/nature/grass_leafs.glb"),
+  bush: assetUrl("town/nature/plant_bush.glb"),
+  rock: assetUrl("town/nature/rock_smallA.glb"),
 } as const;
 
 export type TownAssetKey = keyof typeof ASSET_SOURCES;

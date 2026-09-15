@@ -1,4 +1,5 @@
 import Matter from "matter-js";
+import { assetUrl } from "../../core/asset-url";
 import { PowerYard, definitions } from "./powers";
 import { TUNE } from "./yard";
 import { drawPlush } from "./plush";
@@ -431,7 +432,7 @@ export class WishboneRenderer {
     this.canvas = canvas;
     this.c = canvas.getContext("2d")!;
     this.background = new Image();
-    this.background.src = "/assets/backdrop.png";
+    this.background.src = assetUrl("backdrop.png");
     this.particles = [];
     this.labels = [];
     this.shake = 0;
@@ -604,8 +605,24 @@ export class WishboneRenderer {
     );
     // The left branch makes the rear band a real part of the planted fork,
     // rather than a floating anchor.
-    line(c, [[242, 438], [215, 390]], "#795435", 18);
-    line(c, [[242, 438], [215, 391]], "#c6965d", 7);
+    line(
+      c,
+      [
+        [242, 438],
+        [215, 390],
+      ],
+      "#795435",
+      18,
+    );
+    line(
+      c,
+      [
+        [242, 438],
+        [215, 391],
+      ],
+      "#c6965d",
+      7,
+    );
     const heldX =
       TUNE.origin.x -
       (input ? (input.velocity.x / TUNE.launchScale) * 0.48 : 0);
