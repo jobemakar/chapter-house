@@ -1,0 +1,28 @@
+{
+  "mode": "built-in imagegen",
+  "generationCalls": 3,
+  "assets": [
+    {
+      "path": "C:/Users/jmakar/Documents/Codex/2026-09-10/ok-astra-please-improve-on-this/work/demo-art/pocket-funhouse-background.png",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Use case: stylized-concept\nAsset type: Pocket Funhouse game background, landscape 1536x1024.\nPrimary request: theatrical cut-paper miniature cabinet interior, rich midnight plum and teal, with dark cherry red draped curtains at outer edges, brass stars and ornate clockwork trim. A central large EMPTY dark teal stage area occupies 75% of the image. Straight-on view, no perspective distortion in central area. Magical warm footlights. Textured layered cardstock craftsmanship.\nConstraints: decorations confined to outer borders so central play area stays empty and clearly readable. No text, no buttons, no actual puzzle pieces in center; interactive puzzle rendered separately."
+    },
+    {
+      "path": "C:/Users/jmakar/Documents/Codex/2026-09-10/ok-astra-please-improve-on-this/work/demo-art/wishbone-backyard-background.png",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Use case: illustration-story\nAsset type: Wishbone Big Fetch game background, landscape 1536x1024.\nPrimary request: warm watercolor summer backyard side-view game environment. Soft blue sky in top 55%, distant Appalachian-ish green hills, white fence near lower quarter, warm grassy strip at bottom 20%, a big friendly leafy tree at far right and flowers at outer edges. Center mostly open clear space for projectile flight.\nStyle: hand-painted paper texture, sunlit saturated greens, apricot, sky blue.\nConstraints: No dogs, people, frisbees, text, UI."
+    },
+    {
+      "path": "C:/Users/jmakar/Documents/Codex/2026-09-10/ok-astra-please-improve-on-this/work/demo-art/wishbone-dog-sprite.png",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Use case: illustration-story\nAsset type: single dog sprite cutout on a genuinely transparent background.\nPrimary request: small happy scruffy tan-and-white terrier with floppy ears and an orange bandana, full body strict side view facing right in a playful mid-run pose, feet separated. Readable at 80px wide. Warm watercolor storybook painting with inkless soft edges matching a sunny watercolor backyard.\nConstraints: Exactly one whole dog with comfortable transparent margin. Genuine alpha transparency, preserve alpha channel. No text, ground, shadows outside dog, or sprite sheet."
+    }
+  ],
+  "inspection": {
+    "backgrounds": "Clear central play areas, no text or UI. Pocket Funhouse adds decorative moon faces/castles to outer border; empty stage appears closer to 65-70% of total image than requested 75%.",
+    "dog": "ARGB PNG with genuine alpha: sampled minimum 0, maximum 253; 3671 of 6144 sampled pixels fully transparent. Right-facing full-body running terrier; head slightly turned toward viewer rather than strict profile. Preview shows halo in hidden RGB; alpha is present. No generation retries or image modifications."
+  }
+}
