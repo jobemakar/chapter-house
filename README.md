@@ -1,5 +1,26 @@
 # Chapter House — integrated slice
 
+## Standalone demo previews — 2026-09-16
+
+Open **Games** and scroll to **Explore the other demos**. All ten books are
+represented: integrated Wishbone Fling plus nine other standalone book demos,
+with three extra comparisons (Backyard Ruckus, Arctic Duet and Contraption Club).
+Previews open in new tabs and do not award Chapter House coins or keepsakes.
+They retain their existing gameplay and browser-local save keys.
+
+The typed catalog is `src/core/game-previews.ts`. The Vite preview bridge serves
+and packages exact existing standalone builds and allowlisted dependencies.
+Three previously uncatalogued builds are retained as immutable artifacts in
+`preview-sources/`; their original editable projects remain untouched. See
+[source provenance](docs/preview-sources.md), [plan](docs/game-previews-plan.md)
+and [verification](docs/game-previews-verification.md). After building, run
+`npm run verify:previews -- http://127.0.0.1:5191/` against the active local server
+to compare every served and built preview with its source bytes.
+
+This is access for review, not integration of the other nine games. Bureau After
+Dark and Veda retain optional Google Fonts requests from their original files.
+No publication is implied by this local menu update.
+
 A TypeScript application connecting a cozy 3D library clubhouse to Wishbone Fling. This is checkpoint BOB-SLICE-01A: the shared space plus one game, playable locally or from the static public demo. Accounts, Firebase and live visits are checkpoint B. No other game has been integrated or changed.
 
 ## Public demo

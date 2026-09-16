@@ -510,6 +510,56 @@ small {
   width: 100%;
   background: #f0f1e2;
 }
+.game-preview-list {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 20px;
+}
+.game-preview-card {
+  display: block;
+  border: 1px solid #dfe2cf;
+  border-radius: 16px;
+  padding: 18px;
+  color: #435940;
+  background: #f4f3e8;
+  text-decoration: none;
+}
+.game-preview-card:hover {
+  background: #e9efdb;
+}
+.game-preview-card:focus-visible {
+  outline: 3px solid #77955e;
+  outline-offset: 3px;
+}
+.game-preview-card small {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #738365;
+}
+.game-preview-card h4 {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 23px;
+  margin: 7px 0 4px;
+}
+.preview-book {
+  font-size: 11px;
+  color: #7c806e;
+}
+.game-preview-card p {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.preview-open {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+}
+.preview-note {
+  padding: 12px;
+  background: #edf0df;
+  border-radius: 10px;
+}
 .game-card-art {
   height: 145px;
   position: relative;

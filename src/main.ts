@@ -16,6 +16,7 @@ import {
 } from "./town/world";
 import { FISH, FINDS, type DiscoveryDefinition } from "./town/activities";
 import { assetUrl } from "./core/asset-url";
+import { GamePreviews } from "./core/game-previews";
 import { furniture, pets, getFurniture } from "./core/catalog";
 import "./styles.css";
 import "./room/actions.css";
@@ -502,7 +503,7 @@ class ChapterHouse {
         ),
       );
     if (name === "games")
-      content.innerHTML = `<button class="game-card" data-action="play"><div class="game-card-art"><img src="${assetUrl("backdrop.png")}" alt="A sunny backyard"><span>WISH</span></div><div><span class="eyebrow">WISHBONE FLING</span><h3>Big tumbles.<br>Happy little dog.</h3><p>Pull back, let go, and see what wobbles.</p><span class="primary faux-button">Let’s play →</span></div></button><div class="reward-note"><span>✦</span><div><b>A keepsake for your corner</b><p>${Math.min(14, this.profile.state.wishbone.throws)} / 14 throws toward your Patchwork dog bed.</p></div></div><p class="quiet">The first of ten book-inspired adventures. More games will join the house later.</p>`;
+      content.innerHTML = `<button class="game-card" data-action="play"><div class="game-card-art"><img src="${assetUrl("backdrop.png")}" alt="A sunny backyard"><span>WISH · INTEGRATED</span></div><div><span class="eyebrow">WISHBONE FLING</span><h3>Big tumbles.<br>Happy little dog.</h3><p>Pull back, let go, and see what wobbles.</p><span class="primary faux-button">Let’s play →</span></div></button><div class="reward-note"><span>✦</span><div><b>A keepsake for your corner</b><p>${Math.min(14, this.profile.state.wishbone.throws)} / 14 throws toward your Patchwork dog bed.</p></div></div>${GamePreviews.markup()}`;
     if (name === "decorate")
       content.innerHTML = `<p>Pick something below, or tap furniture in the room. Tap the floor to find its new home.</p><button data-action="undo" class="text-button">↶ Undo last room change</button><div class="catalog-grid">${this.profile.state.items
         .map((item) => {

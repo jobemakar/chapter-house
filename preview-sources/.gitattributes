@@ -1,0 +1,2 @@
+# Preserve the exact bytes and recorded checksums of imported standalone artifacts.
+* -text

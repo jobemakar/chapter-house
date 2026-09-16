@@ -1,5 +1,19 @@
 # Provenance and baseline
 
+## Standalone preview packaging — 2026-09-16
+
+The Games menu packages existing standalone playable artifacts from the sibling
+book repositories unchanged, with original embedded art, fonts, notices and
+save keys intact. These files are not integrated gameplay source and are not
+compiled by the application's TypeScript gameplay build. Vite emits exact bytes
+on demand via the typed preview allowlist; source repositories are preserved.
+
+Additional previously uncatalogued Bureau After Dark, Veda's Great Escape and
+Little Lantern Keeper · Emberwatch artifacts are snapshotted under
+`preview-sources/`. `preview-sources.md` records original project paths, commits,
+hashes, required local artwork and optional Google Fonts styling requests.
+No new raster art or audio was created for this menu pass.
+
 The clubhouse ambient progression and six interaction sounds in src/room/audio.ts are newly authored procedural Web Audio compositions; no third-party recording or external audio download is used. The rounded action UI and expressive rig changes are authored source, documented in feedback-01.md.
 
 The preserved Wish repository is the source baseline, commit `dd3f939` (Trial saved powerups and collision-driven yard mechanisms in Wishbone Fling). Its original JavaScript files and saves are not modified by this application.
