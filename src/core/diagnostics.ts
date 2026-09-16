@@ -19,7 +19,16 @@ export class LocalDiagnostics {
               additionalProperties: false,
             },
             annotations: { readOnlyHint: true },
-            execute: read,
+            execute: (input: unknown = {}) => {
+              if (
+                !input ||
+                typeof input !== "object" ||
+                Array.isArray(input) ||
+                Object.keys(input).length
+              )
+                throw new Error("Status accepts an empty object only.");
+              return read();
+            },
           }),
         ).catch(() => {});
     } catch {}

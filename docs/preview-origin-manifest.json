@@ -1,0 +1,174 @@
+{
+  "verifiedOn": "2026-09-16",
+  "kind": "exact standalone build snapshots; not integrated gameplay source",
+  "files": [
+    {
+      "id": "stormglide",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-miscalculations-of-lightning-girl\\playable\\Stormglide.html",
+      "bytes": 3815353,
+      "sha256": "3C1AC9742FEAD2EB6339D3AB777D12264C22E1C836AB04B945D991C4CC2CAFBD",
+      "originalByteEquality": true
+    },
+    {
+      "id": "pocket-funhouse",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\playable\\Pocket-Funhouse.html",
+      "bytes": 3518022,
+      "sha256": "E8DC59731E818C294300E0504CA99A08ED1DFBD5DEE46B026F4425DE5049ADFE",
+      "originalByteEquality": true
+    },
+    {
+      "id": "door-atelier",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\door-atelier\\dist\\index.html",
+      "bytes": 1515,
+      "sha256": "AB4BDC4CDFA51794591875CB37D3F9E91C919873356D247675DACBC236A0FE44",
+      "originalByteEquality": true
+    },
+    {
+      "id": "door-atelier",
+      "file": "assets/game.js",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\door-atelier\\dist\\assets\\game.js",
+      "bytes": 490333,
+      "sha256": "CDBCA71C33A72721E2E45F47D9B740EB89E7EED5E3D11D1781EBDE787DE8E86A",
+      "originalByteEquality": true
+    },
+    {
+      "id": "door-atelier",
+      "file": "assets/index.css",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\door-atelier\\dist\\assets\\index.css",
+      "bytes": 2239,
+      "sha256": "4E87B12CB513D057F70F226670DA4B25BF54140C3EE1930B716EE1DE78CE1D48",
+      "originalByteEquality": true
+    },
+    {
+      "id": "backyard-ruckus",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wish\\playable\\Wishbones-Big-Fetch.html",
+      "bytes": 7326345,
+      "sha256": "1026875A85A087A13951DF8C356A03BF246F37B196DD8C17AC7ED8EE5EFF4DC9",
+      "originalByteEquality": true
+    },
+    {
+      "id": "midnight-snow-jam",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-very-very-far-north\\playable\\Midnight-Snow-Jam.html",
+      "bytes": 230979,
+      "sha256": "4FED1136FA0937AEDDCCE6CD4DE7CBE82F078BF4F879848CFDF9794C10781F45",
+      "originalByteEquality": true
+    },
+    {
+      "id": "arctic-duet",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-very-very-far-north\\playable\\Arctic-Duet.html",
+      "bytes": 205896,
+      "sha256": "1E79A059F28D4F6CAEFC72273A25DF0989D8FE4423F5ED87C384404382CFB2D9",
+      "originalByteEquality": true
+    },
+    {
+      "id": "midnight-merienda",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\playable\\Midnight-Merienda.html",
+      "bytes": 9608750,
+      "sha256": "78C9A98B17B79A9006C5F9E091FED1043AA2D8349BA785F806BBC1E3635D1774",
+      "originalByteEquality": true
+    },
+    {
+      "id": "gummy-nook",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\not-if-i-can-help-it\\playable\\Gummy-Nook.html",
+      "bytes": 58478,
+      "sha256": "FD47E3AE96A9569CA1E5A82A509F20FD7D7259E6E0859B3571DBD356A9A893D5",
+      "originalByteEquality": true
+    },
+    {
+      "id": "bureau-after-dark",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cre\\outputs\\bureau-after-dark.html",
+      "bytes": 24778,
+      "sha256": "5B50B930C1A1B62F1EA602B1DFE1EB2F8E942934FAA0F15951F397842AC8CA21",
+      "originalByteEquality": true
+    },
+    {
+      "id": "vedas-great-escape",
+      "file": "game.js",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cre-2\\dist\\game.js",
+      "bytes": 10423,
+      "sha256": "6A0E5588B471CE016D95F50D773F1179F8AC5F57ED3A38D9E5AEFA56B9373B3B",
+      "originalByteEquality": true
+    },
+    {
+      "id": "vedas-great-escape",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cre-2\\dist\\index.html",
+      "bytes": 2816,
+      "sha256": "2C8B1ECA852F72508940A5522956CA57A649A6532F66C9B1AF1F7BC5E100B73D",
+      "originalByteEquality": true
+    },
+    {
+      "id": "vedas-great-escape",
+      "file": "sanctuary.png",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cre-2\\dist\\sanctuary.png",
+      "bytes": 3021448,
+      "sha256": "DDD04D4928B5719D38FFCF6F452F2A5419E22595ADC4D877C8EECF81090E3945",
+      "originalByteEquality": true
+    },
+    {
+      "id": "vedas-great-escape",
+      "file": "style.css",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cre-2\\dist\\style.css",
+      "bytes": 6551,
+      "sha256": "FD746A6AD5E05F4C8DD24C7426B3FA1ED6FF7722906BADB4959BFD0B55FDE780",
+      "originalByteEquality": true
+    },
+    {
+      "id": "emberwatch",
+      "file": "clearing.png",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\clearing.png",
+      "bytes": 2691657,
+      "sha256": "8F111393C489D21C7D889499F1C0E1123A79DF1B5CF68BB19C063D6C92135870",
+      "originalByteEquality": true
+    },
+    {
+      "id": "emberwatch",
+      "file": "game.js",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\game.js",
+      "bytes": 8097,
+      "sha256": "CFD67570D8F718055BC353C4CC808D43B6EB240D08576D02A96A5E6715EEAD8E",
+      "originalByteEquality": true
+    },
+    {
+      "id": "emberwatch",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\index.html",
+      "bytes": 3068,
+      "sha256": "2F00D8442E9987BD8C08C6B302693A3C194B0932D419ACBD044091A08F9CB30C",
+      "originalByteEquality": true
+    },
+    {
+      "id": "emberwatch",
+      "file": "style.css",
+      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\style.css",
+      "bytes": 7045,
+      "sha256": "2A5BD10B2D4314FA78A63B640A67B613B95874DFD691F1D6D2B18B6C1D3C41FF",
+      "originalByteEquality": true
+    },
+    {
+      "id": "picture-day-parade",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\popcorn\\playable\\picture-day-parade.html",
+      "bytes": 43389,
+      "sha256": "B98EFF17C23A488EAFA8CD6F058AABCC4B12F303A046633F2C78BD137C2DD054",
+      "originalByteEquality": true
+    },
+    {
+      "id": "contraption-club",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\popcorn\\experiments\\contraption-club\\playable\\popcorn-contraption-club.html",
+      "bytes": 53988,
+      "sha256": "5F57C4D8A55173104C2D61049E7DA8CB1A2B1B00EB5D3F8CC34AC6111F42BC5A",
+      "originalByteEquality": true
+    }
+  ]
+}

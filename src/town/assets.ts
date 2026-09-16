@@ -16,6 +16,14 @@ const ASSET_SOURCES = {
   bush: assetUrl("town/nature/plant_bush.glb"),
   rock: assetUrl("town/nature/rock_smallA.glb"),
   "dig-dirt": assetUrl("town/nature/crops_dirtSingle.glb"),
+  "mill-sails": assetUrl("town/fantasy/windmill.glb"),
+  "mill-base": assetUrl("town/fantasy/wall-block.glb"),
+  "mill-timber": assetUrl("town/fantasy/wall-wood-block.glb"),
+  "mill-roof": assetUrl("town/fantasy/roof-high-point.glb"),
+  "garden-fountain": assetUrl("town/fantasy/fountain-round.glb"),
+  waterfall: assetUrl("town/nature/cliff_waterfall_rock.glb"),
+  "waterfall-top": assetUrl("town/nature/cliff_waterfallTop_rock.glb"),
+  "river-rocks": assetUrl("town/nature/rock_largeA.glb"),
 } as const;
 
 export type TownAssetKey = keyof typeof ASSET_SOURCES;
@@ -178,6 +186,7 @@ export class TownAssets {
       woodBark: 0x956344,
       dirt: 0xa2a69b,
       dirtDark: 0x5b412c,
+      water: 0x91dce2,
     };
     if (key === "dig-dirt") colors.dirt = 0x9a7045;
     scene.traverse((object) => {

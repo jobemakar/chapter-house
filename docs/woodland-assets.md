@@ -49,3 +49,23 @@ textures. Failed or cancelled loads reject with the specific asset path and clea
 up every model that did complete.
 
 Visual review selected only Mini Forest trees for a consistent rounded silhouette; Nature Kit supplies the flowers, grass, mushrooms, shrubs and stones. The unused oak model was omitted.
+# Asset expansion — 2026-09-16
+
+Fantasy Town Kit 2.0: https://kenney.nl/assets/fantasy-town-kit (CC0).
+Exact GLTF exports under public/assets/town/fantasy: windmill.glb (sails only),
+wall-block.glb, wall-wood-block.glb, roof-high-point.glb and fountain-round.glb.
+Their external Textures/colormap.png and fantasy-town-CC0.txt are locally retained.
+The fixed tower is assembled from kit blocks/roof; only the sail group rotates
+around its source X-axis. The comparison fountain adds bounded procedural jets.
+
+Nature Kit: https://kenney.nl/assets/nature-kit (CC0). Exact GLTF exports added:
+cliff_waterfall_rock.glb, cliff_waterfallTop_rock.glb and rock_largeA.glb. Existing
+Nature CC0 provenance/license remains. Instance scale/orientation and a palette
+pass adapt them to the town; source GLBs are unchanged. Falling streaks/foam and
+the curved flowing stream shader are original TypeScript scenery, not claimed
+Kenney animations. TownAssets now owns 21 shared imported model definitions.
+
+Water's geometry, fishing and navigation share TownStream's smooth bank bends;
+the bridge segment stays flat for alignment. New scenery collision footprints
+are kept in the navigation model. Resource-sharing/disposal remains with
+TownAssets for imports and town scene teardown for authored geometry/materials.

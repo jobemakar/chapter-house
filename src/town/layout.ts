@@ -22,6 +22,9 @@ export const TOWN = {
   fountain: { x: 30, z: 35, radius: 2, interactionRadius: 4.35 },
   stream: { minZ: 22, maxZ: 26 },
   bridge: { x: 30, z: 24, width: 3.8, depth: 5.2 },
+  windmill: { x: 14, z: 33, width: 3.2, depth: 3.2 },
+  gardenFountain: { x: 36.8, z: 37.8, radius: 1.45 },
+  waterfall: { x: 7, width: 3, height: 2.4 },
   trees: [
     { x: 3.5, z: 4, radius: 0.65, variant: 0 },
     { x: 8, z: 3, radius: 0.65, variant: 1 },

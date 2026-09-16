@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { TOWN, type TownBuilding, type TownPoint } from "./layout";
 import { TownAssets } from "./assets";
+import { TownStream } from "./stream";
+import { TownWater } from "./water";
 
 const material = (color: THREE.ColorRepresentation, roughness = 0.82) =>
   new THREE.MeshStandardMaterial({ color, roughness });
@@ -31,6 +33,9 @@ export class TownArt {
   private coinMesh: THREE.Mesh | null = null;
   private coinStart = new THREE.Vector3();
   private coinAge = 0;
+  private readonly stream = new TownWater();
+  private millRotor: THREE.Group | null = null;
+  private readonly fallingWater: THREE.Mesh[] = [];
 
   constructor() {
     this.root.name = "Forest village";
@@ -52,6 +57,9 @@ export class TownArt {
       );
       TOWN.buildings.forEach((building) => this.makeBuilding(building));
       this.makeGardenAccents();
+      this.makeWindmill();
+      this.makeComparisonFountain();
+      this.makeWaterfall();
       this.assetState = "ready";
     } catch (error) {
       this.assetState = "failed";
@@ -72,6 +80,16 @@ export class TownArt {
     const safeDt = Math.min(Math.max(dt, 0), 0.1);
     this.elapsed += safeDt;
     const calm = reducedMotion ? 0.22 : 1;
+    this.stream.update(safeDt, reducedMotion);
+    if (this.millRotor && !reducedMotion)
+      this.millRotor.rotation.x += safeDt * 0.48;
+    this.fallingWater.forEach((drop, i) => {
+      const phase = reducedMotion
+        ? i / this.fallingWater.length
+        : (this.elapsed * 0.65 + i / this.fallingWater.length) % 1;
+      drop.position.y = 0.15 + (1 - phase) * TOWN.waterfall.height;
+      drop.scale.y = 0.65 + Math.sin(phase * Math.PI) * 0.55;
+    });
     this.water.forEach((water, index) => {
       water.emissiveIntensity =
         0.075 + Math.sin(this.elapsed * 1.8 + index) * 0.025 * calm;
@@ -79,7 +97,7 @@ export class TownArt {
     this.jets.forEach((jet, index) => {
       const wave = Math.sin(this.elapsed * 4.1 + index * 1.5) * 0.035 * calm;
       jet.scale.y = 1 + wave;
-      jet.position.y = 0.95 + wave * 0.4;
+      jet.position.y = (jet.userData.baseY ?? 0.95) + wave * 0.4;
     });
     this.ripples.forEach((ripple, index) => {
       const pulse = (Math.sin(this.elapsed * 2.2 + index * 1.8) + 1) * 0.5;
@@ -278,47 +296,7 @@ export class TownArt {
   }
 
   private makeStream() {
-    const streamDepth = TOWN.stream.maxZ - TOWN.stream.minZ;
-    for (const z of [TOWN.stream.minZ - 0.18, TOWN.stream.maxZ + 0.18])
-      this.mesh(
-        this.root,
-        new THREE.BoxGeometry(TOWN.width, 0.12, 0.72),
-        0x6f8757,
-        TOWN.width / 2,
-        0.015,
-        z,
-        { shadow: false },
-      );
-    const stream = this.mesh(
-      this.root,
-      new THREE.PlaneGeometry(TOWN.width, streamDepth),
-      0x5ba7b6,
-      TOWN.width / 2,
-      0.06,
-      (TOWN.stream.minZ + TOWN.stream.maxZ) / 2,
-      { shadow: false, roughness: 0.38 },
-    );
-    stream.rotation.x = -Math.PI / 2;
-    const streamMaterial = stream.material as THREE.MeshStandardMaterial;
-    streamMaterial.emissive.set(0x17485a);
-    streamMaterial.emissiveIntensity = 0.08;
-    streamMaterial.transparent = true;
-    streamMaterial.opacity = 0.88;
-    this.water.push(streamMaterial);
-    for (const bankZ of [TOWN.stream.minZ, TOWN.stream.maxZ]) {
-      for (let x = 1.2; x < TOWN.width; x += 2.1) {
-        if (Math.abs(x - TOWN.bridge.x) < TOWN.bridge.width / 2 + 0.8) continue;
-        const stone = this.mesh(
-          this.root,
-          new THREE.DodecahedronGeometry(0.17, 0),
-          0x97a28a,
-          x,
-          0.12,
-          bankZ + Math.sin(x * 1.7) * 0.18,
-        );
-        stone.scale.set(1.4, 0.55, 0.9);
-      }
-    }
+    this.root.add(this.stream.root);
   }
 
   private makeBridge() {
@@ -556,11 +534,11 @@ export class TownArt {
 
   private makeGardenAccents() {
     // Decorative clusters stay within existing tree/landmark footprints or along the stream.
-    for (const bankZ of [TOWN.stream.minZ, TOWN.stream.maxZ]) {
+    for (const side of [-1, 1] as const) {
       for (let i = 0; i < 30; i++) {
         const x = 0.6 + i * 2.03;
         if (Math.abs(x - TOWN.bridge.x) < TOWN.bridge.width / 2 + 0.8) continue;
-        const z = bankZ + Math.sin(i * 1.6) * 0.13;
+        const z = TownStream.bank(x, side) + side * 0.12;
         this.place(
           i % 3 === 0 ? "mini-rocks" : "rock",
           x,
@@ -582,6 +560,137 @@ export class TownArt {
     ]) {
       this.place("mushroom", x + 0.25, z + 0.1, { height: 0.26 });
       this.place("bush", x - 0.25, z - 0.15, { height: 0.45 });
+    }
+  }
+
+  private makeWindmill() {
+    const { x, z } = TOWN.windmill;
+    this.place("mill-base", x, z, { width: 2.7 });
+    this.place("mill-timber", x, z, { width: 2.45 }, 2.7);
+    this.place("mill-roof", x, z, { width: 2.95 }, 5.15);
+    // Source windmill.glb is the complete sail assembly, axis along X.
+    // Loader grounds clones; compensate only its Y grounding to put the hub at origin.
+    const sails = this.assets.create("mill-sails", { height: 5 });
+    sails.position.y = -2.5;
+    const rotor = new THREE.Group();
+    rotor.name = "Turning windmill sails";
+    rotor.position.set(x + 1.75, 4.5, z);
+    rotor.add(sails);
+    this.imported.add(rotor);
+    this.millRotor = rotor;
+    this.makeShopSign(this.root, "WINDMILL", x, 0.6, z + 1.85, 1.65);
+    this.path(
+      [
+        [22, 36.5],
+        [18, 36.5],
+        [14, 35],
+      ],
+      1.3,
+    );
+  }
+
+  private makeComparisonFountain() {
+    const f = TOWN.gardenFountain;
+    const basin = this.place("garden-fountain", f.x, f.z, { width: 2.9 });
+    basin.userData.kind = "garden-fountain";
+    const pedestal = this.mesh(
+      this.root,
+      new THREE.CylinderGeometry(0.16, 0.26, 0.75, 12),
+      0xccbb9e,
+      f.x,
+      0.55,
+      f.z,
+    );
+    pedestal.userData.kind = "garden-fountain";
+    this.mesh(
+      this.root,
+      new THREE.SphereGeometry(0.2, 16, 10),
+      0xe0d2ae,
+      f.x,
+      0.98,
+      f.z,
+    );
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * Math.PI) / 2;
+      const jet = this.mesh(
+        this.root,
+        new THREE.CylinderGeometry(0.025, 0.04, 0.6, 6),
+        0xcdf4ec,
+        f.x + Math.cos(angle) * 0.3,
+        0.8,
+        f.z + Math.sin(angle) * 0.3,
+        { shadow: false, roughness: 0.2 },
+      );
+      jet.rotation.z = Math.cos(angle) * 0.35;
+      jet.rotation.x = -Math.sin(angle) * 0.35;
+      // Preserve this smaller fountain's own jet height in the shared update.
+      jet.userData.baseY = 0.8;
+      this.jets.push(jet);
+    }
+    this.makeShopSign(this.root, "GARDEN FOUNTAIN", f.x, 0.45, f.z + 1.65, 2.0);
+  }
+
+  private makeWaterfall() {
+    const { x, height } = TOWN.waterfall;
+    const z = TownStream.bank(x, -1) + 0.45;
+    const backing = this.place(
+      "river-rocks",
+      x,
+      z - 1.5,
+      { width: 4.6, depth: 2.8 },
+      0.03,
+      0.15,
+    );
+    backing.scale.y = 3.8;
+    this.place("waterfall", x, z, { height }, 0.06, Math.PI);
+    const lip = this.place(
+      "waterfall-top",
+      x,
+      z - 0.05,
+      { width: height },
+      height + 0.04,
+      Math.PI,
+    );
+    lip.scale.y = 0.3;
+    for (const side of [-1, 1]) {
+      const rock = this.place(
+        "river-rocks",
+        x + side * 1.2,
+        z - 0.35,
+        { width: 2.2, depth: 1.6 },
+        0.03,
+        side * 0.4,
+      );
+      rock.scale.y = 5;
+    }
+    for (let i = 0; i < 9; i++) {
+      const drop = this.mesh(
+        this.root,
+        new THREE.BoxGeometry(0.035, 0.34, 0.015),
+        0xe4fffa,
+        x - 0.9 + i * 0.225,
+        0.4,
+        z + 0.24,
+        { shadow: false },
+      );
+      this.fallingWater.push(drop);
+    }
+    for (let i = 0; i < 3; i++) {
+      const foam = new THREE.Mesh(
+        new THREE.RingGeometry(0.45 + i * 0.18, 0.48 + i * 0.18, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0xebffef,
+          transparent: true,
+          opacity: 0.4,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        }),
+      );
+      foam.position.set(x, 0.095, z + 0.62);
+      foam.rotation.x = -Math.PI / 2;
+      foam.scale.y = 0.5;
+      this.root.add(foam);
+      this.ripples.push(foam);
     }
   }
 

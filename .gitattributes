@@ -1,0 +1,2 @@
+# Reviewed standalone snapshots must retain their canonical bytes on every OS.
+preview-sources/** -text

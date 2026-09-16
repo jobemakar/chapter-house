@@ -1,8 +1,27 @@
 # Packaged preview sources
 
-These are immutable standalone build artifacts, not integrated gameplay
-source. The preview build bridge emits them without compiling or rewriting
+These are reviewed standalone build snapshots, not integrated gameplay
+source. Refresh them only from reviewed canonical builds, not manual generated
+HTML edits. The preview build bridge emits them without compiling or rewriting
 them. The Chapter House menu may open them as separate preview artifacts only.
+
+## Current snapshot refresh — 2026-09-16
+
+All thirteen preview builds and required dependencies now reside under
+preview-sources in this application, including the added Door Atelier concept.
+The build bridge resolves this application root, not the sibling collection.
+Veda game.js/style.css, Merienda generated art, Gummy hover and Contraption
+affordances were refreshed from their original source repositories. The older
+tables below retain the initial audit as history; current authoritative hashes,
+sizes, original paths and byte-equality checks are in
+[preview-origin-manifest.json](preview-origin-manifest.json).
+
+To refresh: edit the original authored game source, run its documented build
+(Veda's readable tracked JS/CSS are themselves the source), copy the canonical
+HTML/dependencies, update the typed allowlist if needed, then run test, build
+and verify:previews. Door Atelier uses relative stable assets/game.js and
+assets/index.css paths so nested hosting is self-contained. Optional Google
+Fonts requests in older demos retain their system-font fallbacks.
 
 ## Bureau After Dark
 

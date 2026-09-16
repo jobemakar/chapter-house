@@ -115,3 +115,18 @@ Levels → The Long Walk Home is the new wide spring-only yard. Overview, pan/zo
 
 ## Outdoor woodland pass — 2026-09-15
 The outdoor houses have been replaced with a Kenney-based woodland setting. See docs/woodland-village-plan.md, docs/woodland-assets.md and docs/woodland-village-verification.md. Twelve locally packaged GLBs plus their texture and license files total about 272 kB. No external requests are needed at play time. Assets are loaded per outdoor scene and shared between clones; terrain streaming remains future work.
+
+## Collection feedback — 2026-09-16
+
+Games opens thirteen standalone previews, including Door Atelier alongside the
+unchanged Pocket Funhouse. All required preview builds/dependencies now live in
+preview-sources; the application builds without sibling repositories. Saves and
+rewards stay separate. Veda supports tap-select/tap-destination, Contraption
+labels fixed versus draggable devices, Merienda uses generated kitchen sprites,
+and Gummy has fine-pointer icon hover feedback.
+
+Outside includes a Kenney windmill with rotating sails, a second garden fountain
+for comparison, curved flowing water and an animated Nature Kit waterfall.
+TownStream defines the common bank boundary for art, collision and fishing;
+only the bridge crosses the water. See docs/collection-feedback-06-plan.md and
+docs/collection-feedback-06-verification.md. Physical-phone testing remains pending.

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { GamePreviews } from "../src/core/game-previews";
 import { GamePreviewBridge } from "../tools/game-previews";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const root = fileURLToPath(new URL("../", import.meta.url));
 test("standalone menu has unique safe routes and separate-tab preview labels", () => {
   assert.equal(
     new Set(GamePreviews.entries.map((p) => p.id)).size,
@@ -33,15 +33,19 @@ test("every preview has its existing build and all required assets packaged", as
     assert.match(html, /<html[\s>]/i, preview.id);
     // Citation anchors are fine; required scripts/images/styles must be packaged inline.
     const dependencies = [
-      ...html.matchAll(
-        /<(?:script|img|audio|video|source|link)\b[^>]*\b(?:src|href)=["']([^"']+)["']/gi,
-      ),
+      ...html
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (script) =>
+          script.replace(/>[\s\S]*<\/script>/, "></script>"),
+        )
+        .matchAll(
+          /<(?:script|img|audio|video|source|link)\b[^>]*\b(?:src|href)=["']([^"']+)["']/gi,
+        ),
     ]
       .map((match) => match[1])
       .filter((url) => !url.startsWith("data:") && !url.startsWith("#"));
     for (const dependency of dependencies)
       assert.ok(
-        preview.assets?.includes(dependency),
+        preview.assets?.includes(dependency.replace(/^\.\//, "")),
         `${preview.id} has unexpected dependency: ${dependency}`,
       );
     for (const asset of preview.assets ?? [])

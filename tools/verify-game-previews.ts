@@ -8,7 +8,7 @@ import { GamePreviewBridge } from "./game-previews.ts";
 class PreviewVerification {
   async run() {
     const appRoot = fileURLToPath(new URL("../", import.meta.url));
-    const bridge = new GamePreviewBridge(resolve(appRoot, ".."));
+    const bridge = new GamePreviewBridge(appRoot);
     const origin = process.argv[2] ?? "http://127.0.0.1:5191/";
     let files = 0;
     for (const preview of GamePreviews.entries) {

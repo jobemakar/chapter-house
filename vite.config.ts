@@ -5,7 +5,7 @@ export default defineConfig({
   base: "./",
   plugins: [
     new GamePreviewBridge(
-      fileURLToPath(new URL("../", import.meta.url)),
+      fileURLToPath(new URL("./", import.meta.url)),
     ).plugin(),
   ],
   // Windows may briefly lock copied assets; polling avoids native EBUSY watcher exits.

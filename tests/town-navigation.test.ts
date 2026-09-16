@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TownNavigation } from "../src/town/navigation";
 import { TOWN } from "../src/town/layout";
+import { TownStream } from "../src/town/stream";
 
 const assertRoute = (
   nav: TownNavigation,
@@ -99,9 +100,31 @@ test("fishing targets exist only at clear stream banks and never on the bridge",
   });
   assert.deepEqual(nav.streamTarget({ x: 48, z: 21 }), {
     x: 48,
-    z: 22.65,
+    z: TownStream.bounds(48).minZ + 0.65,
   });
   assert.equal(nav.streamTarget({ x: 10, z: 30 }), null);
   assert.equal(nav.streamTarget({ x: 30, z: 27 }), null);
   assert.equal(nav.streamTarget({ x: 10, z: 24 }), null);
+});
+
+test("curved stream banks agree with collision and fishing along both shores", () => {
+  const nav = new TownNavigation();
+  for (const x of [3, 7, 12, 18, 23, 38, 44, 48, 55]) {
+    const bank = TownStream.bounds(x);
+    assert.equal(nav.walkable({ x, z: (bank.minZ + bank.maxZ) / 2 }), false);
+    for (const side of [-1, 1] as const) {
+      const edge = TownStream.bank(x, side);
+      const position = { x, z: edge + side * 0.8 };
+      const target = nav.streamTarget(position);
+      if (!nav.walkable(position)) {
+        assert.equal(target, null);
+        continue;
+      }
+      assert.ok(target, `clear bank at ${x}/${side}`);
+      assert.ok(TownStream.contains(target));
+    }
+  }
+  assert.equal(nav.walkable(TOWN.windmill), false);
+  assert.equal(nav.walkable(TOWN.gardenFountain), false);
+  assert.equal(TownStream.bounds(TOWN.bridge.x).minZ, TOWN.stream.minZ);
 });
