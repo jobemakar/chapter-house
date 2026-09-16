@@ -8,6 +8,11 @@ The new `src/games/wishbone/` modules explicitly port the prior core solver, aut
 
 `public/assets/backdrop.png` is the prior built-in-imagegen watercolor backyard from 2026-09-10. Its original prompt and generation metadata are copied into `legacy-asset-generation.json`. No new raster assets were generated or edited for this integration. The standalone terrier PNG is not needed by the articulated canvas dog.
 
+2026-09-16 depth refinement: the renderer samples only the upper 66.5% of this
+unchanged painting (sky, trees and mountains), excluding its baked-in fence.
+The independent warm-ivory picket fence, sage verge and extended lawn are
+original canvas artwork authored in TypeScript. No third-party assets were added.
+
 Fraunces (`title.ttf`) and DM Sans (`body.ttf`) retain their SIL Open Font License notices alongside the files. Three.js and Matter.js MIT notices are distributed under `public/licenses/` and copied into the production build.
 
 Room furniture, characters, catalog portraits, icon paths and the favicon are authored procedural geometry/SVG for this local application. They are invented visual treatments, not claims about exact objects or character appearance in the novel. Audio is the prior original Web Audio synthesis, ported to `GameAudio`; no recordings were downloaded.

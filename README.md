@@ -83,7 +83,12 @@ Restack and Keepsakes now use large icons. Drag away from the launcher to pan; u
 
 ## Village and simpler Fling update
 
-Outside opens Willowbrook square: walk or drag to explore, visit the fountain, toss a free cosmetic coin, and return to the clubhouse. Trees, buildings, stream and fountain constrain routes; water sound attenuates with the view. Avatar thought-cloud reactions and pet speech bubbles accompany actions and feeding.
+Outside opens Willowbrook square: walk or drag to explore, tap the nearby fountain to toss a free cosmetic coin, and return to the clubhouse. There is no separate coin button. Trees, buildings, stream and fountain constrain routes; water sound attenuates with the view. Avatar thought-cloud reactions and pet speech bubbles accompany actions and feeding.
+
+2026-09-16: Wishbone's fence now has its own near-world layer, with ground-anchored
+zoom and faster parallax than the mountains. The lawn extends to the viewport
+edges in wide overview. See [plan](docs/feedback-05-plan.md) and
+[verification](docs/feedback-05-verification.md).
 
 Levels → The Long Walk Home is the new wide spring-only yard. Overview, pan/zoom and flight follow show its full width. The Y-fork launcher holds Wishbone in a lower leather pouch, and dog/block impacts use a short procedural rustle. Pocket power collection and activation are removed; archived data and already-owned displays remain. See docs/feedback-04-plan.md and docs/feedback-04-verification.md.
 

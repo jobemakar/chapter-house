@@ -85,7 +85,6 @@ export class TownWorld {
     private profile: ProfileRepository,
     private home: () => void,
     private notify: (text: string) => void,
-    private coinAvailabilityChanged: (available: boolean) => void,
     private contextChanged: (view: TownContextView) => void = () => {},
     private discoveryChanged: (view: TownDiscoveryView) => void = () => {},
     private petAssets: PetAssets = new PetAssets(),
@@ -102,7 +101,7 @@ export class TownWorld {
     canvas.tabIndex = 0;
     canvas.setAttribute(
       "aria-label",
-      "Woodland village. Tap paths to walk, cross the stream by its bridge, and approach the fountain to toss a coin.",
+      "Woodland village. Tap paths to walk, cross the stream by its bridge, and tap the fountain nearby to toss a coin.",
     );
     canvas.style.touchAction = "none";
     this.scene.add(new THREE.HemisphereLight(0xfff7dc, 0x7c997e, 2.5));
@@ -554,7 +553,6 @@ export class TownWorld {
     const available = this.nav.nearFountain(this.point);
     if (available === this.coinAvailable) return;
     this.coinAvailable = available;
-    this.coinAvailabilityChanged(available);
   }
   private frame = (time: number) => {
     if (this.disposed) return;
@@ -655,7 +653,6 @@ export class TownWorld {
     this.abort.abort();
     this.observer.disconnect();
     this.audio.dispose();
-    this.coinAvailabilityChanged(false);
     this.contextMenu.reset();
     this.contextChanged({
       mode: "hidden",

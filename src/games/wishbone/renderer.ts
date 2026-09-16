@@ -4,6 +4,7 @@ import { PowerYard, definitions } from "./powers";
 import { TUNE } from "./yard";
 import { drawPlush } from "./plush";
 import type { PieceBody, Life, AimInput } from "./types";
+import { WishboneScenery } from "./scenery";
 const colors = ["#e6ac64", "#7ea59a", "#df8569", "#d1af63"];
 function round(
   c: CanvasRenderingContext2D,
@@ -447,6 +448,65 @@ export class WishboneRenderer {
     this.canvas.width = Math.max(1, Math.round(rect.width * dpr));
     this.canvas.height = Math.max(1, Math.round(rect.height * dpr));
   }
+  private drawFence(left: number, right: number) {
+    const c = this.c;
+    // Muted sage verge and warm ivory wood echo the watercolor without stealing focus.
+    c.fillStyle = "#789467";
+    c.fillRect(left, 576, right - left, 26);
+    for (const y of [532, 559]) {
+      round(c, left, y, right - left, 12, 2, "#dedbc0", "#9eaa83");
+      line(
+        c,
+        [
+          [left, y + 2],
+          [right, y + 2],
+        ],
+        "#f7f0d3",
+        3,
+      );
+    }
+    for (let x = Math.floor(left / 34) * 34; x < right; x += 34) {
+      const top = 513 + Math.sin(x * 0.07) * 2;
+      c.beginPath();
+      c.moveTo(x, 582);
+      c.lineTo(x, top + 10);
+      c.lineTo(x + 9, top);
+      c.lineTo(x + 18, top + 10);
+      c.lineTo(x + 18, 582);
+      c.closePath();
+      c.fillStyle = "#eee8ce";
+      c.fill();
+      c.strokeStyle = "#aab18e";
+      c.lineWidth = 1.5;
+      c.stroke();
+      line(
+        c,
+        [
+          [x + 4, top + 13],
+          [x + 4, 578],
+        ],
+        "#fff8df",
+        2,
+      );
+    }
+    for (let x = Math.floor(left / 306) * 306; x < right; x += 306) {
+      round(c, x - 4, 504, 26, 83, 3, "#e1dec1", "#9ca886");
+      round(c, x - 7, 501, 32, 8, 3, "#f4edd3", "#aab18e");
+      ellipse(c, x + 9, 499, 9, 5, "#f4edd3");
+    }
+    for (let x = Math.floor(left / 23) * 23; x < right; x += 23) {
+      line(
+        c,
+        [
+          [x, 596],
+          [x + 4, 583],
+          [x + 9, 594],
+        ],
+        "#91ae75",
+        3,
+      );
+    }
+  }
   burst(x: number, y: number, color: string, reduced: boolean) {
     for (let i = 0; i < (reduced ? 4 : 18); i++) {
       const a = Math.random() * Math.PI * 2,
@@ -488,18 +548,20 @@ export class WishboneRenderer {
       );
       this.shake = Math.max(0, this.shake - dt * 18);
     }
-    // The painted distance deliberately moves less than the playable yard.
-    // Overscan prevents an exposed edge when the camera reaches a boundary.
-    const farX = (W / 2 - view.x) * (reduced ? 0 : 0.2);
-    const farY = (H / 2 - view.y) * (reduced ? 0 : 0.2);
-    const farOverscan = 120 + Math.abs(worldW - W) * (reduced ? 0 : 0.2);
+    const scenery = WishboneScenery.layout(view, worldW, reduced);
+    // The old painting includes a fence. Use only its sky/mountain region;
+    // the fence below is a separate near-world layer, not baked-in scenery.
     if (this.background.complete && this.background.naturalWidth)
       c.drawImage(
         this.background,
-        -farOverscan + farX,
-        -72 + farY,
-        W + farOverscan * 2,
-        H + 144,
+        0,
+        0,
+        this.background.naturalWidth,
+        Math.floor(this.background.naturalHeight * 0.665),
+        scenery.farLeft,
+        scenery.farTop,
+        scenery.farWidth,
+        scenery.farHeight,
       );
     else {
       c.fillStyle = "#dce8d0";
@@ -511,30 +573,19 @@ export class WishboneRenderer {
     wash.addColorStop(1, "#fbf7e608");
     c.fillStyle = wash;
     c.fillRect(0, 0, W, 600);
-    const nearX = (W / 2 - view.x) * (reduced ? 0 : 0.72);
-    const nearY = (H / 2 - view.y) * (reduced ? 0 : 0.72);
+    // Lawn reaches the screen bottom even when the physics world is zoomed out.
+    const ground = c.createLinearGradient(0, scenery.groundY, 0, H);
+    ground.addColorStop(0, "#b9d093");
+    ground.addColorStop(0.18, "#a8c781");
+    ground.addColorStop(1, "#7fa366");
+    c.fillStyle = ground;
+    c.fillRect(0, scenery.groundY - 1, W, Math.max(0, H - scenery.groundY + 1));
+    // Fence follows zoom and vertical ground exactly, with only a tiny horizontal lag.
     c.save();
-    c.beginPath();
-    c.rect(0, 575, W, H - 575);
-    c.clip();
-    c.fillStyle = "#8cac7340";
-    c.fillRect(-160 + nearX, 601 + nearY, W + 320, 160);
-    // A soft near-grass fringe has depth without competing with the physical floor.
-    for (let y = 618; y < 720; y += 26) {
-      c.strokeStyle = "#e2edbd2b";
-      c.lineWidth = 10;
-      c.beginPath();
-      c.moveTo(-120 + nearX, y + nearY);
-      c.bezierCurveTo(
-        280 + nearX,
-        y - 9 + nearY,
-        790 + nearX,
-        y + 8 + nearY,
-        W + 140 + nearX,
-        y - 3 + nearY,
-      );
-      c.stroke();
-    }
+    c.translate(600 + scenery.fenceX, scenery.groundY);
+    c.scale(view.zoom, view.zoom);
+    c.translate(-600, -WishboneScenery.floorY);
+    this.drawFence(scenery.fenceLeft, scenery.fenceRight);
     c.restore();
     // Every physical thing now shares the camera transform, including flight marks
     // and labels. UI remains DOM-fixed above this canvas.
@@ -544,12 +595,6 @@ export class WishboneRenderer {
     c.translate(-view.x, -view.y);
     // The collision floor is part of the world, so shadows and pieces never float
     // when zooming or panning.
-    const ground = c.createLinearGradient(0, 602, 0, 720);
-    ground.addColorStop(0, "#b9d093");
-    ground.addColorStop(0.18, "#a8c781");
-    ground.addColorStop(1, "#7fa366");
-    c.fillStyle = ground;
-    c.fillRect(0, 602, worldW, 118);
     line(
       c,
       [
