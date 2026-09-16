@@ -69,3 +69,15 @@ Water's geometry, fishing and navigation share TownStream's smooth bank bends;
 the bridge segment stays flat for alignment. New scenery collision footprints
 are kept in the navigation model. Resource-sharing/disposal remains with
 TownAssets for imports and town scene teardown for authored geometry/materials.
+
+## Phone walkthrough revision — 2026-09-16
+
+Comparison fountain removed from scene/navigation/asset-loader selection; its
+historical packaged source is retained for provenance only. Windmill moves to
+the far bank, without a label. Waterfall references the Nature Kit sample scene:
+https://kenney.nl/media/pages/assets/nature-kit/656a90532f-1677698896/sample.png .
+Added exact CC0 cliff_block_rock.glb and cliff_rock.glb from the same pack.
+TownAssets now loads 22 models. Block terraces plus irregular cliff faces,
+planted crests, an uphill pool and descending channel support the larger drop.
+The entire raised footprint is scenic/non-walkable; bridge remains the only
+water crossing. Authored channel/foam motion is not a Kenney animation.

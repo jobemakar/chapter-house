@@ -28,13 +28,11 @@ export class GamePreviews {
       source: "preview-sources/pocket-funhouse/index.html",
     },
     {
-      id: "door-atelier",
-      title: "Door Atelier",
+      id: "luminous-locks",
+      title: "Luminous Locks",
       book: "The Mystery of Locked Rooms",
-      description:
-        "Orbit three miniature 3D doors and uncover their tactile mechanisms.",
-      source: "preview-sources/door-atelier/index.html",
-      assets: ["assets/game.js", "assets/index.css"],
+      description: "Turn moonlit mirrors and open an eerie puzzle-box mansion.",
+      source: "preview-sources/luminous-locks/index.html",
       alternate: true,
     },
     {
@@ -66,6 +64,15 @@ export class GamePreviews {
       book: "Mabuhay!",
       description: "Cook and serve a colorful little night market.",
       source: "preview-sources/midnight-merienda/index.html",
+    },
+    {
+      id: "moonlight-munch-run",
+      title: "Moonlight Munch Run",
+      book: "Mabuhay!",
+      description:
+        "Steer an endless food truck and feed hungry night creatures.",
+      source: "preview-sources/moonlight-munch-run/index.html",
+      alternate: true,
     },
     {
       id: "gummy-nook",

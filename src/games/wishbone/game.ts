@@ -8,6 +8,7 @@ import { WishboneProgression, keepsakes } from "./progression";
 import { GameAudio } from "./audio";
 import type { AimInput } from "./types";
 import { WishboneCamera, type ViewPoint } from "./camera";
+import { GameIcons } from "../../core/game-icons";
 
 export type WishboneShellCallbacks = {
   toggleSound: () => void;
@@ -62,10 +63,10 @@ export class WishboneGame implements GameSession {
 <div class="hud-title"><span class="eyebrow">WISHBONE FLING</span><b data-ui="title"></b><small data-ui="rescued"></small></div>
 <div class="game-wallet" aria-label="Your coins"><span aria-hidden="true">●</span><b data-ui="coins">0</b></div>
 <div class="hud-actions">
-<button data-action="sound" aria-label="Toggle sound">Sound</button>
-<button data-action="fullscreen" aria-label="Fullscreen">Full screen</button>
-<button data-action="help" aria-label="Game instructions">Help</button>
-<button data-action="pause">Pause</button>
+<button data-action="sound" aria-label="Toggle sound" title="Sound">${GameIcons.markup("sound")}</button>
+<button data-action="fullscreen" aria-label="Fullscreen" title="Fullscreen">${GameIcons.markup("fullscreen")}</button>
+<button data-action="help" aria-label="Game instructions" title="Help">${GameIcons.markup("help")}</button>
+<button data-action="pause" aria-label="Pause" title="Pause">${GameIcons.markup("pause")}</button>
 </div>
 </header>
 <button data-action="levels" class="levels-toggle" aria-expanded="false">Levels</button>
@@ -392,7 +393,9 @@ export class WishboneGame implements GameSession {
     this.paused = value;
     this.activity.suspend();
     this.host.querySelector<HTMLElement>(".pause-cover")!.hidden = !value;
-    this.button("pause").textContent = value ? "Resume" : "Pause";
+    this.button("pause").innerHTML = GameIcons.markup(value ? "play" : "pause");
+    this.button("pause").setAttribute("aria-label", value ? "Resume" : "Pause");
+    this.button("pause").title = value ? "Resume" : "Pause";
     if (value) {
       this.sound.suspend();
       this.save();
@@ -445,6 +448,7 @@ export class WishboneGame implements GameSession {
       this.paused,
       p.throws,
       this.profile.state.currency,
+      this.profile.state.muted,
     ].join();
     if (key !== this.statusKey) {
       this.statusKey = key;
@@ -467,14 +471,21 @@ export class WishboneGame implements GameSession {
       this.button("recall").disabled = this.paused;
       this.button("restack").disabled = this.paused;
       this.ui("coins").textContent = String(this.profile.state.currency);
+      this.button("sound").innerHTML = GameIcons.markup(
+        this.profile.state.muted ? "muted" : "sound",
+      );
+      this.button("sound").setAttribute(
+        "aria-label",
+        this.profile.state.muted ? "Sound off — turn on" : "Sound on — mute",
+      );
+      this.button("sound").title = this.profile.state.muted
+        ? "Sound off"
+        : "Sound on";
+      this.button("sound").setAttribute(
+        "aria-pressed",
+        String(!this.profile.state.muted),
+      );
     }
-    this.button("sound").textContent = this.profile.state.muted
-      ? "Sound off"
-      : "Sound on";
-    this.button("sound").setAttribute(
-      "aria-pressed",
-      String(!this.profile.state.muted),
-    );
   }
   private frame = (timestamp: number) => {
     const dt = this.last ? Math.min((timestamp - this.last) / 1000, 0.06) : 0;
@@ -491,7 +502,11 @@ export class WishboneGame implements GameSession {
           this.sound.note(420, 0.2, 0.04, "triangle");
           this.save();
         }
-        if (event.type === "impact" && event.kind === "dog-block" && this.impactWait <= 0) {
+        if (
+          event.type === "impact" &&
+          event.kind === "dog-block" &&
+          this.impactWait <= 0
+        ) {
           this.impactWait = 0.055;
           this.yard.squash = Math.min(1, event.speed / 10);
           this.sound.kshh(event.speed);

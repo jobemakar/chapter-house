@@ -117,6 +117,14 @@
   display: flex;
   gap: 5px;
 }
+.hud-actions button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 5px;
+  font-size: 22px;
+}
 .levels-toggle {
   position: absolute;
   z-index: 5;

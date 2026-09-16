@@ -13,6 +13,7 @@ export class WishboneCamera {
   zoom = 1;
   private manual = false;
   private lastMode = "ready";
+  private launchZoom = false;
   private get minZoom() {
     return Math.min(1, this.width / this.worldWidth);
   }
@@ -46,6 +47,7 @@ export class WishboneCamera {
         : Math.max(halfH, Math.min(this.worldHeight - halfH, this.y));
   }
   zoomAt(value: number, screen: ViewPoint = { x: 600, y: 360 }) {
+    this.launchZoom = false;
     const anchor = this.toWorld(screen);
     this.zoom = Math.max(this.minZoom, Math.min(1.8, value));
     this.x = anchor.x - (screen.x - 600) / this.zoom;
@@ -54,12 +56,14 @@ export class WishboneCamera {
     this.clamp();
   }
   pan(dx: number, dy: number) {
+    this.launchZoom = false;
     this.x -= dx / this.zoom;
     this.y -= dy / this.zoom;
     this.manual = true;
     this.clamp();
   }
   home(detail = false) {
+    this.launchZoom = false;
     this.zoom = detail ? Math.min(1.5, 1.8) : this.minZoom;
     this.x = detail ? 162 : this.worldWidth / 2;
     this.y = 390;
@@ -67,12 +71,8 @@ export class WishboneCamera {
     this.clamp();
   }
   launched() {
-    if (this.worldWidth > this.width && this.zoom < 1) {
-      this.zoom = 1;
-      this.x = 162;
-      this.y = 390;
-      this.clamp();
-    }
+    // Preserve the overview on release; the render loop eases into flight detail.
+    this.launchZoom = this.worldWidth > this.width && this.zoom < 1;
     this.manual = false;
     this.lastMode = "flight";
   }
@@ -84,19 +84,26 @@ export class WishboneCamera {
     reduced: boolean,
   ) {
     if (frozen) return;
-    // Returning always restores launch visibility; a manual look around lasts for this throw.
-    if (mode !== this.lastMode && mode !== "flight") this.manual = false;
-    this.lastMode = mode;
-    if (this.manual || (this.zoom === 1 && this.worldWidth <= this.width)) return;
-    const target =
-      mode === "flight"
-        ? { x: dog.x + 120 / this.zoom, y: dog.y }
-        : { x: 162, y: 390 };
-    // Reduced motion keeps a steady overview rather than following a flying body.
     if (reduced && mode === "flight") {
       this.home();
       return;
     }
+    if (this.launchZoom) {
+      this.zoom += (1 - this.zoom) * (1 - Math.exp(-Math.min(dt, 0.06) * 9));
+      if (1 - this.zoom < 0.00001) {
+        this.zoom = 1;
+        this.launchZoom = false;
+      }
+    }
+    // Returning always restores launch visibility; a manual look around lasts for this throw.
+    if (mode !== this.lastMode && mode !== "flight") this.manual = false;
+    this.lastMode = mode;
+    if (this.manual || (this.zoom === 1 && this.worldWidth <= this.width))
+      return;
+    const target =
+      mode === "flight"
+        ? { x: dog.x + 120 / this.zoom, y: dog.y }
+        : { x: 162, y: 390 };
     const blend = reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.06) * 5);
     this.x += (target.x - this.x) * blend;
     this.y += (target.y - this.y) * blend;

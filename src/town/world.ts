@@ -364,10 +364,6 @@ export class TownWorld {
         this.tossCoin();
         return;
       }
-      if (o?.userData.kind === "garden-fountain") {
-        this.notify("The new Kenney garden fountain — compare it with the wishing fountain beside it.");
-        return;
-      }
       if (o?.userData.kind === "home") {
         this.home();
         return;

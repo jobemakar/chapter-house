@@ -63,8 +63,31 @@ test("a wide world has an overview, bounded panning, flight follow, and launcher
   c.pan(-10000, 0);
   assert.equal(c.x, 1200);
   c.launched();
-  for (let i = 0; i < 80; i++) c.update(0.05, "flight", { x: 2050, y: 420 }, false, false);
+  for (let i = 0; i < 80; i++)
+    c.update(0.05, "flight", { x: 2050, y: 420 }, false, false);
   assert.ok(c.x > 1700);
-  for (let i = 0; i < 100; i++) c.update(0.05, "ready", { x: 162, y: 478 }, false, false);
+  for (let i = 0; i < 100; i++)
+    c.update(0.05, "ready", { x: 162, y: 478 }, false, false);
   assert.equal(c.x, 600);
+});
+
+test("overview launch eases zoom without jumping the camera on release", () => {
+  const c = new WishboneCamera();
+  c.setWorld({ width: 2400, height: 720 });
+  c.home();
+  const before = { zoom: c.zoom, x: c.x, y: c.y };
+  c.launched();
+  assert.deepEqual({ zoom: c.zoom, x: c.x, y: c.y }, before);
+  c.update(1 / 60, "flight", { x: 190, y: 430 }, false, false);
+  assert.ok(c.zoom > 0.5 && c.zoom < 0.6);
+  const frozen = c.zoom;
+  c.update(0.05, "flight", { x: 220, y: 430 }, true, false);
+  assert.equal(c.zoom, frozen);
+  for (let i = 0; i < 120; i++)
+    c.update(1 / 60, "flight", { x: 500, y: 430 }, false, false);
+  assert.equal(c.zoom, 1);
+  c.home();
+  c.launched();
+  c.update(1 / 60, "flight", { x: 500, y: 430 }, false, true);
+  assert.equal(c.zoom, 0.5);
 });

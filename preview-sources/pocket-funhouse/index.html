@@ -843,7 +843,8 @@ footer {
     pointer = null,
     flash = null,
     particles = [],
-    solveGlow = 0;
+    solveGlow = 0,
+    arrivingSolve = null;
   const SIZE = 116,
     X = 168,
     Y = 120;
@@ -888,6 +889,7 @@ footer {
     pointer = null;
     flash = null;
     solveGlow = 0;
+    arrivingSolve = null;
     $("message").textContent = data.solved.includes(data.room)
       ? C.rooms[data.room].curio + " is yours to keep."
       : C.rooms[data.room].gates.length
@@ -904,7 +906,19 @@ footer {
   function check() {
     const route = C.trace(data.room, state());
     if (route.solved && !data.solved.includes(data.room)) {
+      // Progress is durable as soon as the authored route is proven.  Only the
+      // chime/confetti celebration waits for the spark's final visible arrival.
       data.solved.push(data.room);
+      save();
+      arrivingSolve = { room: data.room, remaining: Math.max(.6, route.visited.length / 1.7) };
+      sync();
+    }
+    return route;
+  }
+  function completeArrival() {
+    if (!arrivingSolve || arrivingSolve.room !== data.room) return;
+    arrivingSolve = null;
+    {
       solveGlow = 1;
       $("message").textContent = "Found: " + C.rooms[data.room].curio + "!";
       sound.chime();
@@ -918,9 +932,7 @@ footer {
             life: 2 + Math.random(),
           });
       sync();
-      save();
     }
-    return route;
   }
   function act(id, gate) {
     if (paused) return;
@@ -1231,6 +1243,10 @@ footer {
       if (flash) {
         flash.time -= dt;
         if (flash.time <= 0) flash = null;
+      }
+      if (arrivingSolve) {
+        arrivingSolve.remaining -= dt;
+        if (arrivingSolve.remaining <= 0) completeArrival();
       }
       particles = particles.filter((p) => p.life > 0);
       for (const p of particles) {

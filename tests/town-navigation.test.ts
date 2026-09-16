@@ -26,6 +26,25 @@ const assertRoute = (
   return path;
 };
 
+test("raised waterfall terrain is non-walkable and far-bank mill is reachable around it", () => {
+  const nav = new TownNavigation();
+  const edge = TownStream.bank(TOWN.waterfall.x, -1);
+  for (const z of [edge - 10, edge - 5, edge - 0.2]) {
+    assert.equal(nav.walkable({ x: TOWN.waterfall.x, z }), false);
+    assert.equal(nav.streamTarget({ x: TOWN.waterfall.x, z }), null);
+  }
+  assert.ok(TOWN.windmill.z < TOWN.stream.minZ);
+  assertRoute(nav, TOWN.entry, {
+    x: TOWN.windmill.x,
+    z: TOWN.windmill.z + 2.5,
+  });
+  assert.equal(
+    nav.walkable({ x: 36.8, z: 37.8 }),
+    true,
+    "removed fountain no longer blocks ground",
+  );
+});
+
 test("expanded town routes around scenery and crosses the stream only on the bridge", () => {
   const nav = new TownNavigation();
   for (const point of [
@@ -125,6 +144,6 @@ test("curved stream banks agree with collision and fishing along both shores", (
     }
   }
   assert.equal(nav.walkable(TOWN.windmill), false);
-  assert.equal(nav.walkable(TOWN.gardenFountain), false);
+  assert.equal(nav.walkable({ x: 36.8, z: 37.8 }), true);
   assert.equal(TownStream.bounds(TOWN.bridge.x).minZ, TOWN.stream.minZ);
 });

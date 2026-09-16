@@ -41,11 +41,14 @@ export class TownNavigation {
       p.z <= TOWN.depth - r &&
       (!inStream || onBridge) &&
       !(
-        Math.abs(p.x - TOWN.waterfall.x) < 2.3 + r &&
-        Math.abs(p.z - (TownStream.bank(TOWN.waterfall.x, -1) - 0.95)) < 1.7 + r
+        Math.abs(p.x - TOWN.waterfall.x) <
+          TOWN.waterfall.terrainWidth / 2 + r &&
+        p.z >
+          TownStream.bank(TOWN.waterfall.x, -1) -
+            TOWN.waterfall.terrainDepth -
+            r &&
+        p.z < TownStream.bank(TOWN.waterfall.x, -1) + 0.6 + r
       ) &&
-      Math.hypot(p.x - TOWN.gardenFountain.x, p.z - TOWN.gardenFountain.z) >=
-        TOWN.gardenFountain.radius + r &&
       !(
         Math.abs(p.x - TOWN.windmill.x) < TOWN.windmill.width / 2 + r &&
         Math.abs(p.z - TOWN.windmill.z) < TOWN.windmill.depth / 2 + r

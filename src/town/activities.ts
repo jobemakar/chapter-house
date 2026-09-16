@@ -208,9 +208,9 @@ export interface TownActivitiesOptions {
 
 const defaultTimings: TownActivityTimings = {
   digging: 0.82,
-  casting: 0.58,
-  waitMin: 0.95,
-  waitMax: 1.55,
+  casting: 1.16,
+  waitMin: 1.9,
+  waitMax: 3.1,
   reeling: 0.52,
   result: 1.25,
 };

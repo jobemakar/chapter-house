@@ -9,7 +9,7 @@ type GLTFLoaderLike = Pick<
   "loadAsync"
 >;
 
-const assetCount = 21;
+const assetCount = 22;
 
 function sourceScene() {
   const scene = new THREE.Group();

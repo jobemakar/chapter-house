@@ -6,40 +6,16 @@
       "id": "stormglide",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-miscalculations-of-lightning-girl\\playable\\Stormglide.html",
-      "bytes": 3815353,
-      "sha256": "3C1AC9742FEAD2EB6339D3AB777D12264C22E1C836AB04B945D991C4CC2CAFBD",
+      "bytes": 3815787,
+      "sha256": "387F37DF62D435D24B0C260376F5C020462FEF9ABA2FF8BEB9EAD3DA29D5BE3F",
       "originalByteEquality": true
     },
     {
       "id": "pocket-funhouse",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\playable\\Pocket-Funhouse.html",
-      "bytes": 3518022,
-      "sha256": "E8DC59731E818C294300E0504CA99A08ED1DFBD5DEE46B026F4425DE5049ADFE",
-      "originalByteEquality": true
-    },
-    {
-      "id": "door-atelier",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\door-atelier\\dist\\index.html",
-      "bytes": 1515,
-      "sha256": "AB4BDC4CDFA51794591875CB37D3F9E91C919873356D247675DACBC236A0FE44",
-      "originalByteEquality": true
-    },
-    {
-      "id": "door-atelier",
-      "file": "assets/game.js",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\door-atelier\\dist\\assets\\game.js",
-      "bytes": 490333,
-      "sha256": "CDBCA71C33A72721E2E45F47D9B740EB89E7EED5E3D11D1781EBDE787DE8E86A",
-      "originalByteEquality": true
-    },
-    {
-      "id": "door-atelier",
-      "file": "assets/index.css",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\door-atelier\\dist\\assets\\index.css",
-      "bytes": 2239,
-      "sha256": "4E87B12CB513D057F70F226670DA4B25BF54140C3EE1930B716EE1DE78CE1D48",
+      "bytes": 3518621,
+      "sha256": "1B0028631EF42E48F5213946D80D308298D8D407483261A41DC102027D6CC3FD",
       "originalByteEquality": true
     },
     {
@@ -62,24 +38,24 @@
       "id": "arctic-duet",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-very-very-far-north\\playable\\Arctic-Duet.html",
-      "bytes": 205896,
-      "sha256": "1E79A059F28D4F6CAEFC72273A25DF0989D8FE4423F5ED87C384404382CFB2D9",
+      "bytes": 207130,
+      "sha256": "9F9985208BBDDB47306C80A66542F36B7EA47F63C25FFE4DE14F233EB8456157",
       "originalByteEquality": true
     },
     {
       "id": "midnight-merienda",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\playable\\Midnight-Merienda.html",
-      "bytes": 9608750,
-      "sha256": "78C9A98B17B79A9006C5F9E091FED1043AA2D8349BA785F806BBC1E3635D1774",
+      "bytes": 9609339,
+      "sha256": "8C9B1EBF1B07BDEFE207BB479EA3CD1BC922F5998E9F84D415AEDA3E85481D0A",
       "originalByteEquality": true
     },
     {
       "id": "gummy-nook",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\not-if-i-can-help-it\\playable\\Gummy-Nook.html",
-      "bytes": 58478,
-      "sha256": "FD47E3AE96A9569CA1E5A82A509F20FD7D7259E6E0859B3571DBD356A9A893D5",
+      "bytes": 60329,
+      "sha256": "2E82FD56B59FF88DB2DE22E84022634636F35DD989A215D8EF7359FB2210CC76",
       "originalByteEquality": true
     },
     {
@@ -166,8 +142,24 @@
       "id": "contraption-club",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\popcorn\\experiments\\contraption-club\\playable\\popcorn-contraption-club.html",
-      "bytes": 53988,
-      "sha256": "5F57C4D8A55173104C2D61049E7DA8CB1A2B1B00EB5D3F8CC34AC6111F42BC5A",
+      "bytes": 57364,
+      "sha256": "DA520CB26138230F290B8D15096BBDBC386E31D30E3146E0458E59BDDBE43875",
+      "originalByteEquality": true
+    },
+    {
+      "id": "luminous-locks",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\experiments\\luminous-locks\\playable\\luminous-locks.html",
+      "bytes": 7035307,
+      "sha256": "85A54E36AA0C56F3A519D461B1060736FAE8AC5637B949D324C9CD8DAC318D0F",
+      "originalByteEquality": true
+    },
+    {
+      "id": "moonlight-munch-run",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\experiments\\moonlight-munch-run\\playable\\moonlight-munch-run.html",
+      "bytes": 4407536,
+      "sha256": "A13008D1F7B24D740F80A015AFC96A518FFD148C546C9F6B27024C05F666ABEB",
       "originalByteEquality": true
     }
   ]

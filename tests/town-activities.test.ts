@@ -12,6 +12,61 @@ const randomSequence = (...values: number[]) => {
   return () => values[index++] ?? values.at(-1) ?? 0;
 };
 
+test("completed fishing reels yield exactly 30 percent for uniform threshold samples", () => {
+  let catches = 0;
+  for (let i = 0; i < 1000; i++) {
+    const a = new TownActivities({
+      random: randomSequence(0, (i + 0.5) / 1000, 0),
+      timings: { casting: 0, waitMin: 0, waitMax: 0, reeling: 0 },
+    });
+    a.cast();
+    a.update(0.01);
+    a.update(0.01);
+    a.reel();
+    const result = a.update(0.01);
+    if (result?.success) catches++;
+    assert.equal(a.update(0.01), null, "result cannot award twice");
+  }
+  assert.equal(catches, 300);
+});
+
+test("seeded completed-reel simulation stays near the intended thirty percent rate", (t) => {
+  let seed = 20260916;
+  const random = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  let catches = 0;
+  for (let i = 0; i < 10000; i++) {
+    const a = new TownActivities({
+      random,
+      timings: { casting: 0, waitMin: 0, waitMax: 0, reeling: 0 },
+    });
+    a.cast();
+    a.update(0.01);
+    a.update(0.01);
+    a.reel();
+    if (a.update(0.01)?.success) catches++;
+  }
+  t.diagnostic(`${catches} catches / 10,000 simulated completed reels`);
+  assert.ok(catches >= 2800 && catches <= 3200);
+});
+
+test("default cast and waiting delay are at least twice the original", () => {
+  const a = new TownActivities({ random: () => 0 });
+  a.cast();
+  assert.ok(a.view.remaining! >= 1.16);
+  a.update(1.16);
+  assert.equal(a.state, "waiting");
+  assert.ok(a.view.remaining! >= 1.9);
+  a.update(1.89);
+  assert.equal(a.state, "waiting");
+  a.update(0.02);
+  assert.equal(a.state, "reelReady");
+  a.update(100);
+  assert.equal(a.state, "reelReady");
+});
+
 test("the activity catalogs keep stable distinct ids across rarity tiers", () => {
   assert.equal(FISH.length, 6);
   assert.equal(FINDS.length, 8);

@@ -331,6 +331,7 @@ input {
     scroll-behavior: auto;
   }
 }
+@media (orientation:landscape) and (max-height:650px){main{max-width:none;padding:8px 14px 4px;min-height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}header{margin-bottom:5px}.eyebrow{font-size:7px}h1{font-size:25px;margin:2px 0}.status{padding-bottom:7px;margin-bottom:5px}.stage{width:min(100%,calc((100dvh - 146px)*1.579));max-height:none;min-height:0;height:100%;aspect-ratio:1200/760}footer{margin:5px 0 0}.card{padding:14px}.card p{display:none}.hint{bottom:1%}}
 @media (max-width: 650px) {
   #record {
     flex-basis: 100%;
@@ -339,6 +340,16 @@ input {
   }
 }
 </style>
+    <style>
+      /* Final landscape override lives after the shared narrow-phone rules. */
+      @media (orientation: landscape) and (max-height: 700px) {
+        main { max-width: none; width: 100%; min-height: 100dvh; padding: 5px 10px 2px; display: grid; grid-template-rows: auto auto minmax(0,1fr) auto; }
+        header { margin-bottom: 3px; } h1 { font-size: 23px; } .eyebrow { font-size: 7px; }
+        .status { padding-bottom: 4px; margin-bottom: 3px; }
+        .stage { width: 100%; height: min(calc(100dvh - 145px), 245px); min-height: 0; max-height: none; aspect-ratio: 3.25 / 1; border-radius: 16px; }
+        footer { margin: 2px 0 0; font-size: 9px; } .card { padding: 12px; } .card p { display: none; }
+      }
+    </style>
   </head>
   <body>
     <main>
