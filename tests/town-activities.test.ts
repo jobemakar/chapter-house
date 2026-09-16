@@ -21,6 +21,10 @@ test("the activity catalogs keep stable distinct ids across rarity tiers", () =>
       new Set(catalog.map((item) => item.rarity)),
       new Set(["common", "uncommon", "rare"]),
     );
+    assert.equal(
+      catalog.every((item) => item.image?.startsWith("collections/")),
+      true,
+    );
   }
 });
 

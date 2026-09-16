@@ -63,6 +63,11 @@ export class TownArt {
     return this.assetState;
   }
 
+  /** A resource-sharing clone owned by TownAssets; callers must only detach it. */
+  createDigMound(): THREE.Group {
+    return this.assets.create("dig-dirt", { width: 0.74 });
+  }
+
   update(dt: number, reducedMotion: boolean): void {
     const safeDt = Math.min(Math.max(dt, 0), 0.1);
     this.elapsed += safeDt;

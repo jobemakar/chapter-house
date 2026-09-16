@@ -75,6 +75,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Little Fossil",
     rarity: "common",
     icon: "🦴",
+    image: "collections/finds/little-fossil.svg",
   },
   {
     id: "acorn-charm",
@@ -82,6 +83,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Acorn Charm",
     rarity: "common",
     icon: "🌰",
+    image: "collections/finds/acorn-charm.svg",
   },
   {
     id: "river-glass",
@@ -89,6 +91,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "River Glass",
     rarity: "common",
     icon: "💠",
+    image: "collections/finds/river-glass.svg",
   },
   {
     id: "button-bone",
@@ -96,6 +99,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Button Bone",
     rarity: "common",
     icon: "🦴",
+    image: "collections/finds/button-bone.svg",
   },
   {
     id: "brass-bookmark",
@@ -103,6 +107,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Brass Bookmark",
     rarity: "uncommon",
     icon: "🔖",
+    image: "collections/finds/brass-bookmark.svg",
   },
   {
     id: "pocket-compass",
@@ -110,6 +115,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Pocket Compass",
     rarity: "uncommon",
     icon: "🧭",
+    image: "collections/finds/pocket-compass.svg",
   },
   {
     id: "carved-feather",
@@ -117,6 +123,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Carved Feather",
     rarity: "uncommon",
     icon: "🪶",
+    image: "collections/finds/carved-feather.svg",
   },
   {
     id: "star-map-shard",
@@ -124,6 +131,7 @@ export const FINDS: readonly DiscoveryDefinition[] = [
     name: "Star Map Shard",
     rarity: "rare",
     icon: "✨",
+    image: "collections/finds/star-map-shard.svg",
   },
 ];
 

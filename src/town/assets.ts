@@ -15,6 +15,7 @@ const ASSET_SOURCES = {
   grass: assetUrl("town/nature/grass_leafs.glb"),
   bush: assetUrl("town/nature/plant_bush.glb"),
   rock: assetUrl("town/nature/rock_smallA.glb"),
+  "dig-dirt": assetUrl("town/nature/crops_dirtSingle.glb"),
 } as const;
 
 export type TownAssetKey = keyof typeof ASSET_SOURCES;
@@ -176,7 +177,9 @@ export class TownAssets {
       leafsGreen: 0x66865b,
       woodBark: 0x956344,
       dirt: 0xa2a69b,
+      dirtDark: 0x5b412c,
     };
+    if (key === "dig-dirt") colors.dirt = 0x9a7045;
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
       const materials = Array.isArray(object.material)

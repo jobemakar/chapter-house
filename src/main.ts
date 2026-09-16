@@ -9,7 +9,11 @@ import { RoomAudio } from "./room/audio";
 import { CatalogPortraits } from "./room/portraits";
 import { PetAssets } from "./room/pet-assets";
 import { WishboneGame } from "./games/wishbone/game";
-import { TownWorld, type TownContextView } from "./town/world";
+import {
+  TownWorld,
+  type TownContextView,
+  type TownDiscoveryView,
+} from "./town/world";
 import { FISH, FINDS, type DiscoveryDefinition } from "./town/activities";
 import { assetUrl } from "./core/asset-url";
 import { furniture, pets, getFurniture } from "./core/catalog";
@@ -128,7 +132,8 @@ class ChapterHouse {
 <main class="town-page" hidden><div class="town-world"></div>
 <div class="town-heading"><span class="eyebrow">A LITTLE FURTHER AFIELD</span><h2>Willowbrook square</h2><p>Tap a path to walk · drag to explore · pinch to zoom</p></div>
 <div class="town-controls"><button data-action="inside">← Clubhouse</button><button data-action="collection">Collection</button><button data-action="plaza">Fountain square</button><button data-action="town-center" aria-label="Center on avatar">◎</button><button data-action="town-out" aria-label="Town zoom out">−</button><button data-action="town-in" aria-label="Town zoom in">+</button></div>
-<div class="town-context" role="group" aria-label="Nearby actions" hidden><button data-action="town-fish" hidden><span>🎣</span> Fish</button><button data-action="town-dig" hidden><span>♠</span> Dig</button><button data-action="town-reel" hidden><span>!</span> Reel!</button></div>
+<div class="town-context" role="group" aria-label="Avatar actions" data-mode="hidden" hidden><button data-action="town-fish"><span>🎣</span> Fish</button><button data-action="town-dig"><span>♠</span> Dig</button><button data-action="town-reel"><span>!</span> Reel!</button></div>
+<div class="town-discovery" role="status" aria-live="polite" hidden><img alt=""><div><small>NEW DISCOVERY</small><b></b><span></span></div></div>
 <div class="town-emotes"><button data-action="town-wave">Wave</button><button data-action="town-jump">Jump</button><button data-action="town-heart" aria-label="Heart reaction">♥</button><button data-action="town-question" aria-label="Curious reaction">?</button><button data-action="fountain-coin" disabled aria-disabled="true" title="Walk closer to the fountain">Toss a coin</button></div>
 </main>
 <aside class="panel" aria-label="Clubhouse options" hidden>
@@ -557,7 +562,7 @@ class ChapterHouse {
     if (name === "collection")
       content.innerHTML = `<p>Fish beside the stream or dig on walkable ground. Duplicates stack, and rare discoveries sparkle a little brighter.</p>${this.collectionSection("Fish", FISH)}${this.collectionSection("Finds", FINDS)}`;
     if (name === "help")
-      content.innerHTML = `<p>This is your local clubhouse. Tap the floor to walk, or focus the room and use the arrow keys. Drag to pan; use + and −, a mouse wheel, or pinch with two fingers to zoom. Wave, jump, and call your pet with the buttons by the room.</p><h3>Make a little space</h3><p>Open Decorate to move, rotate, or store furniture. Choose a spot on the floor, then Place here. Undo reverses your last room change.</p><h3>Play. Collect. Come home.</h3><p>Open Games for Wishbone Fling. Outside, use the little action bubble to dig or fish beside the stream. Your collection and room save automatically on this device.</p><label class="setting"><input type="checkbox" data-action="reduced" ${this.profile.state.reduced ? "checked" : ""}> Reduce motion</label><p class="quiet">${this.profile.saved ? "Saved on this device." : "Saving is unavailable in this browser. Keep this tab open to retain this session."} Accounts and shared visits are planned for the next checkpoint.</p>`;
+      content.innerHTML = `<p>This is your local clubhouse. Tap the floor to walk, or focus the room and use the arrow keys. Drag to pan; use + and −, a mouse wheel, or pinch with two fingers to zoom. Wave, jump, and call your pet with the buttons by the room.</p><h3>Make a little space</h3><p>Open Decorate to move, rotate, or store furniture. Choose a spot on the floor, then Place here. Undo reverses your last room change.</p><h3>Play. Collect. Come home.</h3><p>Open Games for Wishbone Fling. Outside, tap your stationary avatar to open the Dig and Fish action arc. Your collection and room save automatically on this device.</p><label class="setting"><input type="checkbox" data-action="reduced" ${this.profile.state.reduced ? "checked" : ""}> Reduce motion</label><p class="quiet">${this.profile.saved ? "Saved on this device." : "Saving is unavailable in this browser. Keep this tab open to retain this session."} Accounts and shared visits are planned for the next checkpoint.</p>`;
   }
   private collectionSection(
     title: string,
@@ -577,14 +582,35 @@ class ChapterHouse {
   private townContextChanged = (view: TownContextView) => {
     const bubble = this.root.querySelector<HTMLElement>(".town-context")!;
     bubble.hidden = !view.visible;
+    bubble.dataset.mode = view.mode;
     bubble.style.left = `${view.x}px`;
     bubble.style.top = `${view.y}px`;
     for (const action of ["fish", "dig", "reel"] as const) {
       const button = bubble.querySelector<HTMLButtonElement>(
         `[data-action="town-${action}"]`,
       )!;
-      button.hidden = !view.actions.includes(action);
+      const state = view.actions.find((candidate) => candidate.id === action);
+      button.hidden = !state;
+      button.disabled = !state?.enabled;
+      button.setAttribute("aria-disabled", String(!state?.enabled));
+      button.title =
+        action === "fish" && state && !state.enabled
+          ? "Fish beside a clear stretch of stream"
+          : "";
     }
+  };
+  private townDiscoveryChanged = (view: TownDiscoveryView) => {
+    const bubble = this.root.querySelector<HTMLElement>(".town-discovery")!;
+    bubble.hidden = !view.visible || !view.discovery;
+    bubble.style.left = `${view.x}px`;
+    bubble.style.top = `${view.y}px`;
+    if (!view.discovery) return;
+    bubble.className = `town-discovery rarity-${view.discovery.rarity}`;
+    const image = bubble.querySelector<HTMLImageElement>("img")!;
+    image.src = view.discovery.image ? assetUrl(view.discovery.image) : "";
+    image.alt = view.discovery.name;
+    bubble.querySelector("b")!.textContent = view.discovery.name;
+    bubble.querySelector("span")!.textContent = `Collection ×${view.count}`;
   };
   private enterGame() {
     this.leaveTown();
@@ -633,6 +659,10 @@ class ChapterHouse {
     this.audio.setRoomActive(false);
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = true;
     this.root.querySelector<HTMLElement>(".town-page")!.hidden = false;
+    const heading = this.root.querySelector<HTMLElement>(".town-heading")!;
+    heading.classList.remove("show-town-heading");
+    void heading.offsetWidth;
+    heading.classList.add("show-town-heading");
     this.root.classList.add("outside");
     this.town = new TownWorld(
       this.root.querySelector<HTMLElement>(".town-world")!,
@@ -651,6 +681,7 @@ class ChapterHouse {
           : "Walk closer to the fountain";
       },
       this.townContextChanged,
+      this.townDiscoveryChanged,
       this.petAssets,
     );
   }

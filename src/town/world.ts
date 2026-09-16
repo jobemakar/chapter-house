@@ -7,7 +7,15 @@ import { TownActivityArt } from "./activity-art";
 import {
   TownActivities,
   type ActivityAction,
+  type DiscoveryDefinition,
 } from "./activities";
+import { TownContextMenu } from "./context-menu";
+
+export interface TownContextViewAction {
+  id: "dig" | "fish" | "reel";
+  label: string;
+  enabled: boolean;
+}
 import { AnimalRig, RoomArt } from "../room/art";
 import { ActorReaction, type ReactionKind } from "../room/reactions";
 import { RouteMotion } from "../room/motion";
@@ -17,7 +25,16 @@ import type { ProfileRepository, Point } from "../core/profile";
 import { PointerGesture, type ScreenPoint } from "../core/pointer-gesture";
 
 export interface TownContextView {
-  actions: ("dig" | "fish" | "reel")[];
+  mode: "hidden" | "radial" | "reel";
+  actions: readonly TownContextViewAction[];
+  x: number;
+  y: number;
+  visible: boolean;
+}
+
+export interface TownDiscoveryView {
+  discovery: DiscoveryDefinition | null;
+  count: number;
   x: number;
   y: number;
   visible: boolean;
@@ -34,9 +51,12 @@ export class TownWorld {
   private avatar: AnimalRig;
   private activityArt: TownActivityArt;
   private activities = new TownActivities();
+  private contextMenu = new TownContextMenu();
   private activityAction: ActivityAction | null = null;
   private castTarget: Point | null = null;
-  private contextKey = "";
+  private discovery: DiscoveryDefinition | null = null;
+  private discoveryCount = 0;
+  private discoveryTime = 0;
   private pet: AnimalRig | PetRig | null = null;
   private petId: PetAssetKey | null = null;
   private avatarReaction = new ActorReaction("avatar");
@@ -67,6 +87,7 @@ export class TownWorld {
     private notify: (text: string) => void,
     private coinAvailabilityChanged: (available: boolean) => void,
     private contextChanged: (view: TownContextView) => void = () => {},
+    private discoveryChanged: (view: TownDiscoveryView) => void = () => {},
     private petAssets: PetAssets = new PetAssets(),
   ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -102,6 +123,7 @@ export class TownWorld {
       profile.state.avatar.accessory,
     );
     this.avatar.root.add(this.avatarReaction.sprite);
+    this.avatar.root.userData.kind = "avatar";
     this.scene.add(this.avatar.root);
     this.activityArt = new TownActivityArt(this.scene, this.avatar);
     const selected = getPet(profile.state.activePets[0]);
@@ -216,7 +238,9 @@ export class TownWorld {
     void this.art
       .load()
       .then(() => {
-        if (!this.disposed) loading.remove();
+        if (this.disposed) return;
+        this.activityArt.setImportedDigMound(this.art.createDigMound());
+        loading.remove();
       })
       .catch((error: unknown) => {
         if (this.disposed) return;
@@ -324,11 +348,19 @@ export class TownWorld {
     const p = this.floor(screen.x, screen.y);
     if (!p) return;
     for (const hit of this.ray.intersectObjects(
-      [this.art.root, ...(this.pet ? [this.pet.root] : [])],
+      [this.avatar.root, this.art.root, ...(this.pet ? [this.pet.root] : [])],
       true,
     )) {
       let o: THREE.Object3D | null = hit.object;
       while (o && !o.userData.kind) o = o.parent;
+      if (o?.userData.kind === "avatar") {
+        const toggled = this.contextMenu.toggleAvatarTap(
+          this.route.length === 0,
+          this.activities.state,
+        );
+        if (toggled && this.contextMenu.open) this.audio.actionPrompt();
+        return;
+      }
       if (o?.userData.kind === "fountain") {
         this.tossCoin();
         return;
@@ -343,6 +375,7 @@ export class TownWorld {
         return;
       }
     }
+    this.contextMenu.closeForWalk();
     this.walk({ x: p.x, z: p.z });
   }
   private walk(p: Point) {
@@ -353,6 +386,7 @@ export class TownWorld {
       this.notify("Try an open path.");
       return;
     }
+    this.contextMenu.closeForWalk();
     this.route = path;
     this.following = true;
   }
@@ -395,6 +429,7 @@ export class TownWorld {
   }
   dig() {
     if (!this.nav.walkable(this.point) || !this.activities.dig()) return;
+    this.contextMenu.closeForAction();
     this.route = [];
     this.activityAction = "dig";
     this.castTarget = null;
@@ -407,6 +442,7 @@ export class TownWorld {
       this.notify("Try fishing from a clear spot beside the stream.");
       return;
     }
+    this.contextMenu.closeForAction();
     this.route = [];
     this.activityAction = "fish";
     this.castTarget = target;
@@ -439,11 +475,13 @@ export class TownWorld {
           outcome.discovery.kind,
           outcome.discovery.id,
         );
+        this.discovery = outcome.discovery;
+        this.discoveryCount = count;
+        this.discoveryTime = 2;
         if (outcome.action === "fish")
           this.audio.catchFish(outcome.discovery.rarity);
         else this.audio.discover(outcome.discovery.rarity);
         this.react(outcome.discovery.rarity === "rare" ? "surprise" : "heart");
-        this.notify(`${outcome.message} · Collection ×${count}`);
       } else {
         if (outcome.action === "fish") this.audio.emptyLine();
         this.react("question");
@@ -458,11 +496,24 @@ export class TownWorld {
     );
   }
   private updateContext() {
-    const actions: TownContextView["actions"] = [];
-    if (this.activities.state === "idle") {
-      actions.push("dig");
-      if (this.nav.streamTarget(this.point)) actions.unshift("fish");
-    } else if (this.activities.state === "reelReady") actions.push("reel");
+    this.contextMenu.setAvailability({
+      streamBank: !!this.nav.streamTarget(this.point),
+      digAllowed:
+        this.activities.state === "idle" && this.nav.walkable(this.point),
+    });
+    const menu = this.contextMenu.view;
+    const mode =
+      this.activities.state === "reelReady"
+        ? "reel"
+        : menu.open
+          ? "radial"
+          : "hidden";
+    const actions =
+      mode === "radial"
+        ? menu.actions
+        : mode === "reel"
+          ? ([{ id: "reel", label: "Reel", enabled: true }] as const)
+          : [];
     const projected = new THREE.Vector3(
       this.point.x,
       1.72,
@@ -470,15 +521,33 @@ export class TownWorld {
     ).project(this.camera);
     const width = this.host.clientWidth;
     const height = this.host.clientHeight;
-    const key = actions.join(",");
-    if (key && key !== this.contextKey && key !== "reel")
-      this.audio.actionPrompt();
-    this.contextKey = key;
     this.contextChanged({
+      mode,
       actions,
       x: Math.max(58, Math.min(width - 58, ((projected.x + 1) / 2) * width)),
       y: Math.max(74, Math.min(height - 88, ((1 - projected.y) / 2) * height)),
-      visible: actions.length > 0 && Math.abs(projected.z) <= 1,
+      visible: mode !== "hidden" && Math.abs(projected.z) <= 1,
+    });
+    const discoveryPoint = new THREE.Vector3(
+      this.point.x,
+      2.08,
+      this.point.z,
+    ).project(this.camera);
+    this.discoveryChanged({
+      discovery: this.discovery,
+      count: this.discoveryCount,
+      x: Math.max(
+        72,
+        Math.min(width - 72, ((discoveryPoint.x + 1) / 2) * width),
+      ),
+      y: Math.max(
+        94,
+        Math.min(height - 110, ((1 - discoveryPoint.y) / 2) * height),
+      ),
+      visible:
+        this.discoveryTime > 0 &&
+        !!this.discovery &&
+        Math.abs(discoveryPoint.z) <= 1,
     });
   }
   private updateCoinAvailability() {
@@ -541,6 +610,7 @@ export class TownWorld {
       this.avatarReaction.update(dt, this.profile.state.reduced);
       this.petReaction.update(dt, this.profile.state.reduced);
       this.activityArt.update(dt, this.profile.state.reduced);
+      this.discoveryTime = Math.max(0, this.discoveryTime - dt);
       this.coinCooldown = Math.max(0, this.coinCooldown - dt);
       const p = new THREE.Vector3(TOWN.fountain.x, 1, TOWN.fountain.z).project(
         this.camera,
@@ -567,6 +637,7 @@ export class TownWorld {
       coinFlipping: this.coinCooldown > 0,
       coinAvailable: this.coinAvailable,
       activity: this.activities.view,
+      contextMenu: this.contextMenu.view,
       streamBank: !!this.nav.streamTarget(this.point),
       audio: this.audio.status(),
       scenery: this.art.status(),
@@ -585,7 +656,21 @@ export class TownWorld {
     this.observer.disconnect();
     this.audio.dispose();
     this.coinAvailabilityChanged(false);
-    this.contextChanged({ actions: [], x: 0, y: 0, visible: false });
+    this.contextMenu.reset();
+    this.contextChanged({
+      mode: "hidden",
+      actions: [],
+      x: 0,
+      y: 0,
+      visible: false,
+    });
+    this.discoveryChanged({
+      discovery: null,
+      count: 0,
+      x: 0,
+      y: 0,
+      visible: false,
+    });
     this.avatarReaction.dispose();
     this.petReaction.dispose();
     this.activityArt.dispose();

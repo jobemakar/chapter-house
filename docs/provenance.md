@@ -24,6 +24,12 @@ Mini Forest (1.0): https://kenney.nl/assets/mini-forest
 Nature Kit (archive 2.1): https://kenney.nl/assets/nature-kit
 Both CC0; supplied licenses retained in public/assets/town/licenses. See woodland-assets.md for model mapping. Nature materials are made nonmetallic and recolored to sage/stone. Mini Forest palette remains supplied. Custom fountain, ground/path geometry, entrance details and signs remain authored TypeScript. The earlier all-procedural description is historical; the outdoor scenery now includes imported models. Room avatars/furnishings remain procedural.
 
+The unmodified Nature Kit source
+`Models/GLTF format/crops_dirtSingle.glb` is additionally packaged as
+`public/assets/town/nature/crops_dirtSingle.glb` for Willowbrook's temporary
+dug-soil treatment. Its two dirt materials are inline and it has no external
+texture dependency; the existing Nature Kit CC0 license above applies.
+
 ## Kenney Fish Pack collection sprites — 2026-09-15
 
 Fish Pack 2.0: https://kenney.nl/assets/fish-pack. The selected source sprites are

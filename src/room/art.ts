@@ -515,10 +515,8 @@ export class AnimalRig {
       this.arms[0].rotation.set(-0.45, 0, -0.72);
       this.arms[1].rotation.set(-0.55, 0, 0.68);
     } else if (this.activity === "shovel") {
-      const scoop = Math.sin(this.phase * (reduced ? 0.7 : 1.8)) * 0.2;
-      this.arms[0].rotation.set(-0.7 + scoop, 0, -0.42);
-      this.arms[1].rotation.set(-0.45 + scoop, 0, 0.52);
-      this.body.rotation.x += scoop * 0.18;
+      this.arms[0].rotation.set(-0.62, 0, -0.48);
+      this.arms[1].rotation.set(-0.48, 0, 0.56);
     }
   }
 }
