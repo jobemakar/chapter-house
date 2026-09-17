@@ -84,3 +84,15 @@ verification/provenance checkpoint5319eed. Read the experiment's current
 requirements, source-adaptation, COMIC-PROVENANCE and verification Markdown.
 Other standalone hashes were compared with the previous origin manifest;
 only moonlight-munch-run/index.html changed. No publication or remote push.
+
+## 2026-09-17 challenge/frame refresh
+
+Parent plan43 is implemented in canonical Mabuhay commit
+f7ee31e7e104243f8c18ee6ca98273d727a61558. Exact standalone snapshot now includes
+avoid-only potholes/spore pods, one-second firing interruption, harder waves and
+bosses, offscreen feeding exclusion and generated actor-frame animation.
+Read the original FRAME-AND-HAZARD-PROVENANCE and dated verification alongside
+requirements. Artifact9742784 bytes, SHA-256
+E6C7B2C330679738A8E11D133B384DB94C2E8D2B1AA55C4D9EDB39CD8521A6F2.
+Previous origin manifest compared: only Moonlight changed. Thirteen previews,
+nineteen exact files; separate saves and Site unchanged. Keep local.

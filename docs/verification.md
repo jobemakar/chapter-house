@@ -50,3 +50,18 @@ Current total: 47 passing tests and a successful production build. See [feedback
 ## Feedback 03 — 2026-09-15
 
 Current total: 57 passing tests. Camera, clearer gadgets and feeding are implemented; see [feedback-03-verification.md](feedback-03-verification.md) for evidence and limitations.
+
+## Moonlight challenge/frame snapshot — 2026-09-17
+
+Parent plan43: source25 compiled-export checks, application100 tests and strict
+production build pass. Snapshot verifier confirms13 previews/19 files exactly
+match originals, production and served5191 bytes; correct MIME; unknown route404.
+Only Moonlight's artifact hash changed from the prior origin manifest. Source
+commitf7ee31e includes actual generated frames, avoid-only road hazards with a
+one-second automatic/special firing jam and measured first-pass difficulty.
+Browser contact/recovery, frame selection, reduced-motion frame zero, portrait
+restock and compact landscape controls reviewed in isolated5192 final play QA;
+no captured warnings/errors. Original experiment verification records details.
+Temporary QA server/tab closed; primary5191 remains. No physical-device test or
+listened audio, no final balance claim. Existing large-chunk advisory remains.
+Standalone saves/rewards unchanged; no other game/room edit or publication.
