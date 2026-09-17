@@ -1,5 +1,17 @@
 # Packaged preview sources
 
+## Bureau visual refresh — 2026-09-17
+
+Parent plan 45 and canonical Bureau revision 0.3.0 replace final generic record
+icons with illustrated cards/case notes, search ovals with neutral object sprites,
+and the plain map floor/shelves with restrained generated art. Puzzles, save keys,
+IDs and rewards stay unchanged. Canonical PNGs/full prompts and distribution
+encoding provenance live in the original game's assets directory. Only Bureau's
+snapshot changed: 17,708,631 bytes, SHA-256
+`9DE4FDBD06EE512FE8922A6052F318F1B7A05DC1FB24F5E684C45D01EA14AD22`.
+The current manifest remains authoritative. This is a standalone preview, not a
+Chapter House gameplay/account/reward integration.
+
 These are reviewed standalone build snapshots, not integrated gameplay
 source. Refresh them only from reviewed canonical builds, not manual generated
 HTML edits. The preview build bridge emits them without compiling or rewriting

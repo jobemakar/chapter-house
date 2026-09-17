@@ -65,3 +65,15 @@ no captured warnings/errors. Original experiment verification records details.
 Temporary QA server/tab closed; primary5191 remains. No physical-device test or
 listened audio, no final balance claim. Existing large-chunk advisory remains.
 Standalone saves/rewards unchanged; no other game/room edit or publication.
+
+## Bureau illustrated visual snapshot — 2026-09-17
+
+Parent plan45: only Bureau's canonical 0.3.0 snapshot and origin manifest change.
+Application tests pass 100/100, production build succeeds (existing large-chunk
+advisory retained), and exact preview verification passes 13 previews/19 files
+including served bytes, MIME and unknown-route 404. Bureau's strict source/build
+and domain/art checks pass. Actual standalone UI completed both floors, reviewed
+illustrated rewards, reopened the two-record collection after reload, and checked
+390×844 / 844×390 without horizontal overflow or captured warnings/errors.
+No physical-phone or audio-listening claim. IDs/save formats remain unchanged;
+standalone progression remains separate from Chapter House.
