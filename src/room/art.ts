@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { InteractiveFurnishing } from "./furnishings";
+import { TreehouseShell } from "./treehouse";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import type { FurnitureDefinition, PetDefinition } from "../core/catalog";
 const palette = [0xbd705c, 0xe2bf75, 0x789887, 0x7f96a9, 0xbaa0ac, 0xf0ddac];
@@ -281,38 +282,44 @@ export class RoomArt {
     } else this.ball(g, 0.2, 0.19, 0.17, c, 0, 0.51);
     return g;
   }
-  static environment(): THREE.Group {
+  static environment(
+    style: "original" | "treehouse" = "treehouse",
+  ): THREE.Group {
     const g = new THREE.Group();
-    this.box(g, 10.35, 0.3, 8.35, 0x866145, 5, -0.2, 4, 0.1);
-    for (let row = 0; row < 16; row++)
-      for (let col = 0; col < 5; col++) {
-        const x = 1 + col * 2,
-          z = 0.25 + row * 0.5;
-        this.box(
-          g,
-          1.984,
-          0.075,
-          0.486,
-          [0xd8b88d, 0xd1ad80, 0xe0c099, 0xd6b48a][(row * 3 + col) % 4],
-          x,
-          -0.015,
-          z,
-          0.012,
-        );
-      }
-    this.box(g, 10.25, 3.25, 0.16, 0xf2e3c7, 5, 1.54, -0.1);
-    this.box(g, 0.16, 3.25, 8.2, 0xe8d9bb, -0.1, 1.54, 4);
-    this.box(g, 10.2, 0.25, 0.16, 0xa47f56, 5, 0.14, 0.01);
-    this.box(g, 0.16, 0.25, 8.2, 0xa47f56, 0.01, 0.14, 4);
-    this.box(g, 10.35, 0.1, 0.22, 0xc9a579, 5, 3.2, -0.1);
-    this.box(g, 0.22, 0.1, 8.35, 0xc9a579, -0.1, 3.2, 4);
-    // Window layers face into the room; the visible sky is an intentional painted backdrop.
-    this.box(g, 2.3, 1.8, 0.15, 0xba9569, 6.1, 2.02, 0.02);
-    this.box(g, 2.07, 1.57, 0.17, 0xaac9c1, 6.1, 2.02, 0.08);
-    this.box(g, 2.08, 0.055, 0.2, 0xf7e7c7, 6.1, 2.02, 0.15);
-    this.box(g, 0.06, 1.58, 0.2, 0xf7e7c7, 6.1, 2.02, 0.15);
-    this.box(g, 2.65, 0.13, 0.42, 0xc69d6b, 6.1, 1.1, 0.17);
-    this.ball(g, 0.25, 0.25, 0.02, 0xf8e8b4, 6.65, 2.45, 0.18);
+    if (style === "treehouse") {
+      g.add(new TreehouseShell().root);
+    } else {
+      this.box(g, 10.35, 0.3, 8.35, 0x866145, 5, -0.2, 4, 0.1);
+      for (let row = 0; row < 16; row++)
+        for (let col = 0; col < 5; col++) {
+          const x = 1 + col * 2,
+            z = 0.25 + row * 0.5;
+          this.box(
+            g,
+            1.984,
+            0.075,
+            0.486,
+            [0xd8b88d, 0xd1ad80, 0xe0c099, 0xd6b48a][(row * 3 + col) % 4],
+            x,
+            -0.015,
+            z,
+            0.012,
+          );
+        }
+      this.box(g, 10.25, 3.25, 0.16, 0xf2e3c7, 5, 1.54, -0.1);
+      this.box(g, 0.16, 3.25, 8.2, 0xe8d9bb, -0.1, 1.54, 4);
+      this.box(g, 10.2, 0.25, 0.16, 0xa47f56, 5, 0.14, 0.01);
+      this.box(g, 0.16, 0.25, 8.2, 0xa47f56, 0.01, 0.14, 4);
+      this.box(g, 10.35, 0.1, 0.22, 0xc9a579, 5, 3.2, -0.1);
+      this.box(g, 0.22, 0.1, 8.35, 0xc9a579, -0.1, 3.2, 4);
+      // Window layers face into the room; the visible sky is an intentional painted backdrop.
+      this.box(g, 2.3, 1.8, 0.15, 0xba9569, 6.1, 2.02, 0.02);
+      this.box(g, 2.07, 1.57, 0.17, 0xaac9c1, 6.1, 2.02, 0.08);
+      this.box(g, 2.08, 0.055, 0.2, 0xf7e7c7, 6.1, 2.02, 0.15);
+      this.box(g, 0.06, 1.58, 0.2, 0xf7e7c7, 6.1, 2.02, 0.15);
+      this.box(g, 2.65, 0.13, 0.42, 0xc69d6b, 6.1, 1.1, 0.17);
+      this.ball(g, 0.25, 0.25, 0.02, 0xf8e8b4, 6.65, 2.45, 0.18);
+    }
     // A quiet landscape and a little entry mat.
     this.box(g, 0.12, 1.35, 1.55, 0xb68b61, 0.02, 2.0, 3.2);
     this.box(g, 0.14, 1.13, 1.33, 0xb6c4a0, 0.06, 2, 3.2);
@@ -337,13 +344,19 @@ export class RoomArt {
     return g;
   }
   static release(root: THREE.Object3D) {
+    const textures = new Set<THREE.Texture>();
     root.traverse((o) => {
       if (o instanceof THREE.Mesh) {
         o.geometry.dispose();
         const materials = Array.isArray(o.material) ? o.material : [o.material];
-        materials.forEach((m) => m.dispose());
+        materials.forEach((m) => {
+          if (m instanceof THREE.MeshStandardMaterial && m.map?.userData.roomOwned)
+            textures.add(m.map);
+          m.dispose();
+        });
       }
     });
+    textures.forEach((texture) => texture.dispose());
   }
 }
 
