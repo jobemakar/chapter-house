@@ -77,7 +77,7 @@ export class GamePreviews {
       id: "bureau-after-dark",
       title: "Bureau After Dark",
       book: "Amari and the Night Brothers",
-      description: "Explore a whimsical supernatural bureau after hours.",
+    description: "Reveal hidden sigils and unseal two magical Bureau archives.",
       source: "preview-sources/bureau-after-dark/index.html",
     },
     {

@@ -27,13 +27,14 @@ Fonts requests in older demos retain their system-font fallbacks.
 
 - Preview entry: `application/preview-sources/bureau-after-dark/index.html`
 - Display title: `Bureau After Dark`
-- Original source: `C:\Users\jmakar\Documents\Codex\2026-09-13\cre\outputs\bureau-after-dark.html`
-- Original repository/source: generated task folder `C:\Users\jmakar\Documents\Codex\2026-09-13\cre`; no Git repository or source commit was present.
-- Optional network request: the copied file has a CSS `@import` for Google Fonts (`Cormorant Garamond` and `DM Sans`). Its system-font fallbacks remain in the original file.
+- Canonical source: `C:\Users\jmakar\Desktop\codex\interactive\battle-of-books\amari-and-the-night-brothers\playable\Bureau-After-Dark.html`
+- Local revision 0.2.0 (2026-09-17): two floors, six generated sigils, tactile parchment/riddles, journal clues, ordered archive seals, saved case file/cryptid record and automatic elevator exit. User explicitly selected the riddle mechanic, superseding the original stealth pitch.
+- Authored TypeScript, template, generated art provenance and reproducible `node build.cjs` are in the canonical book folder. The September 13 prototype is preserved in its `archive/` folder.
+- All images/code are embedded. Optional Google Fonts (`Cormorant Garamond` and `DM Sans`) retain system-font fallbacks. Saves remain standalone browser-local data; no hosted update or Chapter House gameplay integration.
 
 | Packaged file |  Bytes | SHA-256                                                            | Original-byte equality |
 | ------------- | -----: | ------------------------------------------------------------------ | ---------------------- |
-| `index.html`  | 24,778 | `5B50B930C1A1B62F1EA602B1DFE1EB2F8E942934FAA0F15951F397842AC8CA21` | Verified               |
+| `index.html`  | 14,033,569 | `53BEA42D5E3CA1C365815D4AFBD2CD9E8BCACF36CC8A616B8C40B9D894EED354` | Verified               |
 
 ## Veda's Great Escape
 
