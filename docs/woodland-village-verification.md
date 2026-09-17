@@ -1,4 +1,8 @@
 # Woodland village verification
+
+Historical initial-pass evidence, not current town size or readiness. Latest:
+[waterfall redesign and verification](waterfall-redesign.md). The approved newer
+scene remains local at Jobe's explicit request; the hosted Site is unchanged.
 2026-09-15
 
 Replaced all five procedural village houses with a Kenney timber clubhouse entrance, a reading tent and flower garden. Mini Forest trees, roof, tent, plants and rocks are combined with Nature Kit flowers, grasses, mushrooms, shrubs and small stones. Only the outdoor scene changed. The new paths and three landmark footprints share the existing navigation layout.

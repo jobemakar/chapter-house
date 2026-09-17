@@ -24,6 +24,16 @@ Nature Kit mockup. This replaces that terrain assembly, not other town gameplay.
 
 This request authorizes the redesign and local preview, not a new publication.
 
+## User approval / final handoff
+
+Jobe approved the result with "looks good!", then explicitly instructed "keep
+local". No publication or remote push occurred. Local implementation commit:
+`410f5f42080cf00887090c5b0ddf0ec56783705d`. Hosted version 2 remains the previous
+scene at source commit `9e0cb24dd9e5caeb99871e1f0571f00b972002f7`.
+Shared resume instructions are in parent
+`plans/37-local-waterfall-and-session-handoff.md`; implementation is complete,
+and subsequent iteration awaits fresh user direction.
+
 ## Verification
 
 - Production strict TypeScript/Vite build passes; existing large-bundle warning

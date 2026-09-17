@@ -1,4 +1,8 @@
 # Woodland village art pass
+
+Historical initial pass. Current town visual direction and local-only handoff:
+[waterfall redesign](waterfall-redesign.md), [asset provenance](woodland-assets.md)
+and parent plans/37-local-waterfall-and-session-handoff.md.
 2026-09-15. User authorizes a creative first pass replacing all existing village houses, using Kenney Nature Kit and/or Mini Forest outside only.
 
 ## Brief

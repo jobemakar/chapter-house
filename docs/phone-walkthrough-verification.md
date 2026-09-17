@@ -1,5 +1,10 @@
 # Phone walkthrough revision verification — 2026-09-16
 
+This report describes the published version-two checkpoint. The approved newer
+waterfall is local only; see [waterfall redesign](waterfall-redesign.md) for its
+100-check verification and Jobe's explicit keep-local instruction. Do not treat
+the earlier waterfall acceptance below as the current visual specification.
+
 ## Application review
 
 - Application regression suite: 98/98 passing, including the town/camera/icon changes.
