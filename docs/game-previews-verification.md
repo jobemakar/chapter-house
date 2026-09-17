@@ -43,3 +43,20 @@ playtest of all demos. Original demos retain their historical controls, saves an
 limitations. Bureau and Veda retain optional Google Fonts imports; functional
 fallback fonts remain. No physical-device test, new audio listening or publication
 was performed. The public hosted build remains unchanged.
+
+## Moonlight shooter local verification — 2026-09-17
+
+Original experiment's 16 checks pass (model/save/input); application 100 checks,
+strict TypeScript/Vite build and exact snapshot verifier pass. Current local
+inventory: 13 standalone previews/19 files plus integrated Wishbone. All source,
+production and served bytes match, correct MIME, unknown route 404. Moonlight
+is embedded offline comic art/code with retained MIT notice, separate save key
+and no shared rewards. Current hashes/sizes are in preview-origin-manifest.json.
+
+Actual browser steering/special/waves/boss/supply depletion/free continuation,
+checkpoint reload and boss completion into stage 2 were observed. Pause/help
+block game input; resumed keyboard focus recovers. Desktop 1280 × 720,
+portrait 390 × 844 and landscape 844 × 390 layouts reviewed; viewport reset. No console
+warnings/errors captured. No physical touch-device/audio listening/full balance
+validation claimed. Original verification entries above are historical.
+Local changes only; private hosted version 2 and all other preview bytes unchanged.

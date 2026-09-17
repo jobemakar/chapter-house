@@ -62,7 +62,7 @@ export class GamePreviews {
       title: "Moonlight Munch Run",
       book: "Mabuhay!",
       description:
-        "Steer an endless food truck and feed hungry night creatures.",
+        "Catch serving upgrades, feed attack waves and face moonlight bosses.",
       source: "preview-sources/moonlight-munch-run/index.html",
       alternate: true,
     },

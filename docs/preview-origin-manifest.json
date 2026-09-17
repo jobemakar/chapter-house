@@ -1,5 +1,5 @@
 {
-  "verifiedOn": "2026-09-16",
+  "verifiedOn": "2026-09-17",
   "kind": "exact standalone build snapshots; not integrated gameplay source",
   "files": [
     {
@@ -150,8 +150,8 @@
       "id": "moonlight-munch-run",
       "file": "index.html",
       "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\experiments\\moonlight-munch-run\\playable\\moonlight-munch-run.html",
-      "bytes": 4407536,
-      "sha256": "A13008D1F7B24D740F80A015AFC96A518FFD148C546C9F6B27024C05F666ABEB",
+      "bytes": 5575531,
+      "sha256": "B3D91F387E21E99B3C61161C5DF3567FE0701F12C65E45C1EA7079FC29ADA79E",
       "originalByteEquality": true
     }
   ]

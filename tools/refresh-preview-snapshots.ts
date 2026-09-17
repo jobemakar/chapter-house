@@ -51,7 +51,7 @@ class SnapshotRefresh {
       manifestPath,
       JSON.stringify(
         {
-          verifiedOn: "2026-09-16",
+          verifiedOn: "2026-09-17",
           kind: "exact standalone build snapshots; not integrated gameplay source",
           files,
         },
