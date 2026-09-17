@@ -20,10 +20,16 @@ const ASSET_SOURCES = {
   "mill-base": assetUrl("town/fantasy/wall-block.glb"),
   "mill-timber": assetUrl("town/fantasy/wall-wood-block.glb"),
   "mill-roof": assetUrl("town/fantasy/roof-high-point.glb"),
-  "cliff-block": assetUrl("town/nature/cliff_block_rock.glb"),
-  "cliff-face": assetUrl("town/nature/cliff_rock.glb"),
-  waterfall: assetUrl("town/nature/cliff_waterfall_rock.glb"),
-  "waterfall-top": assetUrl("town/nature/cliff_waterfallTop_rock.glb"),
+  "cliff-block": assetUrl("town/nature/cliff_block_stone.glb"),
+  "cliff-half": assetUrl("town/nature/cliff_blockHalf_stone.glb"),
+  "cliff-face": assetUrl("town/nature/cliff_stone.glb"),
+  "cliff-half-face": assetUrl("town/nature/cliff_half_stone.glb"),
+  waterfall: assetUrl("town/nature/cliff_waterfall_stone.glb"),
+  "waterfall-top": assetUrl("town/nature/cliff_waterfallTop_stone.glb"),
+  "waterfall-boulder": assetUrl("town/nature/rock_largeD.glb"),
+  "waterfall-column-a": assetUrl("town/nature/rock_tallC.glb"),
+  "waterfall-column-b": assetUrl("town/nature/rock_tallD.glb"),
+  "waterfall-column-c": assetUrl("town/nature/rock_tallG.glb"),
   "river-rocks": assetUrl("town/nature/rock_largeA.glb"),
 } as const;
 
@@ -190,6 +196,10 @@ export class TownAssets {
       water: 0x91dce2,
     };
     if (key === "dig-dirt") colors.dirt = 0x9a7045;
+    // These kit boulders provide the reference's broken-column silhouettes.
+    // Harmonize their earth faces to the pale cliff stone, retaining grass caps.
+    if (key.startsWith("waterfall-column") || key === "waterfall-boulder")
+      colors.dirt = 0xb8cfd1;
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
       const materials = Array.isArray(object.material)

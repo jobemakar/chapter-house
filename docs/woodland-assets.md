@@ -81,3 +81,26 @@ TownAssets now loads 22 models. Block terraces plus irregular cliff faces,
 planted crests, an uphill pool and descending channel support the larger drop.
 The entire raised footprint is scenic/non-walkable; bridge remains the only
 water crossing. Authored channel/foam motion is not a Kenney animation.
+
+## Waterfall redesign — 2026-09-16
+
+The user rejected that rectangular spillway composition. Its stretched facade
+skins, parallel walls, circular source disk and falling dash effect are removed.
+`TownWaterfall` now composes overlapping full/half modules, native-proportion
+outward-facing stone facades, varied upright rocks and planted shelves.
+
+Exact additional Nature Kit exports are locally packaged, unchanged:
+`cliff_block_stone.glb`, `cliff_blockHalf_stone.glb`, `cliff_stone.glb`,
+`cliff_half_stone.glb`, `cliff_waterfall_stone.glb`,
+`cliff_waterfallTop_stone.glb`, `rock_largeD.glb`, `rock_tallC.glb`,
+`rock_tallD.glb`, `rock_tallG.glb`. Source is the same licensed Nature Kit
+GLTF-format download used in prior passes. Historical rock-family cliff files
+remain intact. Upright rock and largeD earth materials are harmonized to pale
+stone #b8cfd1 while retaining their grass caps; source binaries are not edited.
+The meandering variable-width brook, animated bowed drop sheet and whitewater
+patches are authored TypeScript/shaders, not imported Kenney animation.
+Shared imported resources are detached before town scene teardown.
+The curated loader now owns 28 model definitions.
+
+The scenic collision footprint is conservatively widened to 13.6 by 14 units;
+raised land/water stays inaccessible. No save, fishing-odds or game changes.

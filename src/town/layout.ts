@@ -27,8 +27,8 @@ export const TOWN = {
     x: 7,
     width: 4.6,
     height: 4.6,
-    terrainWidth: 11,
-    terrainDepth: 12,
+    terrainWidth: 13.6,
+    terrainDepth: 14,
   },
   trees: [
     { x: 3.5, z: 4, radius: 0.65, variant: 0 },

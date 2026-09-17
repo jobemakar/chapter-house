@@ -4,6 +4,7 @@ import { TOWN, type TownBuilding, type TownPoint } from "./layout";
 import { TownAssets } from "./assets";
 import { TownStream } from "./stream";
 import { TownWater } from "./water";
+import { TownWaterfall } from "./waterfall";
 
 const material = (color: THREE.ColorRepresentation, roughness = 0.82) =>
   new THREE.MeshStandardMaterial({ color, roughness });
@@ -35,7 +36,7 @@ export class TownArt {
   private coinAge = 0;
   private readonly stream = new TownWater();
   private millRotor: THREE.Group | null = null;
-  private readonly fallingWater: THREE.Mesh[] = [];
+  private waterfall: TownWaterfall | null = null;
 
   constructor() {
     this.root.name = "Forest village";
@@ -90,13 +91,7 @@ export class TownArt {
     this.stream.update(safeDt, reducedMotion);
     if (this.millRotor && !reducedMotion)
       this.millRotor.rotation.x += safeDt * 0.48;
-    this.fallingWater.forEach((drop, i) => {
-      const phase = reducedMotion
-        ? i / this.fallingWater.length
-        : (this.elapsed * 0.65 + i / this.fallingWater.length) % 1;
-      drop.position.y = 0.15 + (1 - phase) * TOWN.waterfall.height;
-      drop.scale.y = 0.65 + Math.sin(phase * Math.PI) * 0.55;
-    });
+    this.waterfall?.update(safeDt, reducedMotion);
     this.water.forEach((water, index) => {
       water.emissiveIntensity =
         0.075 + Math.sin(this.elapsed * 1.8 + index) * 0.025 * calm;
@@ -149,6 +144,7 @@ export class TownArt {
   dispose(): void {
     this.disposed = true;
     this.imported.removeFromParent();
+    this.waterfall?.detachImports();
     this.assets.dispose();
     if (this.coinMesh) {
       this.coinMesh.parent?.remove(this.coinMesh);
@@ -596,209 +592,9 @@ export class TownArt {
   }
 
   private makeWaterfall() {
-    const { x, height } = TOWN.waterfall;
-    const z = TownStream.bank(x, -1) + 0.45;
-    // A planted escarpment gives the water a source, not a disconnected hanging sheet.
-    for (let row = 0; row < 4; row++) {
-      const top = height + row * 0.48;
-      for (const side of [-1, 1]) {
-        const cliff = this.place(
-          "cliff-block",
-          x + side * 3.6,
-          z - 1.6 - row * 2.65,
-          { width: 3.35, depth: 2.8 },
-        );
-        cliff.scale.y = top / 2.8;
-        // Kit cliff faces have irregular stone columns; skin the exposed walls.
-        const face = this.place(
-          "cliff-face",
-          x + side * 5.2,
-          z - 1.6 - row * 2.65,
-          { height: top },
-          0,
-          side > 0 ? -Math.PI / 2 : Math.PI / 2,
-        );
-        face.scale.z = 2.7 / top;
-        if (row === 0) {
-          const front = this.place(
-            "cliff-face",
-            x + side * 3.6,
-            z - 0.08,
-            { height: top },
-            0,
-            Math.PI,
-          );
-          front.scale.x = 3.35 / top;
-        }
-        if (row === 1 || row === 3) {
-          this.place(
-            "mini-tree-high",
-            x + side * 3.6,
-            z - 1.6 - row * 2.65,
-            { height: row === 3 ? 3.2 : 2.4 },
-            top,
-          );
-          this.place(
-            "bush",
-            x + side * 2.8,
-            z - 1.3 - row * 2.65,
-            { height: 0.45 },
-            top,
-          );
-        }
-      }
-    }
-    // Solid wedge underneath the uphill channel, filling the valley between kit cliffs.
-    const bed = new THREE.BufferGeometry();
-    const farZ = z - 10,
-      nearZ = z - 0.1,
-      topY = height + 1.55;
-    const a = x - 2.2,
-      b = x + 2.2;
-    bed.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(
-        [
-          a,
-          0,
-          farZ,
-          b,
-          0,
-          farZ,
-          a,
-          topY,
-          farZ,
-          b,
-          topY,
-          farZ,
-          a,
-          0,
-          nearZ,
-          b,
-          0,
-          nearZ,
-          a,
-          height,
-          nearZ,
-          b,
-          height,
-          nearZ,
-        ],
-        3,
-      ),
-    );
-    bed.setIndex([
-      2, 3, 6, 3, 7, 6, 0, 2, 4, 2, 6, 4, 1, 5, 3, 3, 5, 7, 0, 1, 2, 1, 3, 2, 4,
-      6, 5, 5, 6, 7,
-    ]);
-    bed.computeVertexNormals();
-    this.mesh(this.root, bed, 0x718969, 0, 0, 0);
-    const source = this.mesh(
-      this.root,
-      new THREE.CylinderGeometry(1.75, 1.75, 0.05, 32),
-      0x74c8ce,
-      x,
-      topY + 0.035,
-      farZ + 0.7,
-      { shadow: false, roughness: 0.25 },
-    );
-    this.water.push(source.material as THREE.MeshStandardMaterial);
-    const channel = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(x, topY + 0.04, farZ + 0.7),
-      new THREE.Vector3(x - 0.55, height + 1.15, z - 7),
-      new THREE.Vector3(x + 0.45, height + 0.62, z - 4),
-      new THREE.Vector3(x, height + 0.08, z - 0.1),
-    ]);
-    const vertices: number[] = [],
-      indices: number[] = [];
-    for (let i = 0; i <= 64; i++) {
-      const p = channel.getPoint(i / 64),
-        t = channel.getTangent(i / 64);
-      for (const side of [-1, 1])
-        vertices.push(p.x - t.z * 1.15 * side, p.y, p.z + t.x * 1.15 * side);
-      if (i < 64) {
-        const n = i * 2;
-        indices.push(n, n + 1, n + 2, n + 1, n + 3, n + 2);
-      }
-    }
-    const flow = new THREE.BufferGeometry();
-    flow.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(vertices, 3),
-    );
-    flow.setIndex(indices);
-    flow.computeVertexNormals();
-    const upstream = this.mesh(this.root, flow, 0x74c8ce, 0, 0, 0, {
-      shadow: false,
-      roughness: 0.25,
-    });
-    (upstream.material as THREE.MeshStandardMaterial).side = THREE.DoubleSide;
-    this.water.push(upstream.material as THREE.MeshStandardMaterial);
-    for (let i = 0; i < 11; i++) {
-      const p = channel.getPoint((i + 0.3) / 11);
-      const foam = this.mesh(
-        this.root,
-        new THREE.BoxGeometry(0.25, 0.012, 0.09),
-        0xe4fffa,
-        p.x,
-        p.y + 0.018,
-        p.z,
-        { shadow: false },
-      );
-      foam.rotation.y = i * 0.8;
-    }
-    this.place("waterfall", x, z, { height }, 0.06, Math.PI);
-    const lip = this.place(
-      "waterfall-top",
-      x,
-      z - 0.05,
-      { width: height },
-      height * 0.7 + 0.06,
-      Math.PI,
-    );
-    lip.scale.y = 0.3;
-    for (const side of [-1, 1]) {
-      const rock = this.place(
-        "river-rocks",
-        x + side * 3.3,
-        z + 0.12,
-        { width: 2.2, depth: 1.6 },
-        0.03,
-        side * 0.4,
-      );
-      rock.scale.y = 2.8;
-    }
-    for (let i = 0; i < 15; i++) {
-      const drop = this.mesh(
-        this.root,
-        new THREE.BoxGeometry(0.055, 0.62, 0.025),
-        0xe4fffa,
-        x - 1.8 + i * 0.257,
-        0.4,
-        z + 0.24,
-        { shadow: false },
-      );
-      this.fallingWater.push(drop);
-    }
-    for (let i = 0; i < 3; i++) {
-      const foam = new THREE.Mesh(
-        new THREE.RingGeometry(1.05 + i * 0.24, 1.12 + i * 0.24, 40),
-        new THREE.MeshBasicMaterial({
-          color: 0xebffef,
-          transparent: true,
-          opacity: 0.4,
-          side: THREE.DoubleSide,
-          depthWrite: false,
-        }),
-      );
-      foam.position.set(x, 0.095, z + 0.9);
-      foam.rotation.x = -Math.PI / 2;
-      foam.scale.y = 0.5;
-      this.root.add(foam);
-      this.ripples.push(foam);
-    }
+    this.waterfall = new TownWaterfall(this.assets);
+    this.root.add(this.waterfall.root);
   }
-
   private makeShopSign(
     parent: THREE.Object3D,
     text: string,
