@@ -28,14 +28,6 @@ export class GamePreviews {
       source: "preview-sources/pocket-funhouse/index.html",
     },
     {
-      id: "luminous-locks",
-      title: "Luminous Locks",
-      book: "The Mystery of Locked Rooms",
-      description: "Turn moonlit mirrors and open an eerie puzzle-box mansion.",
-      source: "preview-sources/luminous-locks/index.html",
-      alternate: true,
-    },
-    {
       id: "backyard-ruckus",
       title: "Wishbone’s Big Fetch",
       book: "Wish",

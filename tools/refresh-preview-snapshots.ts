@@ -16,10 +16,6 @@ class SnapshotRefresh {
     const collection = resolve(root, "..");
     for (const [id, source] of [
       [
-        "luminous-locks",
-        "the-mystery-of-locked-rooms/experiments/luminous-locks/playable/luminous-locks.html",
-      ],
-      [
         "moonlight-munch-run",
         "mabuhay/experiments/moonlight-munch-run/playable/moonlight-munch-run.html",
       ],
