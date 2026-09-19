@@ -1,0 +1,3 @@
+{
+ "schemaVersion":1,"id":"arctic-duet","ideaId":"BOB-004-ALT1","title":"Arctic Duet","version":"0.1.0","status":"implemented-experiment","sourceEntry":"src/index.html","requirements":"requirements.md","hostedEntry":"../../dist/duet.html","offlineEntry":"../../playable/Arctic-Duet.html","saveKey":"arctic-duet-v1","localUrl":"http://127.0.0.1:4323/duet.html","publicUrl":null
+}

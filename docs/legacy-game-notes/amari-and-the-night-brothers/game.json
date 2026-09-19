@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "bureau-after-dark",
+  "ideaId": "BOB-007",
+  "book": {
+    "title": "Amari and the Night Brothers",
+    "author": "B. B. Alston"
+  },
+  "title": "Bureau After Dark",
+  "status": "implemented-demo",
+  "localRevision": "0.3.0",
+  "publishedRevision": null,
+  "primaryMechanic": "Search hidden sigils, reveal enchanted riddles, and order journal clues to unseal archives",
+  "sourceEntry": "src/game.ts",
+  "hostedEntry": null,
+  "offlineEntry": "playable/Bureau-After-Dark.html",
+  "playable": "playable/Bureau-After-Dark.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first"
+  ],
+  "audioPlanned": true,
+  "audioImplemented": "Original synthesized discovery and reward chimes with persistent mute",
+  "levelCount": 2,
+  "saveScope": "Browser-local standalone sigils, records and floor unlocks; separate from Chapter House rewards",
+  "collectiblePlan": "../plans/11-collectible-catalog.md"
+}

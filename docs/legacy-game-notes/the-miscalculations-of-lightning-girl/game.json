@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "stormglide",
+  "ideaId": "BOB-001",
+  "book": {
+    "title": "The Miscalculations of Lightning Girl",
+    "author": "Stacy McAnulty"
+  },
+  "title": "Lightning Girl: Stormglide",
+  "status": "implemented-candidate",
+  "version": "0.3.0",
+  "primaryMechanic": "continuous-free-flight-collect-dodge-dash",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Stormglide.html",
+  "requirements": "plans/requirements.md",
+  "publicUrl": "https://lightning-girl-stormglide.mowgliworf.chatgpt.site",
+  "siteProjectId": "appgprj_6aa2fa6610a081918c72910e6f006fd9",
+  "publishedVersion": 1,
+  "publishedSourceCommit": "7934b664f3863c7442f1f0357de21102933047ae",
+  "storageKey": "stormglide-v1",
+  "session": "endless",
+  "controls": [
+    "touch-first",
+    "keyboard",
+    "mouse"
+  ],
+  "audio": true,
+  "devicePriority": "iPad",
+  "collectiblePlan": "../plans/11-collectible-catalog.md"
+}

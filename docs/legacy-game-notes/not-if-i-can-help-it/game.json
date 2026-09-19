@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "gummy-galaxy",
+  "ideaId": "BOB-006-R3",
+  "book": {
+    "title": "Not If I Can Help It",
+    "author": "Carolyn Mackler"
+  },
+  "title": "Gummy Nook",
+  "status": "implemented-local",
+  "primaryMechanic": "Adjacent match-3 swaps, line clears, falling refills and cascades",
+  "sourceEntry": "src/game.ts",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Gummy-Nook.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "eight-direction neighbor swipe",
+    "tap two touching cells including diagonals",
+    "swap marked gummy to activate power",
+    "keyboard Tab/Enter/Space"
+  ],
+  "audioPlanned": false,
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "plannedRevision": {
+    "ideaId": "BOB-006-R3",
+    "title": "Gummy Nook",
+    "primaryMechanic": "Adjacent match-3 swaps, line clears, falling refills and cascades",
+    "status": "implemented-local",
+    "plan": "plans/match3-design.md",
+    "requirements": "plans/requirements.md"
+  },
+  "previousTitles": [
+    "Gummy Galaxy"
+  ],
+  "version": "0.5.0",
+  "audio": true,
+  "saveKey": "bob-gummy-nook-v2"
+}

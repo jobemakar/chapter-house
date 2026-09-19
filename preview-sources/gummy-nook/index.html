@@ -44,382 +44,580 @@
 <footer><span>Made for a moment of play.</span><span>No rush. No game over. Just a little more lovely.</span></footer></main>
 <dialog id="settings"><h2>Make yourself comfortable.</h2><p>Your nook, your way.</p><label><input type="checkbox" id="music"> Gentle music</label><label><input type="checkbox" id="motion"> Wobble & celebrations</label><label><input type="checkbox" id="gloss"> Glossy candy texture</label><button id="closeSettings">All cozy</button></dialog>
 <dialog id="pauseDialog"><div class="pause-art">☁</div><h2>A little breather.</h2><p>Everything is right where you left it.</p><button id="resume">Back to the nook</button></dialog><div id="ghost" hidden></div><div id="confetti" aria-hidden="true"></div>
-<script>/* Pure tray rules. Indices run left-to-right in a six-cell row. */
-const GummyCore = (() => {
-  const names = ['Dewdrop', 'Peach heart', 'Mint star', 'Sunny flower', 'Berry butterfly', 'Cloud bunny', 'Golden bear'];
-  const colors = ['#57cbb3', '#fa8e9e', '#82c4ee', '#ffc561', '#ba9ae7', '#f6b8cf', '#f0b744'];
-  const rewards = [
-    {id:'gn-candy-jar', name:'Candy jar', tier:2, mount:'tabletop', size:[.2,.2,.3], footprint:[.2,.2], clearance:0, supportSurfaces:[], rationale:'Original container for the cover-inspired candy shapes.'},
-    {id:'gn-gummy-lamp', name:'Gummy lamp', tier:3, mount:'tabletop', size:[.25,.25,.4], footprint:[.25,.25], clearance:0, supportSurfaces:[], rationale:'Original candy-glass light for a personally comfortable nook.'},
-    {id:'gn-sock-cushion', name:'Soft sock cushion', tier:4, mount:'floor', size:[.55,.4,.2], footprint:[.55,.4], clearance:.15, supportSurfaces:[], rationale:'Original soft-texture comfort object; no medical claim.'},
-    {id:'gn-bear-beanbag', name:'Gummy-bear beanbag', tier:6, mount:'floor', size:[.8,.75,.8], footprint:[.8,.75], clearance:.25, supportSurfaces:[], rationale:'Original floor seat based on the gummy-bear cover motif.'}
-  ];
-  const SIZE=6, COUNT=36, thresholds=[0,12,40,100];
-  const powerNames=['','Row Ribbon','Column Ribbon','Sugar Burst','Frost Flake'];
-  const base=t=>t===null?null:t%5;
-  const power=t=>t>=10?Math.floor(t/5)-1:0;
-  const valid=t=>Number.isInteger(t)&&((t>=0&&t<5)||(t>=10&&t<30));
-  function matches(board){
-    const found=new Set();
-    for(let row=0;row<SIZE;row++)for(let col=0;col<SIZE;col++){
-      const i=row*SIZE+col,t=base(board[i]);if(t===null)continue;
-      if(col<=SIZE-3&&t===base(board[i+1])&&t===base(board[i+2])){let x=col;while(x<SIZE&&base(board[row*SIZE+x])===t)found.add(row*SIZE+x++);}
-      if(row<=SIZE-3&&t===base(board[i+SIZE])&&t===base(board[i+SIZE*2])){let y=row;while(y<SIZE&&base(board[y*SIZE+col])===t)found.add(y++*SIZE+col);}
+<script>"use strict";
+class BoardEngine {
+    static SIZE = 6;
+    static COUNT = 36;
+    static names = ['Dewdrop', 'Peach heart', 'Mint star', 'Sunny flower', 'Berry butterfly', 'Cloud bunny', 'Golden bear'];
+    static colors = ['#57cbb3', '#fa8e9e', '#82c4ee', '#ffc561', '#ba9ae7', '#f6b8cf', '#f0b744'];
+    static thresholds = [0, 12, 40, 100];
+    static powerNames = ['', 'Row Ribbon', 'Column Ribbon', 'Sugar Burst', 'Frost Flake'];
+    static rewards = [
+        { id: 'gn-candy-jar', name: 'Candy jar', tier: 2, mount: 'tabletop', size: [.2, .2, .3], footprint: [.2, .2], clearance: 0, supportSurfaces: [], rationale: 'Original container for the cover-inspired candy shapes.' },
+        { id: 'gn-gummy-lamp', name: 'Gummy lamp', tier: 3, mount: 'tabletop', size: [.25, .25, .4], footprint: [.25, .25], clearance: 0, supportSurfaces: [], rationale: 'Original candy-glass light for a personally comfortable nook.' },
+        { id: 'gn-sock-cushion', name: 'Soft sock cushion', tier: 4, mount: 'floor', size: [.55, .4, .2], footprint: [.55, .4], clearance: .15, supportSurfaces: [], rationale: 'Original soft-texture comfort object; no medical claim.' },
+        { id: 'gn-bear-beanbag', name: 'Gummy-bear beanbag', tier: 6, mount: 'floor', size: [.8, .75, .8], footprint: [.8, .75], clearance: .25, supportSurfaces: [], rationale: 'Original floor seat based on the gummy-bear cover motif.' }
+    ];
+    static base(tier) { return tier === null ? null : tier % 5; }
+    static power(tier) { return tier >= 10 ? (Math.floor(tier / 5) - 1) : 0; }
+    static valid(tier) { return Number.isInteger(tier) && ((tier >= 0 && tier < 5) || (tier >= 10 && tier < 30)); }
+    static adjacent(a, b) { return Number.isInteger(a) && Number.isInteger(b) && a >= 0 && b >= 0 && a < 36 && b < 36 && a !== b && Math.max(Math.abs(Math.floor(a / 6) - Math.floor(b / 6)), Math.abs(a % 6 - b % 6)) === 1; }
+    static matches(board) {
+        const found = new Set();
+        for (let row = 0; row < 6; row += 1)
+            for (let col = 0; col < 6; col += 1) {
+                const index = row * 6 + col, value = this.base(board[index]);
+                if (value === null)
+                    continue;
+                if (col <= 3 && value === this.base(board[index + 1]) && value === this.base(board[index + 2]))
+                    for (let x = col; x < 6 && this.base(board[row * 6 + x]) === value; x += 1)
+                        found.add(row * 6 + x);
+                if (row <= 3 && value === this.base(board[index + 6]) && value === this.base(board[index + 12]))
+                    for (let y = row; y < 6 && this.base(board[y * 6 + col]) === value; y += 1)
+                        found.add(y * 6 + col);
+            }
+        return [...found].sort((a, b) => a - b);
     }
-    return [...found].sort((a,b)=>a-b);
-  }
-  function adjacent(a,b){return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a<COUNT&&b<COUNT&&a!==b&&Math.max(Math.abs(Math.floor(a/SIZE)-Math.floor(b/SIZE)),Math.abs(a%SIZE-b%SIZE))===1;}
-  function legalMoves(board){const moves=[];for(let a=0;a<COUNT;a++)for(const b of [a+1,a+SIZE-1,a+SIZE,a+SIZE+1]){if(!adjacent(a,b))continue;if(power(board[a])||power(board[b])){moves.push([a,b]);continue;}if(board[a]===board[b])continue;const copy=[...board];[copy[a],copy[b]]=[copy[b],copy[a]];if(matches(copy).length)moves.push([a,b]);}return moves;}
-  function expandPowers(board,cells){const cleared=new Set(cells),activated=[];for(const i of cleared){const kind=power(board[i]);if(!kind)continue;activated.push({at:i,kind});const row=Math.floor(i/6),col=i%6;for(let j=0;j<COUNT;j++){const r=Math.floor(j/6),c=j%6;if((kind===1&&r===row)||(kind===2&&c===col)||(kind===3&&Math.abs(r-row)<=1&&Math.abs(c-col)<=1)||(kind===4&&Math.abs(r-row)===Math.abs(c-col)))cleared.add(j);}}return {cells:[...cleared],activated};}
-  function mix(board,random=Math.random){const next=newBoard(random),powers=board.filter(t=>power(t));for(let i=0;i<powers.length;i++)next[i]=base(next[i])+(power(powers[i])+1)*5;return next;}
-  function pick(random,n){return Math.min(n-1,Math.max(0,Math.floor(random()*n)));}
-  function newBoard(random=Math.random){
-    for(let attempt=0;attempt<50;attempt++){
-      const board=[];
-      for(let i=0;i<COUNT;i++){const options=[0,1,2,3,4].filter(t=>!(i%SIZE>=2&&board[i-1]===t&&board[i-2]===t)&&!(i>=SIZE*2&&board[i-SIZE]===t&&board[i-SIZE*2]===t));board.push(options[pick(random,options.length)]);}
-      if(legalMoves(board).length)return board;
+    static legalMoves(board) {
+        const moves = [];
+        for (let a = 0; a < 36; a += 1)
+            for (const b of [a + 1, a + 5, a + 6, a + 7]) {
+                if (!this.adjacent(a, b))
+                    continue;
+                if (this.power(board[a]) || this.power(board[b])) {
+                    moves.push([a, b]);
+                    continue;
+                }
+                if (board[a] === board[b])
+                    continue;
+                const copy = [...board];
+                [copy[a], copy[b]] = [copy[b], copy[a]];
+                if (this.matches(copy).length)
+                    moves.push([a, b]);
+            }
+        return moves;
     }
-    // Deterministic, match-free fallback with a guaranteed swap at 1 → 7.
-    const board=Array.from({length:COUNT},(_,i)=>(i%SIZE+Math.floor(i/SIZE)*2)%5);
-    board[0]=0;board[1]=1;board[2]=0;board[7]=0;return board;
-  }
-  function syncProgress(s){
-    s.discovered=[...new Set([...s.discovered,0,1,2,3,4,...(s.cleared>=40?[5]:[]),...(s.cleared>=100?[6]:[])])].sort();
-    s.owned=[...new Set([...s.owned,...rewards.filter((r,i)=>s.cleared>=thresholds[i]).map(r=>r.id)])];
-  }
-  function fresh(random=Math.random){return {version:2,board:newBoard(random),discovered:[0,1,2,3,4],cleared:0,moves:0,bestCascade:0,owned:['gn-candy-jar'],settings:{muted:false,music:true,motion:true,gloss:true}};}
-  function restore(raw,random=Math.random){
-    const s=fresh(random);if(!raw||![1,2].includes(raw.version))return s;
-    if(raw.version===2){
-      for(const key of ['cleared','moves','bestCascade'])if(Number.isSafeInteger(raw[key])&&raw[key]>=0)s[key]=raw[key];
-      if(Array.isArray(raw.board)&&raw.board.length===COUNT&&raw.board.every(valid)&&!matches(raw.board).length&&legalMoves(raw.board).length)s.board=[...raw.board];
+    static expandPowers(board, cells) {
+        const cleared = new Set(cells), activated = [];
+        for (const index of cleared) {
+            const kind = this.power(board[index]);
+            if (!kind)
+                continue;
+            activated.push({ at: index, kind });
+            const row = Math.floor(index / 6), col = index % 6;
+            for (let candidate = 0; candidate < 36; candidate += 1) {
+                const r = Math.floor(candidate / 6), c = candidate % 6;
+                if ((kind === 1 && r === row) || (kind === 2 && c === col) || (kind === 3 && Math.abs(r - row) <= 1 && Math.abs(c - col) <= 1) || (kind === 4 && Math.abs(r - row) === Math.abs(c - col)))
+                    cleared.add(candidate);
+            }
+        }
+        return { cells: [...cleared], activated };
     }
-    if(Array.isArray(raw.discovered))s.discovered=raw.discovered.filter(t=>Number.isInteger(t)&&t>=0&&t<7);
-    if(Array.isArray(raw.owned))s.owned=raw.owned.filter(id=>rewards.some(r=>r.id===id));
-    if(raw.version===1)for(const r of rewards)if(s.discovered.includes(r.tier)&&!s.owned.includes(r.id))s.owned.push(r.id);
-    for(const key of Object.keys(s.settings))if(typeof raw.settings?.[key]==='boolean')s.settings[key]=raw.settings[key];
-    syncProgress(s);return s;
-  }
-  function collapse(board,cleared,random=Math.random){
-    const next=[...board],removed=new Set(cleared),falls=[];
-    for(let col=0;col<SIZE;col++){
-      let dest=SIZE-1;
-      for(let row=SIZE-1;row>=0;row--){const from=row*SIZE+col;if(removed.has(from))continue;const to=dest--*SIZE+col;next[to]=board[from];if(from!==to)falls.push({from,to,tier:board[from]});}
-      const missing=dest+1;
-      while(dest>=0){const to=dest*SIZE+col,tier=pick(random,5);next[to]=tier;falls.push({from:(dest-missing)*SIZE+col,to,tier});dest--;}
+    static pick(random, count) { return Math.min(count - 1, Math.max(0, Math.floor(random() * count))); }
+    static newBoard(random = Math.random) {
+        for (let attempt = 0; attempt < 50; attempt += 1) {
+            const board = [];
+            for (let index = 0; index < 36; index += 1) {
+                const options = [0, 1, 2, 3, 4].filter(value => !(index % 6 >= 2 && board[index - 1] === value && board[index - 2] === value) && !(index >= 12 && board[index - 6] === value && board[index - 12] === value));
+                board.push(options[this.pick(random, options.length)]);
+            }
+            if (this.legalMoves(board).length)
+                return board;
+        }
+        const board = Array.from({ length: 36 }, (_, index) => (index % 6 + Math.floor(index / 6) * 2) % 5);
+        board[0] = 0;
+        board[1] = 1;
+        board[2] = 0;
+        board[7] = 0;
+        return board;
     }
-    return {board:next,falls};
-  }
-  function swap(s,a,b,random=Math.random){
-    if(!adjacent(a,b))return {ok:false,reason:'neighbor',phases:[]};
-    const original=[...s.board],swapped=[...original];[swapped[a],swapped[b]]=[swapped[b],swapped[a]];
-    const phases=[{kind:'swap',from:a,to:b,before:original,after:swapped}];
-    let found=matches(swapped);
-    if(power(swapped[a])||power(swapped[b]))found=[...new Set([...found,a,b])];
-    if(!found.length){phases.push({kind:'swap',from:a,to:b,before:swapped,after:original});return {ok:false,reason:'no-match',phases};}
-    let board=swapped,cleared=0,depth=0;
-    while(found.length&&depth<30){
-      depth++;const expanded=expandPowers(board,found);found=expanded.cells;cleared+=found.length;
-      const fallen=collapse(board,found,random);
-      if(depth===1&&s.moves%3===0){const incoming=fallen.falls.find(f=>f.from<0);if(incoming){const kind=Math.floor(s.moves/3)%4+1;incoming.tier+=(kind+1)*5;fallen.board[incoming.to]=incoming.tier;}}
-      phases.push({kind:'clear',before:[...board],cells:found,depth,activated:expanded.activated});
-      phases.push({kind:'fall',before:board.map((t,i)=>found.includes(i)?null:t),after:fallen.board,falls:fallen.falls});
-      board=fallen.board;found=matches(board);
+    static mix(board, random = Math.random) { const next = this.newBoard(random), powers = board.filter(value => this.power(value)); powers.forEach((value, index) => { next[index] = this.base(next[index]) + (this.power(value) + 1) * 5; }); return next; }
+    static fresh(random = Math.random) { return { version: 2, board: this.newBoard(random), discovered: [0, 1, 2, 3, 4], cleared: 0, moves: 0, bestCascade: 0, owned: ['gn-candy-jar'], settings: { muted: false, music: true, motion: true, gloss: true } }; }
+    static asRecord(value) { return value !== null && typeof value === 'object' && !Array.isArray(value) ? value : null; }
+    static synchronize(state) {
+        state.discovered = [...new Set([...state.discovered, 0, 1, 2, 3, 4, ...(state.cleared >= 40 ? [5] : []), ...(state.cleared >= 100 ? [6] : [])])].sort((a, b) => a - b);
+        state.owned = [...new Set([...state.owned, ...this.rewards.filter((_, index) => state.cleared >= this.thresholds[index]).map(reward => reward.id)])];
     }
-    const refreshed=found.length>0||!legalMoves(board).length;
-    if(refreshed){const after=mix(board,random);phases.push({kind:'shuffle',before:board,after});board=after;}
-    s.board=board;s.cleared+=cleared;s.moves++;s.bestCascade=Math.max(s.bestCascade,depth);syncProgress(s);
-    return {ok:true,phases,cleared,depth,refreshed};
-  }
-  return {names,colors,rewards,SIZE,COUNT,thresholds,powerNames,base,power,valid,expandPowers,mix,matches,adjacent,legalMoves,newBoard,fresh,restore,collapse,swap};
-})();
-if(typeof module!=='undefined')module.exports=GummyCore;
-
-
-
-/* All shapes and shelf illustrations are original SVG geometry. No remote assets. */
-const GummyArt = (()=>{
-  const paths=[
-    'M50 12 C39 26 18 42 18 61 C18 101 82 101 82 61 C82 42 61 26 50 12Z',
-    'M50 87 C37 76 10 59 10 36 C10 9 41 8 50 28 C59 8 90 9 90 36 C90 59 63 76 50 87Z',
-    'M50 8 Q55 8 64 33 L90 35 Q100 38 82 56 L74 65 L78 88 Q76 97 50 79 Q24 97 22 88 L26 65 L8 45 Q0 34 36 33 Q45 8 50 8Z',
-    'M50 25 C68 -6 93 18 77 39 C108 44 103 76 77 75 C78 105 47 110 40 82 C16 100 -3 70 23 60 C-4 43 15 14 37 32 Q43 10 50 25Z',
-    'M50 44 C18 -8 1 20 12 45 C-4 67 20 97 46 68 L50 86 L54 68 C80 97 104 67 88 45 C99 20 82 -8 50 44Z',
-    'M29 45 C11 -10  40 -8 45 39 L55 39 C60 -8 89 -10 71 45 C105 72 77 94 50 92 C23 94 -5 72 29 45Z',
-    'M23 36 C0 29 12 3 29 14 L36 24 Q50 18 64 24 L71 14 C88 3 100 29 77 36 Q88 48 78 61 C94 82  70 99 62 84 Q50 92 38 84 C30 99 6 82 22 61 Q12 48 23 36Z'
-  ];
-  let serial=0;
-  function gummy(t,face=true){const id='g'+serial++;return `<svg viewBox="0 0 100 106" aria-hidden="true"><defs><linearGradient id="${id}" x2=".3" y2="1"><stop stop-color="#fff" stop-opacity=".62"/><stop offset=".4" stop-color="${GummyCore.colors[t]}"/><stop offset="1" stop-color="${GummyCore.colors[t]}"/></linearGradient></defs><ellipse cx="50" cy="94" rx="30" ry="6" fill="#305d50" opacity=".12"/><path d="${paths[t]}" fill="${GummyCore.colors[t]}" stroke="#654c4933" stroke-width="2"/><path class="glaze" d="${paths[t]}" fill="url(#${id})"/><path class="shine" d="M29 40 Q25 48 28 54" fill="none" stroke="white" stroke-opacity=".65" stroke-width="5" stroke-linecap="round"/>${face?'<g fill="#443f4c"><ellipse cx="39" cy="57" rx="3" ry="4"/><ellipse cx="61" cy="57" rx="3" ry="4"/><path d="M45 67 Q50 72 55 67" fill="none" stroke="#443f4c" stroke-width="2.5" stroke-linecap="round"/></g><g fill="#f76b88" opacity=".4"><ellipse cx="30" cy="65" rx="6" ry="3"/><ellipse cx="70" cy="65" rx="6" ry="3"/></g>':''}</svg>`;}
-  function reward(i){if(i===0)return '<svg viewBox="0 0 100 110"><rect x="24" y="26" width="52" height="70" rx="13" fill="#e3f7ef" stroke="#82b8a6" stroke-width="3"/><rect x="21" y="19" width="58" height="13" rx="5" fill="#c29369"/><circle cx="40" cy="72" r="12" fill="#f78e9f"/><circle cx="60" cy="76" r="11" fill="#ffd067"/><circle cx="50" cy="55" r="10" fill="#60cdb2"/><path d="M32  40 V60" stroke="white" stroke-width="4"/></svg>';
-    if(i===1)return '<svg viewBox="0 0 100 110"><ellipse cx="50" cy="96" rx="29" ry="6" fill="#c4a787"/><path d="M50 56 V93" stroke="#ad815a" stroke-width="9"/><path d="M18 64 L30 19 Q50 5 70 19 L82 64 Q50 78 18 64" fill="#ffd984" stroke="#dba66b" stroke-width="2"/><path d="M35 28 L29 58" stroke="#fff3ca" stroke-width="5" stroke-linecap="round"/></svg>';
-    if(i===2)return '<svg viewBox="0 0 100 110"><path d="M20 33 Q50 19 81 36 L85 79 Q51 98 15 79Z" fill="#f2b9bb" stroke="#be8893" stroke-width="3"/><path d="M42 41 L58 41 L58  60 Q75 65  60 76 L37 76 Q28 67 42 61Z" fill="#fff2de"/></svg>';return gummy(6);}
-  function piece(t){const kind=GummyCore.power(t),svg=gummy(GummyCore.base(t));if(!kind)return svg;const symbol=['','↔','↕','✹','❄'][kind];return svg.replace('</svg>',`<g class="power-badge"><circle cx="77" cy="24" r="18" fill="${kind===4?'#d8f5ff':'#fff7d6'}" stroke="${kind===4?'#82bfd7':'#ac7750'}" stroke-width="2.5"/><text x="77" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="22" fill="#8c4f69">${symbol}</text></g></svg>`);}
-  return {gummy,reward,piece};
-})();
-
-
-
-
-const GummyAudio=(()=>{
-  let context,master,settings,paused=false,nextNote=0,note=0;
-  const melody=[60,64,67,71,69,67,64,62,60,67,72,71,67,64,62,55];
-  const powerVoices=new Set(),lastPower=new Map();
-  function cancelPowers(){for(const node of powerVoices){try{node.stop();}catch{}}powerVoices.clear();}
-  function powerVoice(startHz,endHz,duration,volume,noise=false,delay=0){
-    if(!context||settings?.muted||paused)return;
-    const time=context.currentTime+delay,gain=context.createGain(),filter=context.createBiquadFilter();
-    let source;
-    if(noise){source=context.createBufferSource();const buffer=context.createBuffer(1,Math.ceil(context.sampleRate*duration),context.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;source.buffer=buffer;filter.type='bandpass';filter.Q.value=.65;filter.frequency.setValueAtTime(startHz,time);filter.frequency.exponentialRampToValueAtTime(endHz,time+duration);source.connect(filter);filter.connect(gain);}
-    else{source=context.createOscillator();source.type='sine';source.frequency.setValueAtTime(startHz,time);source.frequency.exponentialRampToValueAtTime(endHz,time+duration);source.connect(gain);}
-    gain.gain.setValueAtTime(0,time);gain.gain.linearRampToValueAtTime(volume,time+.018);gain.gain.exponentialRampToValueAtTime(.0001,time+duration);gain.connect(master);
-    powerVoices.add(source);source.onended=()=>{powerVoices.delete(source);source.disconnect();gain.disconnect();filter.disconnect();};source.start(time);source.stop(time+duration+.01);
-  }
-  function powerSound(kind){
-    if(!context||settings?.muted||paused)return;
-    // A chain can fire many candies at once; one voice recipe per kind per moment.
-    if(context.currentTime-(lastPower.get(kind)??-10)<.09)return;lastPower.set(kind,context.currentTime);
-    if(kind==='ribbon-row'||kind==='ribbon-column'){
-      const up=kind==='ribbon-column';powerVoice(up?240:980,up?1700:130,.42,.07);powerVoice(900,4200,.31,.07,true);powerVoice(130,55,.14,.06,false,.29);
-    }else if(kind==='burst'){
-      powerVoice(155,38,.4,.12);powerVoice(1600,240,.42,.085,true);[650,900,1250,1750].forEach((hz,i)=>powerVoice(hz,hz*.65,.1,.026,false,.08+i*.05));
-    }else if(kind==='frost-start'){
-      powerVoice(650,4200,.58,.06,true);[880,1320,1760].forEach((hz,i)=>powerVoice(hz,hz*1.12,.6,.027,false,i*.035));
-    }else if(kind==='ice'){
-      powerVoice(4300,750,.32,.075,true);[1800,2600,3300,2200,3800].forEach((hz,i)=>powerVoice(hz,hz*.55,.18,.035,false,i*.032));
+    static restore(raw, random = Math.random) {
+        const state = this.fresh(random), record = this.asRecord(raw);
+        if (!record || (record.version !== 1 && record.version !== 2))
+            return state;
+        if (record.version === 2) {
+            for (const key of ['cleared', 'moves', 'bestCascade']) {
+                const value = record[key];
+                if (Number.isSafeInteger(value) && value >= 0)
+                    state[key] = value;
+            }
+            const board = record.board;
+            if (Array.isArray(board) && board.length === 36 && board.every(value => this.valid(value)) && !this.matches(board).length && this.legalMoves(board).length)
+                state.board = [...board];
+        }
+        if (Array.isArray(record.discovered))
+            state.discovered = record.discovered.filter(value => Number.isInteger(value) && value >= 0 && value < 7);
+        if (Array.isArray(record.owned))
+            state.owned = record.owned.filter(value => typeof value === 'string' && this.rewards.some(reward => reward.id === value));
+        if (record.version === 1)
+            for (const reward of this.rewards)
+                if (state.discovered.includes(reward.tier) && !state.owned.includes(reward.id))
+                    state.owned.push(reward.id);
+        const savedSettings = this.asRecord(record.settings);
+        if (savedSettings)
+            for (const key of Object.keys(state.settings))
+                if (typeof savedSettings[key] === 'boolean')
+                    state.settings[key] = savedSettings[key];
+        this.synchronize(state);
+        return state;
     }
-  }
-  function applyVolume(){if(master)master.gain.setValueAtTime(settings?.muted||paused?0:1,context.currentTime);}
-  function unlock(s){settings=s;try{if(!context){context=new (window.AudioContext||window.webkitAudioContext)();master=context.createGain();master.connect(context.destination);}applyVolume();if(context.state==='suspended')context.resume().catch(()=>{});}catch{}}
-  function tone(midi,duration=.2,volume=.04,type='sine',delay=0){if(!context||!settings||settings.muted||paused)return;const time=context.currentTime+delay,osc=context.createOscillator(),gain=context.createGain();osc.type=type;osc.frequency.value=440*2**((midi-69)/12);gain.gain.setValueAtTime(0,time);gain.gain.linearRampToValueAtTime(volume,time+.012);gain.gain.exponentialRampToValueAtTime(.0001,time+duration);osc.connect(gain);gain.connect(master);osc.start(time);osc.stop(time+duration+.03);}
-  function cascadeNotes(depth){const level=Math.max(1,Math.min(8,depth));const root=[60,62,64,67,69,72,74,76][level-1];return [root,...(level>=2?[root+4]:[]),...(level>=3?[root+7]:[]),...(level>=5?[root+12]:[])];}
-  function swish(){
-    if(!context||settings?.muted||paused)return;
-    const length=.17,time=context.currentTime,buffer=context.createBuffer(1,Math.ceil(context.sampleRate*length),context.sampleRate),data=buffer.getChannelData(0);
-    for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
-    const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();source.buffer=buffer;filter.type='bandpass';filter.Q.value=.8;
-    filter.frequency.setValueAtTime(650,time);filter.frequency.exponentialRampToValueAtTime(2300,time+.065);filter.frequency.exponentialRampToValueAtTime(800,time+length);
-    gain.gain.setValueAtTime(0,time);gain.gain.linearRampToValueAtTime(.085,time+.045);gain.gain.exponentialRampToValueAtTime(.0001,time+length);
-    source.connect(filter);filter.connect(gain);gain.connect(master);source.start(time);source.stop(time+length);
-  }
-  function effect(kind,count=1){
-    if(kind==='swap'){swish();return;}
-    if(['ribbon-row','ribbon-column','burst','frost-start','ice'].includes(kind)){powerSound(kind);return;}
-    if(kind==='merge'){const notes=cascadeNotes(count);notes.forEach((n,i)=>tone(n,.25+Math.min(count,8)*.025,.064/Math.sqrt(notes.length),'sine',i*.042));tone(43+Math.min(count,8),.17,.025,'triangle');tone(notes.at(-1)+12,.11,.018,'triangle',.09);if(count>=3)tone(notes[0]+19,.2,.024,'sine',.13);}
-    else if(kind==='pick')tone(72,.1,.025);else if(kind==='place')tone(60,.12,.035);else tone(55,.1,.02);
-  }
-  // Original sparse pentatonic-style music; no downloaded or copyrighted recording.
-  setInterval(()=>{if(!context||!settings||!settings.music||settings.muted||paused)return;if(context.currentTime>=nextNote){tone(melody[note%melody.length],1.4,.016);if(note%4===0)tone([48,53,45,55][Math.floor(note/4)%4],2.5,.013,'triangle');note++;nextNote=context.currentTime+.62;}},120);
-  return {unlock,effect,cascadeNotes,cancelPowers,update(s){settings=s;applyVolume();},pause(value){paused=value;if(value)cancelPowers();applyVolume();}};
-})();
-
-/* One visual phase at a time: swap, pop, gravity, refill, then any cascade. */
-const GummyMotion=(()=>{
-  let active;
-  const ease='cubic-bezier(.18,.8,.25,1)',cell=i=>document.querySelector(`[data-cell="${i}"]`);
-  function cancel(){if(!active)return;active.cancelled=true;active.animations.forEach(a=>a.cancel());active.layers.forEach(l=>l.remove());GummyAudio.cancelPowers();active=null;}
-  async function animate(run,el,frames,duration){if(run.cancelled)return;const a=el.animate(frames,{duration,easing:ease,fill:'forwards'});run.animations.push(a);await a.finished.catch(()=>{});}
-  function layer(run,tier,box){const el=document.createElement('div');el.className='gummy-flight';el.innerHTML=GummyArt.piece(tier);el.style.cssText=`left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px`;run.overlay.append(el);run.layers.push(el);return el;}
-  function boxAt(index){const first=cell(0).getBoundingClientRect(),second=cell(1).getBoundingClientRect(),below=cell(6).getBoundingClientRect(),board=active.overlay.getBoundingClientRect(),style=getComputedStyle(cell(0));const left=parseFloat(style.borderLeftWidth)+parseFloat(style.paddingLeft),top=parseFloat(style.borderTopWidth)+parseFloat(style.paddingTop);return {x:first.x-board.x+(index%6+6)%6*(second.x-first.x)+left,y:first.y-board.y+Math.floor(index/6)*(below.y-first.y)+top,width:first.width-left-parseFloat(style.borderRightWidth)-parseFloat(style.paddingRight),height:first.height-top-parseFloat(style.borderBottomWidth)-parseFloat(style.paddingBottom)};}
-  async function flight(run,from,to,tier,arc=0){const start=boxAt(from),end=boxAt(to),el=layer(run,tier,start),dx=end.x-start.x,dy=end.y-start.y;await animate(run,el,[{transform:'translate(0,0)'},{transform:`translate(${dx*.5}px,${dy*.5+arc}px) scale(1.04,.98)`,offset:.5},{transform:`translate(${dx}px,${dy}px) scale(1)`}],from<0?280:210);/* Keep landed art until every flight is finished and its destination is painted. */}
-  function effectNode(run,className,x,y,width,height,html=''){
-    const el=document.createElement('div');el.className='power-wave '+className;
-    el.style.cssText=`left:${x}px;top:${y}px;width:${width}px;height:${height}px`;
-    el.innerHTML=html;run.overlay.append(el);run.layers.push(el);return el;
-  }
-  async function particles(run,x,y,radius,ice=false,count=28){
-    await Promise.all(Array.from({length:count},(_,i)=>{
-      const angle=i/count*Math.PI*2,reach=radius*(.65+(i%4)*.12),size=ice?7+i%5:9+i%7;
-      const el=effectNode(run,ice?'ice-shard':'sugar-spark',x-size/2,y-size/2,size,size);
-      el.style.background=ice?'#e8fbff':['#fff7b8','#ffc58b','#f5a3bf','#d9b9ff'][i%4];
-      return animate(run,el,[{transform:'translate(0,0) scale(.3)',opacity:1},{opacity:1,offset:.25},{transform:`translate(${Math.cos(angle)*reach}px,${Math.sin(angle)*reach}px) rotate(${i*43}deg) scale(.2)`,opacity:0}],ice?340:480);
-    }));
-  }
-  async function powerEffect(run,power){
-    const box=boxAt(power.at),cx=box.x+box.width/2,cy=box.y+box.height/2,first=boxAt(0),last=boxAt(35);
-    if(!run.overlay.querySelector('.power-focus')){const focus=effectNode(run,'power-focus',0,0,last.x+last.width+20,last.y+last.height+20);animate(run,focus,[{opacity:0},{opacity:1,offset:.15},{opacity:1,offset:.7},{opacity:0}],1050);}
-    const charge=effectNode(run,'power-charge'+(power.kind===4?' icy':''),cx-box.width*.8,cy-box.width*.8,box.width*1.6,box.width*1.6,power.kind===4?'❄':'✦');
-    if(power.kind===4)GummyAudio.effect('frost-start');
-    await animate(run,charge,[{transform:'scale(.1) rotate(-30deg)',opacity:0},{transform:'scale(1) rotate(15deg)',opacity:1,offset:.75},{transform:'scale(.7) rotate(30deg)',opacity:.6}],140);
-    if(run.cancelled)return;
-    if(power.kind!==4)GummyAudio.effect(['','ribbon-row','ribbon-column','burst'][power.kind]);
-    animate(run,charge,[{transform:'scale(.7)',opacity:.7},{transform:'scale(1.8)',opacity:0}],220);
-    if(power.kind<=2){
-      const horizontal=power.kind===1,lo=horizontal?first.x:first.y,hi=horizontal?last.x+last.width:last.y+last.height,center=horizontal?cx:cy;
-      const lane=effectNode(run,'ribbon-lane',horizontal?lo:box.x,horizontal?box.y:lo,horizontal?hi-lo:box.width,horizontal?box.height:hi-lo);
-      const jobs=[animate(run,lane,[{opacity:0},{opacity:1,offset:.3},{opacity:0}],480)];
-      for(const direction of [-1,1]){
-        const distance=(direction<0?lo:hi)-center;
-        const bolt=effectNode(run,'ribbon-bolt '+(horizontal?'horizontal':'vertical'),cx-19,cy-19,38,38,'<i></i><b>✦</b>');
-        bolt.style.setProperty('--tail',direction<0?'1':'-1');
-        jobs.push((async()=>{await animate(run,bolt,[{transform:'translate(0,0) scale(.4)',opacity:0},{opacity:1,offset:.1},{transform:`translate(${horizontal?distance:0}px,${horizontal?0:distance}px) scale(1.2)`,opacity:1,offset:.85},{transform:`translate(${horizontal?distance:0}px,${horizontal?0:distance}px) scale(.4)`,opacity:0}],360);if(!run.cancelled)await particles(run,horizontal?center+distance:cx,horizontal?cy:center+distance,box.width*.9,false,10);})());
-      }
-      await Promise.all(jobs);
-    }else if(power.kind===3){
-      const radius=box.width*1.9,ring=effectNode(run,'burst-ring',cx-radius,cy-radius,radius*2,radius*2);
-      const ring2=effectNode(run,'burst-ring secondary',cx-radius,cy-radius,radius*2,radius*2);
-      const flash=effectNode(run,'burst-flash',cx-25,cy-25,50,50,'✹');
-      await Promise.all([animate(run,ring,[{transform:'scale(.08)',opacity:1},{opacity:1,offset:.35},{transform:'scale(1)',opacity:0}],480),animate(run,ring2,[{transform:'scale(.05)',opacity:0},{transform:'scale(.1)',opacity:1,offset:.25},{transform:'scale(.85)',opacity:0}],560),animate(run,flash,[{transform:'scale(.2) rotate(0deg)',opacity:1},{transform:'scale(2.2) rotate(25deg)',opacity:1,offset:.4},{transform:'scale(.8) rotate(90deg)',opacity:0}],320),particles(run,cx,cy,radius)]);
-    }else{
-      const row=Math.floor(power.at/6),col=power.at%6,ice=[];
-      for(let i=0;i<36;i++)if(Math.abs(Math.floor(i/6)-row)===Math.abs(i%6-col)){
-        const b=boxAt(i),tile=effectNode(run,'frost-tile',b.x-2,b.y-2,b.width+4,b.height+4,'<span>❄</span><svg viewBox="0 0 100 100"><path d="M50 0L42 25L62  forty L38 63L48 100M42 25L16 36M38 63L78  seventy"/></svg>'.replace('forty','40').replace('seventy','70'));
-        ice.push({tile,box:b});
-      }
-      await Promise.all(ice.map(({tile})=>animate(run,tile,[{transform:'scale(.2) rotate(-8deg)',opacity:0},{transform:'scale(1)',opacity:1,offset:.28},{transform:'scale(1)',opacity:1,offset:.78},{transform:'scale(1.08) rotate(2deg)',opacity:1}],650)));
-      if(run.cancelled)return;
-      ice.forEach(({tile})=>tile.classList.add('cracked'));
-      GummyAudio.effect('ice');
-      await Promise.all(ice.flatMap(({tile,box:b})=>[animate(run,tile,[{transform:'scale(1)',opacity:1},{transform:'scale(1.25) rotate(-7deg)',opacity:.8,offset:.3},{transform:'scale(.5) rotate(10deg)',opacity:0}],340),particles(run,b.x+b.width/2,b.y+b.height/2,b.width*1.2,true,10)]));
+    static collapse(board, cleared, random = Math.random) {
+        const next = [...board], removed = new Set(cleared), falls = [];
+        for (let col = 0; col < 6; col += 1) {
+            let destination = 5;
+            for (let row = 5; row >= 0; row -= 1) {
+                const from = row * 6 + col;
+                if (removed.has(from))
+                    continue;
+                const to = destination-- * 6 + col;
+                next[to] = board[from];
+                if (from !== to)
+                    falls.push({ from, to, tier: board[from] });
+            }
+            const missing = destination + 1;
+            while (destination >= 0) {
+                const to = destination * 6 + col, tier = this.pick(random, 5);
+                next[to] = tier;
+                falls.push({ from: (destination - missing) * 6 + col, to, tier });
+                destination -= 1;
+            }
+        }
+        return { board: next, falls };
     }
-  }
-  async function play(phases,paint,onClear){
-    cancel();const run={cancelled:false,animations:[],layers:[]};active=run;
-    const overlay=document.createElement('div');overlay.className='board-motion';document.getElementById('board').append(overlay);run.overlay=overlay;run.layers.push(overlay);
-    for(const phase of phases){
-      if(run.cancelled)return;paint(phase.before);
-      if(phase.kind==='swap'){
-        GummyAudio.effect('swap');
-        for(const i of [phase.from,phase.to])cell(i).querySelector('svg').style.visibility='hidden';
-        await Promise.all([flight(run,phase.from,phase.to,phase.before[phase.from],-9),flight(run,phase.to,phase.from,phase.before[phase.to],9)]);
-      }else if(phase.kind==='clear'){
-        onClear(phase);
-        await Promise.all((phase.activated||[]).map(power=>powerEffect(run,power)));
-        if(run.cancelled)return;
-        await Promise.all(phase.cells.map(i=>animate(run,cell(i).querySelector('svg'),[{transform:'scale(1)',opacity:1},{transform:'scale(1.16,.86)',opacity:1,offset:.4},{transform:'scale(.3)',opacity:0}],190)));
-      }else if(phase.kind==='fall'){
-        for(const f of phase.falls)if(f.from>=0){const svg=cell(f.from).querySelector('svg');if(svg)svg.style.visibility='hidden';}
-        await Promise.all(phase.falls.map(f=>flight(run,f.from,f.to,f.tier)));
-      }else if(phase.kind==='shuffle'){
-        await animate(run,document.getElementById('board'),[{opacity:1},{opacity:.35}],120);
-        if(run.cancelled)return;paint(phase.after);
-        await animate(run,document.getElementById('board'),[{opacity:.35},{opacity:1}],160);
-      }
-      if(run.cancelled)return;
-      // Paint destinations before removing overlays, synchronously: no blank landing frame.
-      if(phase.after)paint(phase.after);
-      run.overlay.replaceChildren();
-      // Clear completed animation effects before reusing persistent SVG nodes.
-      run.animations.forEach(a=>a.cancel());run.animations=[];
+    static swap(state, a, b, random = Math.random) {
+        if (!this.adjacent(a, b))
+            return { ok: false, reason: 'neighbor', phases: [] };
+        const original = [...state.board], swapped = [...original];
+        [swapped[a], swapped[b]] = [swapped[b], swapped[a]];
+        const phases = [{ kind: 'swap', from: a, to: b, before: original, after: swapped }];
+        let found = this.matches(swapped);
+        if (this.power(swapped[a]) || this.power(swapped[b]))
+            found = [...new Set([...found, a, b])];
+        if (!found.length) {
+            phases.push({ kind: 'swap', from: a, to: b, before: swapped, after: original });
+            return { ok: false, reason: 'no-match', phases };
+        }
+        let board = swapped, cleared = 0, depth = 0;
+        while (found.length && depth < 30) {
+            depth += 1;
+            const expanded = this.expandPowers(board, found);
+            found = expanded.cells;
+            cleared += found.length;
+            const fallen = this.collapse(board, found, random);
+            if (depth === 1 && state.moves % 3 === 0) {
+                const incoming = fallen.falls.find(fall => fall.from < 0);
+                if (incoming) {
+                    const kind = (Math.floor(state.moves / 3) % 4 + 1);
+                    incoming.tier += (kind + 1) * 5;
+                    fallen.board[incoming.to] = incoming.tier;
+                }
+            }
+            phases.push({ kind: 'clear', before: [...board], cells: found, depth, activated: expanded.activated });
+            phases.push({ kind: 'fall', before: board.map((tier, index) => found.includes(index) ? null : tier), after: fallen.board, falls: fallen.falls });
+            board = fallen.board;
+            found = this.matches(board);
+        }
+        const refreshed = found.length > 0 || !this.legalMoves(board).length;
+        if (refreshed) {
+            const after = this.mix(board, random);
+            phases.push({ kind: 'shuffle', before: board, after });
+            board = after;
+        }
+        state.board = board;
+        state.cleared += cleared;
+        state.moves += 1;
+        state.bestCascade = Math.max(state.bestCascade, depth);
+        this.synchronize(state);
+        return { ok: true, phases, cleared, depth, refreshed };
     }
-    if(active===run)cancel();
-  }
-  return {play,cancel};
-})();
-
-const $=id=>document.getElementById(id),KEY='bob-gummy-nook-v2';
-let state,storageAvailable=true,migrated=false;
-try{const saved=localStorage.getItem(KEY),legacy=localStorage.getItem('bob-gummy-nook-v1');migrated=!saved&&!!legacy;state=GummyCore.restore(JSON.parse(saved||legacy));}catch{state=GummyCore.fresh();}
-const history=[];let selection=null,drag=null,paused=false,animating=false,visualRevision=0,suppressClick=false;
-if(matchMedia('(prefers-reduced-motion: reduce)').matches)state.settings.motion=false;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));storageAvailable=true;}catch{storageAvailable=false;}}
-function announce(text){$('status').textContent=text+(storageAvailable?'':' · Progress lasts for this visit; saving is unavailable.');}
-function paintBoard(board){
-  for(let i=0;i<GummyCore.COUNT;i++){
-    let el=$('board').querySelector(`[data-cell="${i}"]`);
-    if(!el){el=document.createElement('button');el.dataset.cell=i;$('board').append(el);}
-    const t=board[i];el.className='cell'+(t===null?' empty':'')+(GummyCore.power(t)?' powered':'');
-    if(el.dataset.value!==String(t)){el.innerHTML=t===null?'':GummyArt.piece(t);el.dataset.value=String(t);}
-    const svg=el.querySelector('svg');if(svg)svg.style.removeProperty('visibility');
-    const label=t===null?'empty':GummyCore.names[GummyCore.base(t)]+(GummyCore.power(t)?' — '+GummyCore.powerNames[GummyCore.power(t)]+', swap with any neighbor to activate':'');
-    el.setAttribute('aria-label',`Row ${Math.floor(i/6)+1}, column ${i%6+1}: ${label}`);el.title=label;
-  }
 }
-function selectedRender(){document.querySelectorAll('.selected,.suggested').forEach(el=>el.classList.remove('selected','suggested'));if(selection!==null)$('board').querySelector(`[data-cell="${selection}"]`).classList.add('selected');}
-function updateTrayColor(){
-  // One color chapter per 120 cleared gummies; blend continuously between chapters.
-  const palette=[[172,195,178],[164,190,211],[190,177,210],[216,179,191],[221,194,166]];
-  const progress=state.cleared/120,index=Math.floor(progress)%palette.length,t=progress-Math.floor(progress);
-  const color=palette[index].map((v,i)=>Math.round(v+(palette[(index+1)%palette.length][i]-v)*t));
-  const tint=amount=>'rgb('+color.map(v=>Math.round(v+(255-v)*amount)).join(',')+')';
-  $('board').style.backgroundColor=tint(0);
-  $('board').style.borderColor=tint(.38);
-  $('board').style.setProperty('--tile-ground',tint(.24));
-  $('board').style.setProperty('--tile-hover',tint(.40));
+class SaveStore {
+    static key = 'bob-gummy-nook-v2';
+    static legacyKey = 'bob-gummy-nook-v1';
+    available = true;
+    migrated = false;
+    load() { try {
+        const saved = localStorage.getItem(SaveStore.key), legacy = localStorage.getItem(SaveStore.legacyKey);
+        this.migrated = !saved && Boolean(legacy);
+        return BoardEngine.restore(JSON.parse(saved ?? legacy ?? 'null'));
+    }
+    catch {
+        return BoardEngine.fresh();
+    } }
+    save(state) { try {
+        localStorage.setItem(SaveStore.key, JSON.stringify(state));
+        this.available = true;
+    }
+    catch {
+        this.available = false;
+    } }
 }
-function render(){
-  GummyMotion.cancel();animating=false;visualRevision++;$('board').style.opacity='';
-  paintBoard(state.board);updateTrayColor();$('undo').disabled=!history.length;
-  $('mergeCount').textContent=state.moves+(state.moves===1?' lovely move':' lovely moves');$('clearCount').textContent=state.cleared;
-  $('bestChain').textContent=state.bestCascade>1?state.bestCascade+'× best cascade':'A little more lovely';
-  const next=GummyCore.rewards.find(r=>!state.owned.includes(r.id));
-  if(next){const threshold=GummyCore.thresholds[GummyCore.rewards.indexOf(next)];$('goalText').textContent=`${Math.max(0,threshold-state.cleared)} more gummies to your ${next.name.toLowerCase()}`;$('goalProgress').value=Math.min(1,state.cleared/threshold);}
-  else{$('goalText').textContent='Your cozy corner is complete. Keep the cascades coming.';$('goalProgress').value=1;}
-  $('rewardCount').textContent=state.owned.length+' / 4';$('discoveryCount').textContent=state.discovered.length+' / 7';
-  $('collection').innerHTML=GummyCore.names.map((name,t)=>`<div class="specimen ${state.discovered.includes(t)?'':'locked'}" title="${name}">${GummyArt.gummy(t)}<span>${state.discovered.includes(t)?name:'···'}</span></div>`).join('');
-  $('rewards').innerHTML=GummyCore.rewards.map((r,i)=>`<div class="reward-row ${state.owned.includes(r.id)?'':'locked'}"><span class="dot">${state.owned.includes(r.id)?'✓':'·'}</span><span>${r.name}</span><small>${state.owned.includes(r.id)?'yours':GummyCore.thresholds[i]+' cleared'}</small></div>`).join('');
-  $('shelf').innerHTML=GummyCore.rewards.slice(0,2).map((r,i)=>state.owned.includes(r.id)?`<div title="${r.name}">${GummyArt.reward(i)}</div>`:'').join('');
-  $('floorItems').innerHTML=GummyCore.rewards.slice(2).map((r,i)=>state.owned.includes(r.id)?`<div title="${r.name}">${GummyArt.reward(i+2)}</div>`:'').join('');
-  document.body.classList.toggle('still',!state.settings.motion);document.body.classList.toggle('matte',!state.settings.gloss);
-  $('sound').textContent=state.settings.muted?'Sound off':'Sound on';$('sound').setAttribute('aria-label',state.settings.muted?'Unmute sound':'Mute sound');
-  for(const key of ['music','motion','gloss'])$(key).checked=state.settings[key];
-  selectedRender();GummyAudio.update(state.settings);
+class GummyArt {
+    static serial = 0;
+    static paths = ['M50 12 C39 26 18 42 18 61 C18 101 82 101 82 61 C82 42 61 26 50 12Z', 'M50 87 C37 76 10 59 10 36 C10 9 41 8 50 28 C59 8 90 9 90 36 C90 59 63 76 50 87Z', 'M50 8 Q55 8 64 33 L90 35 Q100 38 82 56 L74 65 L78 88 Q76 97 50 79 Q24 97 22 88 L26 65 L8 45 Q0 34 36 33 Q45 8 50 8Z', 'M50 25 C68 -6 93 18 77 39 C108 44 103 76 77 75 C78 105 47 110 40 82 C16 100 -3 70 23 60 C-4 43 15 14 37 32 Q43 10 50 25Z', 'M50 44 C18 -8 1 20 12 45 C-4 67 20 97 46 68 L50 86 L54 68 C80 97 104 67 88 45 C99 20 82 -8 50 44Z', 'M29 45 C11 -10 40 -8 45 39 L55 39 C60 -8 89 -10 71 45 C105 72 77 94 50 92 C23 94 -5 72 29 45Z', 'M23 36 C0 29 12 3 29 14 L36 24 Q50 18 64 24 L71 14 C88 3 100 29 77 36 Q88 48 78 61 C94 82 70 99 62 84 Q50 92 38 84 C30 99 6 82 22 61 Q12 48 23 36Z'];
+    static gummy(tier, face = true) { const id = `g${this.serial++}`, path = this.paths[tier], color = BoardEngine.colors[tier]; return `<svg viewBox="0 0 100 106" aria-hidden="true"><defs><linearGradient id="${id}" x2=".3" y2="1"><stop stop-color="#fff" stop-opacity=".62"/><stop offset=".4" stop-color="${color}"/><stop offset="1" stop-color="${color}"/></linearGradient></defs><ellipse cx="50" cy="94" rx="30" ry="6" fill="#305d50" opacity=".12"/><path d="${path}" fill="${color}" stroke="#654c4933" stroke-width="2"/><path class="glaze" d="${path}" fill="url(#${id})"/><path class="shine" d="M29 40 Q25 48 28 54" fill="none" stroke="white" stroke-opacity=".65" stroke-width="5" stroke-linecap="round"/>${face ? '<g fill="#443f4c"><ellipse cx="39" cy="57" rx="3" ry="4"/><ellipse cx="61" cy="57" rx="3" ry="4"/><path d="M45 67 Q50 72 55 67" fill="none" stroke="#443f4c" stroke-width="2.5" stroke-linecap="round"/></g><g fill="#f76b88" opacity=".4"><ellipse cx="30" cy="65" rx="6" ry="3"/><ellipse cx="70" cy="65" rx="6" ry="3"/></g>' : ''}</svg>`; }
+    static reward(index) { if (index === 0)
+        return '<svg viewBox="0 0 100 110"><rect x="24" y="26" width="52" height="70" rx="13" fill="#e3f7ef" stroke="#82b8a6" stroke-width="3"/><rect x="21" y="19" width="58" height="13" rx="5" fill="#c29369"/><circle cx="40" cy="72" r="12" fill="#f78e9f"/><circle cx="60" cy="76" r="11" fill="#ffd067"/><circle cx="50" cy="55" r="10" fill="#60cdb2"/></svg>'; if (index === 1)
+        return '<svg viewBox="0 0 100 110"><ellipse cx="50" cy="96" rx="29" ry="6" fill="#c4a787"/><path d="M50 56 V93" stroke="#ad815a" stroke-width="9"/><path d="M18 64 L30 19 Q50 5 70 19 L82 64 Q50 78 18 64" fill="#ffd984" stroke="#dba66b" stroke-width="2"/></svg>'; if (index === 2)
+        return '<svg viewBox="0 0 100 110"><path d="M20 33 Q50 19 81 36 L85 79 Q51 98 15 79Z" fill="#f2b9bb" stroke="#be8893" stroke-width="3"/></svg>'; return this.gummy(6); }
+    static piece(tier) { const kind = BoardEngine.power(tier), svg = this.gummy(BoardEngine.base(tier)); if (!kind)
+        return svg; const symbol = ['', '↔', '↕', '✹', '❄'][kind]; return svg.replace('</svg>', `<g class="power-badge"><circle cx="77" cy="24" r="18" fill="${kind === 4 ? '#d8f5ff' : '#fff7d6'}" stroke="${kind === 4 ? '#82bfd7' : '#ac7750'}" stroke-width="2.5"/><text x="77" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="22" fill="#8c4f69">${symbol}</text></g></svg>`); }
 }
-function remember(){history.push([...state.board]);if(history.length>30)history.shift();}
-async function playback(phases){
-  const revision=visualRevision;
-  if(state.settings.motion&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-    animating=true;
-    try{await GummyMotion.play(phases,paintBoard,phase=>{GummyAudio.effect('merge',phase.depth);const powers=phase.activated?.map(p=>GummyCore.powerNames[p.kind]);announce(powers?.length?`${powers.join(' + ')}! ${phase.cells.length} gummies cleared.`:phase.depth>1?`${phase.depth}× cascade! Another ${phase.cells.length} little gummies.`:`${phase.cells.length} gummies matched!`);});}catch(e){console.error(e);GummyMotion.cancel();}
-  }else if(phases.some(p=>p.kind==='clear')){GummyAudio.effect('merge');const kinds=new Set(phases.flatMap(p=>(p.activated||[]).map(x=>x.kind)));for(const kind of kinds)GummyAudio.effect(['','ribbon-row','ribbon-column','burst','ice'][kind]);}
-  if(revision!==visualRevision)return false;render();return true;
+/** Keeps DOM rendering independent from input and persistence policy. */
+class GummyRenderer {
+    paint(board) {
+        const host = document.getElementById('board');
+        if (!host)
+            throw new Error('Missing board');
+        for (let index = 0; index < BoardEngine.COUNT; index += 1) {
+            let element = host.querySelector(`[data-cell="${index}"]`);
+            if (!element) {
+                element = document.createElement('button');
+                element.dataset.cell = String(index);
+                host.append(element);
+            }
+            const tier = board[index];
+            element.className = `cell${BoardEngine.power(tier) ? ' powered' : ''}`;
+            if (element.dataset.value !== String(tier)) {
+                element.innerHTML = GummyArt.piece(tier);
+                element.dataset.value = String(tier);
+            }
+            element.querySelector('svg')?.style.removeProperty('visibility');
+            const label = BoardEngine.names[BoardEngine.base(tier)] + (BoardEngine.power(tier) ? ` — ${BoardEngine.powerNames[BoardEngine.power(tier)]}, swap with any neighbor to activate` : '');
+            element.setAttribute('aria-label', `Row ${Math.floor(index / 6) + 1}, column ${index % 6 + 1}: ${label}`);
+            element.title = label;
+        }
+    }
+    tint(cleared) {
+        const palette = [[172, 195, 178], [164, 190, 211], [190, 177, 210], [216, 179, 191], [221, 194, 166]], progress = cleared / 120, index = Math.floor(progress) % palette.length, amount = progress - Math.floor(progress), color = palette[index].map((value, channel) => Math.round(value + (palette[(index + 1) % palette.length][channel] - value) * amount)), tint = (light) => `rgb(${color.map(value => Math.round(value + (255 - value) * light)).join(',')})`, board = document.getElementById('board');
+        if (!board)
+            throw new Error('Missing board');
+        board.style.backgroundColor = tint(0);
+        board.style.borderColor = tint(.38);
+        board.style.setProperty('--tile-ground', tint(.24));
+        board.style.setProperty('--tile-hover', tint(.4));
+    }
 }
-async function act(from,to){
-  if(paused||animating)return;GummyAudio.unlock(state.settings);
-  const previous=[...state.board],owned=state.owned.length,result=GummyCore.swap(state,from,to);
-  selection=null;selectedRender();
-  if(result.reason==='neighbor'){announce('Swap with any touching neighbor, including diagonally.');return;}
-  if(!state.settings.motion||matchMedia('(prefers-reduced-motion: reduce)').matches)GummyAudio.effect('swap');
-  if(result.ok){history.push(previous);if(history.length>30)history.shift();$('undo').disabled=false;save();}
-  if(!await playback(result.phases))return;
-  if(!result.ok){GummyAudio.effect('soft');announce('Almost! Line up three or more of the same shape.');}
-  else announce(`${result.depth>1?result.depth+'× cascade! ':''}${result.cleared} gummies cleared.`+(state.owned.length>owned?' A new keepsake is in your nook!':result.refreshed?' A fresh tray keeps the play going.':' Lovely little match.'));
+class GummyAudio {
+    context = null;
+    master = null;
+    settings = null;
+    paused = false;
+    nextNote = 0;
+    note = 0;
+    voices = new Set();
+    lastPower = new Map();
+    static melody = [60, 64, 67, 71, 69, 67, 64, 62, 60, 67, 72, 71, 67, 64, 62, 55];
+    constructor() { window.setInterval(() => this.music(), 120); }
+    unlock(settings) { this.settings = settings; try {
+        if (!this.context) {
+            this.context = new AudioContext();
+            this.master = this.context.createGain();
+            this.master.connect(this.context.destination);
+        }
+        this.volume();
+        if (this.context.state === 'suspended')
+            void this.context.resume();
+    }
+    catch { /* Audio remains optional. */ } }
+    update(settings) { this.settings = settings; this.volume(); }
+    pause(value) { this.paused = value; if (value)
+        this.cancelPowers(); this.volume(); }
+    cancelPowers() { for (const voice of this.voices) {
+        try {
+            voice.stop();
+        }
+        catch { /* already stopped */ }
+    } this.voices.clear(); }
+    cascadeNotes(depth) { const level = Math.max(1, Math.min(8, depth)), root = [60, 62, 64, 67, 69, 72, 74, 76][level - 1]; return [root, ...(level >= 2 ? [root + 4] : []), ...(level >= 3 ? [root + 7] : []), ...(level >= 5 ? [root + 12] : [])]; }
+    volume() { if (this.context && this.master)
+        this.master.gain.setValueAtTime(this.settings?.muted || this.paused ? 0 : 1, this.context.currentTime); }
+    tone(midi, duration = .2, volume = .04, type = 'sine', delay = 0) { if (!this.context || !this.master || !this.settings || this.settings.muted || this.paused)
+        return; const time = this.context.currentTime + delay, oscillator = this.context.createOscillator(), gain = this.context.createGain(); oscillator.type = type; oscillator.frequency.value = 440 * 2 ** ((midi - 69) / 12); gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(volume, time + .012); gain.gain.exponentialRampToValueAtTime(.0001, time + duration); oscillator.connect(gain); gain.connect(this.master); oscillator.start(time); oscillator.stop(time + duration + .03); }
+    voice(start, end, duration, volume, noise = false, delay = 0) {
+        if (!this.context || !this.master || this.settings?.muted || this.paused)
+            return;
+        const time = this.context.currentTime + delay, gain = this.context.createGain(), filter = this.context.createBiquadFilter();
+        let source;
+        if (noise) {
+            const bufferSource = this.context.createBufferSource(), buffer = this.context.createBuffer(1, Math.ceil(this.context.sampleRate * duration), this.context.sampleRate), data = buffer.getChannelData(0);
+            for (let i = 0; i < data.length; i += 1)
+                data[i] = Math.random() * 2 - 1;
+            bufferSource.buffer = buffer;
+            filter.type = 'bandpass';
+            filter.Q.value = .65;
+            filter.frequency.setValueAtTime(start, time);
+            filter.frequency.exponentialRampToValueAtTime(end, time + duration);
+            bufferSource.connect(filter);
+            filter.connect(gain);
+            source = bufferSource;
+        }
+        else {
+            const oscillator = this.context.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(start, time);
+            oscillator.frequency.exponentialRampToValueAtTime(end, time + duration);
+            oscillator.connect(gain);
+            source = oscillator;
+        }
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(volume, time + .018);
+        gain.gain.exponentialRampToValueAtTime(.0001, time + duration);
+        gain.connect(this.master);
+        this.voices.add(source);
+        source.onended = () => { this.voices.delete(source); source.disconnect(); gain.disconnect(); filter.disconnect(); };
+        source.start(time);
+        source.stop(time + duration + .01);
+    }
+    power(kind) { if (!this.context || this.settings?.muted || this.paused || this.context.currentTime - (this.lastPower.get(kind) ?? -10) < .09)
+        return; this.lastPower.set(kind, this.context.currentTime); if (kind === 'ribbon-row' || kind === 'ribbon-column') {
+        const up = kind === 'ribbon-column';
+        this.voice(up ? 240 : 980, up ? 1700 : 130, .42, .07);
+        this.voice(900, 4200, .31, .07, true);
+        this.voice(130, 55, .14, .06, false, .29);
+    }
+    else if (kind === 'burst') {
+        this.voice(155, 38, .4, .12);
+        this.voice(1600, 240, .42, .085, true);
+        [650, 900, 1250, 1750].forEach((hz, index) => this.voice(hz, hz * .65, .1, .026, false, .08 + index * .05));
+    }
+    else if (kind === 'frost-start') {
+        this.voice(650, 4200, .58, .06, true);
+        [880, 1320, 1760].forEach((hz, index) => this.voice(hz, hz * 1.12, .6, .027, false, index * .035));
+    }
+    else if (kind === 'ice') {
+        this.voice(4300, 750, .32, .075, true);
+        [1800, 2600, 3300, 2200, 3800].forEach((hz, index) => this.voice(hz, hz * .55, .18, .035, false, index * .032));
+    } }
+    effect(kind, count = 1) { if (kind === 'swap') {
+        this.swish();
+        return;
+    } if (['ribbon-row', 'ribbon-column', 'burst', 'frost-start', 'ice'].includes(kind)) {
+        this.power(kind);
+        return;
+    } if (kind === 'merge') {
+        const notes = this.cascadeNotes(count);
+        notes.forEach((value, index) => this.tone(value, .25 + Math.min(count, 8) * .025, .064 / Math.sqrt(notes.length), 'sine', index * .042));
+        this.tone(43 + Math.min(count, 8), .17, .025, 'triangle');
+        this.tone(notes[notes.length - 1] + 12, .11, .018, 'triangle', .09);
+        if (count >= 3)
+            this.tone(notes[0] + 19, .2, .024, 'sine', .13);
+    }
+    else if (kind === 'pick')
+        this.tone(72, .1, .025);
+    else
+        this.tone(kind === 'place' ? 60 : 55, kind === 'place' ? .12 : .1, kind === 'place' ? .035 : .02); }
+    swish() { if (!this.context || !this.master || this.settings?.muted || this.paused)
+        return; const length = .17, time = this.context.currentTime, buffer = this.context.createBuffer(1, Math.ceil(this.context.sampleRate * length), this.context.sampleRate), data = buffer.getChannelData(0); for (let index = 0; index < data.length; index += 1)
+        data[index] = Math.random() * 2 - 1; const source = this.context.createBufferSource(), filter = this.context.createBiquadFilter(), gain = this.context.createGain(); source.buffer = buffer; filter.type = 'bandpass'; filter.Q.value = .8; filter.frequency.setValueAtTime(650, time); filter.frequency.exponentialRampToValueAtTime(2300, time + .065); filter.frequency.exponentialRampToValueAtTime(800, time + length); gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(.085, time + .045); gain.gain.exponentialRampToValueAtTime(.0001, time + length); source.connect(filter); filter.connect(gain); gain.connect(this.master); source.start(time); source.stop(time + length); }
+    music() { if (!this.context || !this.settings || !this.settings.music || this.settings.muted || this.paused || this.context.currentTime < this.nextNote)
+        return; this.tone(GummyAudio.melody[this.note % GummyAudio.melody.length], 1.4, .016); if (this.note % 4 === 0)
+        this.tone([48, 53, 45, 55][Math.floor(this.note / 4) % 4], 2.5, .013, 'triangle'); this.note += 1; this.nextNote = this.context.currentTime + .62; }
 }
-function choose(i){
-  if(paused||animating)return;GummyAudio.unlock(state.settings);
-  if(selection===i){selection=null;selectedRender();return;}
-  if(selection!==null&&GummyCore.adjacent(selection,i)){act(selection,i);return;}
-  selection=i;selectedRender();GummyAudio.effect('pick');announce('Swap with a neighbor to line up three or more.');
+class MotionQueue {
+    audio;
+    active = null;
+    constructor(audio) {
+        this.audio = audio;
+    }
+    cancel() { if (!this.active)
+        return; this.active.cancelled = true; this.active.animations.forEach(animation => animation.cancel()); this.active.layers.forEach(layer => layer.remove()); this.audio.cancelPowers(); this.active = null; }
+    cell(index) { const element = document.querySelector(`[data-cell="${index}"]`); if (!element)
+        throw new Error(`Missing board cell ${index}`); return element; }
+    async animate(run, element, frames, duration) { if (run.cancelled)
+        return; const animation = element.animate(frames, { duration, easing: 'cubic-bezier(.18,.8,.25,1)', fill: 'forwards' }); run.animations.push(animation); await animation.finished.catch(() => undefined); }
+    box(index) { const target = this.cell(index < 0 ? index + 36 : index); return target.getBoundingClientRect(); }
+    async flight(run, from, to, tier, arc = 0) { const start = this.box(from), end = this.box(to), overlayBox = run.overlay.getBoundingClientRect(), element = document.createElement('div'); element.className = 'gummy-flight'; element.innerHTML = GummyArt.piece(tier); element.style.cssText = `left:${start.x - overlayBox.x}px;top:${start.y - overlayBox.y}px;width:${start.width}px;height:${start.height}px`; run.overlay.append(element); run.layers.push(element); const dx = end.x - start.x, dy = end.y - start.y; await this.animate(run, element, [{ transform: 'translate(0,0)' }, { transform: `translate(${dx * .5}px,${dy * .5 + arc}px) scale(1.04,.98)`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(1)` }], from < 0 ? 280 : 210); }
+    effect(run, name, box, html = '') { const overlayBox = run.overlay.getBoundingClientRect(), element = document.createElement('div'); element.className = `power-wave ${name}`; element.style.cssText = `left:${box.x - overlayBox.x}px;top:${box.y - overlayBox.y}px;width:${box.width}px;height:${box.height}px`; element.innerHTML = html; run.overlay.append(element); run.layers.push(element); return element; }
+    async power(run, activation) {
+        const box = this.box(activation.at), centerX = box.x + box.width / 2, centerY = box.y + box.height / 2;
+        if (activation.kind === 4) {
+            this.audio.effect('frost-start');
+            const jobs = [];
+            const row = Math.floor(activation.at / 6), col = activation.at % 6;
+            for (let index = 0; index < 36; index += 1)
+                if (Math.abs(Math.floor(index / 6) - row) === Math.abs(index % 6 - col)) {
+                    const tile = this.effect(run, 'frost-tile', this.box(index), '<span>❄</span>');
+                    jobs.push(this.animate(run, tile, [{ transform: 'scale(.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1, offset: .3 }, { transform: 'scale(1)', opacity: 1, offset: .75 }, { transform: 'scale(.5)', opacity: 0 }], 990));
+                }
+            await Promise.all(jobs);
+            if (!run.cancelled)
+                this.audio.effect('ice');
+            return;
+        }
+        this.audio.effect(['', 'ribbon-row', 'ribbon-column', 'burst'][activation.kind]);
+        if (activation.kind === 3) {
+            const ringBox = new DOMRect(centerX - box.width * 1.9, centerY - box.width * 1.9, box.width * 3.8, box.width * 3.8), ring = this.effect(run, 'burst-ring', ringBox), spark = this.effect(run, 'sugar-spark', box, '✹');
+            await Promise.all([this.animate(run, ring, [{ transform: 'scale(.08)', opacity: 1 }, { transform: 'scale(1)', opacity: 0 }], 480), this.animate(run, spark, [{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(2.2)', opacity: 0 }], 400)]);
+            return;
+        }
+        const horizontal = activation.kind === 1, first = this.box(horizontal ? Math.floor(activation.at / 6) * 6 : activation.at % 6), last = this.box(horizontal ? Math.floor(activation.at / 6) * 6 + 5 : 30 + activation.at % 6), lane = this.effect(run, 'ribbon-lane', horizontal ? new DOMRect(first.x, box.y, last.right - first.x, box.height) : new DOMRect(box.x, first.y, box.width, last.bottom - first.y));
+        await this.animate(run, lane, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 0 }], 480);
+    }
+    async play(phases, paint, onClear) {
+        this.cancel();
+        const overlay = document.createElement('div');
+        overlay.className = 'board-motion';
+        document.getElementById('board').append(overlay);
+        const run = { cancelled: false, animations: [], layers: [overlay], overlay };
+        this.active = run;
+        for (const phase of phases) {
+            if (run.cancelled)
+                return;
+            if ('before' in phase)
+                paint(phase.before);
+            if (phase.kind === 'swap') {
+                this.audio.effect('swap');
+                for (const index of [phase.from, phase.to])
+                    this.cell(index).querySelector('svg')?.setAttribute('style', 'visibility:hidden');
+                await Promise.all([this.flight(run, phase.from, phase.to, phase.before[phase.from], -9), this.flight(run, phase.to, phase.from, phase.before[phase.to], 9)]);
+            }
+            else if (phase.kind === 'clear') {
+                onClear(phase);
+                await Promise.all(phase.activated.map(activation => this.power(run, activation)));
+                if (run.cancelled)
+                    return;
+                await Promise.all(phase.cells.map(index => { const svg = this.cell(index).querySelector('svg'); return svg ? this.animate(run, svg, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.3)', opacity: 0 }], 190) : Promise.resolve(); }));
+            }
+            else if (phase.kind === 'fall') {
+                for (const fall of phase.falls)
+                    if (fall.from >= 0)
+                        this.cell(fall.from).querySelector('svg')?.setAttribute('style', 'visibility:hidden');
+                await Promise.all(phase.falls.map(fall => this.flight(run, fall.from, fall.to, fall.tier)));
+            }
+            else {
+                await this.animate(run, document.getElementById('board'), [{ opacity: 1 }, { opacity: .35 }], 120);
+                if (run.cancelled)
+                    return;
+                paint(phase.after);
+                await this.animate(run, document.getElementById('board'), [{ opacity: .35 }, { opacity: 1 }], 160);
+            }
+            if (run.cancelled)
+                return;
+            if ('after' in phase)
+                paint(phase.after);
+            run.overlay.replaceChildren();
+            run.animations.forEach(animation => animation.cancel());
+            run.animations = [];
+        }
+        if (this.active === run)
+            this.cancel();
+    }
 }
-function sourceFrom(el){const cell=el.closest('[data-cell]');return cell?Number(cell.dataset.cell):null;}
-document.addEventListener('pointerdown',e=>{
-  if(paused||animating||drag||e.button!==0)return;const source=sourceFrom(e.target);if(source===null)return;
-  GummyAudio.unlock(state.settings);drag={source,x:e.clientX,y:e.clientY,id:e.pointerId};
-});
-document.addEventListener('pointermove',e=>{if(drag&&e.pointerId===drag.id)e.preventDefault();},{passive:false});
-document.addEventListener('pointerup',e=>{
-  if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;
-  const dx=e.clientX-d.x,dy=e.clientY-d.y;
-  if(Math.hypot(dx,dy)<15)return;
-  const ax=Math.abs(dx),ay=Math.abs(dy),diagonal=Math.min(ax,ay)/Math.max(ax,ay)>.42;
-  const dc=diagonal||ax>ay?Math.sign(dx):0,dr=diagonal||ay>=ax?Math.sign(dy):0;
-  const target=d.source+dc+dr*6;
-  if((d.source%6+dc)<0||(d.source%6+dc)>5)return;
-  if(GummyCore.adjacent(d.source,target))act(d.source,target);
-  suppressClick=true;setTimeout(()=>suppressClick=false,0);
-});
-document.addEventListener('pointercancel',()=>drag=null);
-document.addEventListener('click',e=>{if(suppressClick)return;const source=sourceFrom(e.target);if(source!==null)choose(source);});
-$('undo').onclick=()=>{if(paused)return;const previous=history.pop();if(!previous)return;state.board=previous;selection=null;save();render();announce('One move back. Your keepsakes and progress stay yours.');};
-$('hintButton').onclick=()=>{
-  if(paused||animating)return;selection=null;selectedRender();const move=GummyCore.legalMoves(state.board)[0];
-  if(move){for(const i of move)$('board').querySelector(`[data-cell="${i}"]`).classList.add('suggested');announce('Try swapping the two highlighted gummies.');}
-};
-$('shuffle').onclick=async()=>{
-  if(paused||animating)return;remember();const before=[...state.board];state.board=GummyCore.mix(state.board);selection=null;save();
-  if(await playback([{kind:'shuffle',before,after:[...state.board]}]))announce('A fresh mix. All your keepsakes stay yours.');
-};
-$('sound').onclick=()=>{state.settings.muted=!state.settings.muted;GummyAudio.unlock(state.settings);save();render();};
-function setPause(value){paused=value;drag=null;if(animating)render();GummyAudio.pause(value);}
-$('pause').onclick=()=>{setPause(true);$('pauseDialog').showModal();};
-$('resume').onclick=()=>{setPause(false);$('pauseDialog').close();};$('pauseDialog').addEventListener('close',()=>setPause(false));
-$('settingsButton').onclick=()=>{setPause(true);$('settings').showModal();};$('closeSettings').onclick=()=>{setPause(false);$('settings').close();};$('settings').addEventListener('close',()=>setPause(false));
-for(const key of ['music','motion','gloss'])$(key).onchange=()=>{state.settings[key]=$(key).checked;save();render();};
-document.addEventListener('visibilitychange',()=>GummyAudio.pause(document.hidden||paused));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){selection=null;drag=null;selectedRender();}});
-document.querySelector('.brand').onclick=e=>e.preventDefault();
-$('recipeArt').innerHTML=GummyArt.gummy(1)+GummyArt.gummy(1)+GummyArt.gummy(1);
-save();render();announce(migrated?'Your keepsakes are here. Welcome to a fresh match-3 tray.':'Swap neighbors. Match three. Let a little lovely happen.');
-window.gummySnapshot=()=>JSON.parse(JSON.stringify({state,paused,animating,history:history.length,selection}));
+class GummyController {
+    store = new SaveStore();
+    renderer = new GummyRenderer();
+    audio = new GummyAudio();
+    motion = new MotionQueue(this.audio);
+    state = this.store.load();
+    history = [];
+    selection = null;
+    drag = null;
+    paused = false;
+    animating = false;
+    revision = 0;
+    suppressClick = false;
+    constructor() { if (matchMedia('(prefers-reduced-motion: reduce)').matches)
+        this.state.settings.motion = false; this.bind(); this.store.save(this.state); this.render(); this.announce(this.store.migrated ? 'Your keepsakes are here. Welcome to a fresh match-3 tray.' : 'Swap neighbors. Match three. Let a little lovely happen.'); }
+    get(id) { const element = document.getElementById(id); if (!element)
+        throw new Error(`Missing ${id}`); return element; }
+    announce(text) { this.get('status').textContent = text + (this.store.available ? '' : ' · Progress lasts for this visit; saving is unavailable.'); }
+    paint = (board) => this.renderer.paint(board);
+    color() { this.renderer.tint(this.state.cleared); }
+    selectionRender() { document.querySelectorAll('.selected,.suggested').forEach(element => element.classList.remove('selected', 'suggested')); if (this.selection !== null)
+        this.get('board').querySelector(`[data-cell="${this.selection}"]`)?.classList.add('selected'); }
+    render() { this.motion.cancel(); this.animating = false; this.revision += 1; this.get('board').style.opacity = ''; this.paint(this.state.board); this.color(); this.get('undo').disabled = !this.history.length; this.get('mergeCount').textContent = `${this.state.moves} lovely move${this.state.moves === 1 ? '' : 's'}`; this.get('clearCount').textContent = String(this.state.cleared); this.get('bestChain').textContent = this.state.bestCascade > 1 ? `${this.state.bestCascade}× best cascade` : 'A little more lovely'; const next = BoardEngine.rewards.find(reward => !this.state.owned.includes(reward.id)); const progress = this.get('goalProgress'); if (next) {
+        const threshold = BoardEngine.thresholds[BoardEngine.rewards.indexOf(next)];
+        this.get('goalText').textContent = `${Math.max(0, threshold - this.state.cleared)} more gummies to your ${next.name.toLowerCase()}`;
+        progress.value = Math.min(1, this.state.cleared / threshold);
+    }
+    else {
+        this.get('goalText').textContent = 'Your cozy corner is complete. Keep the cascades coming.';
+        progress.value = 1;
+    } this.get('rewardCount').textContent = `${this.state.owned.length} / 4`; this.get('discoveryCount').textContent = `${this.state.discovered.length} / 7`; this.get('collection').innerHTML = BoardEngine.names.map((name, tier) => `<div class="specimen ${this.state.discovered.includes(tier) ? '' : 'locked'}" title="${name}">${GummyArt.gummy(tier)}<span>${this.state.discovered.includes(tier) ? name : '···'}</span></div>`).join(''); this.get('rewards').innerHTML = BoardEngine.rewards.map((reward, index) => `<div class="reward-row ${this.state.owned.includes(reward.id) ? '' : 'locked'}"><span class="dot">${this.state.owned.includes(reward.id) ? '✓' : '·'}</span><span>${reward.name}</span><small>${this.state.owned.includes(reward.id) ? 'yours' : `${BoardEngine.thresholds[index]} cleared`}</small></div>`).join(''); this.get('shelf').innerHTML = BoardEngine.rewards.slice(0, 2).map((reward, index) => this.state.owned.includes(reward.id) ? `<div title="${reward.name}">${GummyArt.reward(index)}</div>` : '').join(''); this.get('floorItems').innerHTML = BoardEngine.rewards.slice(2).map((reward, index) => this.state.owned.includes(reward.id) ? `<div title="${reward.name}">${GummyArt.reward(index + 2)}</div>` : '').join(''); document.body.classList.toggle('still', !this.state.settings.motion); document.body.classList.toggle('matte', !this.state.settings.gloss); const sound = this.get('sound'); sound.textContent = this.state.settings.muted ? 'Sound off' : 'Sound on'; sound.setAttribute('aria-label', this.state.settings.muted ? 'Unmute sound' : 'Mute sound'); for (const key of ['music', 'motion', 'gloss'])
+        this.get(key).checked = this.state.settings[key]; this.selectionRender(); this.audio.update(this.state.settings); }
+    async playback(phases) { const revision = this.revision; if (this.state.settings.motion && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        this.animating = true;
+        try {
+            await this.motion.play(phases, this.paint, phase => { this.audio.effect('merge', phase.depth); const powers = phase.activated.map(power => BoardEngine.powerNames[power.kind]); this.announce(powers.length ? `${powers.join(' + ')}! ${phase.cells.length} gummies cleared.` : phase.depth > 1 ? `${phase.depth}× cascade! Another ${phase.cells.length} little gummies.` : `${phase.cells.length} gummies matched!`); });
+        }
+        catch {
+            this.motion.cancel();
+        }
+    }
+    else if (phases.some(phase => phase.kind === 'clear')) {
+        this.audio.effect('merge');
+        const kinds = new Set(phases.filter((phase) => phase.kind === 'clear').flatMap(phase => phase.activated.map(activation => activation.kind)));
+        kinds.forEach(kind => this.audio.effect(['', 'ribbon-row', 'ribbon-column', 'burst', 'ice'][kind]));
+    } if (revision !== this.revision)
+        return false; this.render(); return true; }
+    async act(from, to) { if (this.paused || this.animating)
+        return; this.audio.unlock(this.state.settings); const previous = [...this.state.board], owned = this.state.owned.length, result = BoardEngine.swap(this.state, from, to); this.selection = null; this.selectionRender(); if (result.reason === 'neighbor') {
+        this.announce('Swap with any touching neighbor, including diagonally.');
+        return;
+    } if (!this.state.settings.motion || matchMedia('(prefers-reduced-motion: reduce)').matches)
+        this.audio.effect('swap'); if (result.ok) {
+        this.history.push(previous);
+        if (this.history.length > 30)
+            this.history.shift();
+        this.store.save(this.state);
+    } if (!await this.playback(result.phases))
+        return; if (!result.ok) {
+        this.audio.effect('soft');
+        this.announce('Almost! Line up three or more of the same shape.');
+    }
+    else
+        this.announce(`${result.depth > 1 ? `${result.depth}× cascade! ` : ''}${result.cleared} gummies cleared.${this.state.owned.length > owned ? ' A new keepsake is in your nook!' : result.refreshed ? ' A fresh tray keeps the play going.' : ' Lovely little match.'}`); }
+    choose(index) { if (this.paused || this.animating)
+        return; this.audio.unlock(this.state.settings); if (this.selection === index) {
+        this.selection = null;
+        this.selectionRender();
+        return;
+    } if (this.selection !== null && BoardEngine.adjacent(this.selection, index)) {
+        void this.act(this.selection, index);
+        return;
+    } this.selection = index; this.selectionRender(); this.audio.effect('pick'); this.announce('Swap with a neighbor to line up three or more.'); }
+    source(target) { const element = target instanceof Element ? target.closest('[data-cell]') : null; return element?.dataset.cell === undefined ? null : Number(element.dataset.cell); }
+    pause(value) { this.paused = value; this.drag = null; if (this.animating)
+        this.render(); this.audio.pause(value); }
+    bind() { document.addEventListener('pointerdown', event => { if (this.paused || this.animating || this.drag || event.button !== 0)
+        return; const source = this.source(event.target); if (source === null)
+        return; this.audio.unlock(this.state.settings); this.drag = { source, x: event.clientX, y: event.clientY, id: event.pointerId }; }); document.addEventListener('pointermove', event => { if (this.drag && event.pointerId === this.drag.id)
+        event.preventDefault(); }, { passive: false }); document.addEventListener('pointerup', event => { if (!this.drag || this.drag.id !== event.pointerId)
+        return; const drag = this.drag; this.drag = null; const dx = event.clientX - drag.x, dy = event.clientY - drag.y; if (Math.hypot(dx, dy) < 15)
+        return; const x = Math.abs(dx), y = Math.abs(dy), diagonal = Math.min(x, y) / Math.max(x, y) > .42, dc = diagonal || x > y ? Math.sign(dx) : 0, dr = diagonal || y >= x ? Math.sign(dy) : 0, target = drag.source + dc + dr * 6; if (drag.source % 6 + dc >= 0 && drag.source % 6 + dc <= 5 && BoardEngine.adjacent(drag.source, target))
+        void this.act(drag.source, target); this.suppressClick = true; window.setTimeout(() => { this.suppressClick = false; }, 0); }); document.addEventListener('pointercancel', () => { this.drag = null; }); document.addEventListener('click', event => { if (!this.suppressClick) {
+        const source = this.source(event.target);
+        if (source !== null)
+            this.choose(source);
+    } }); this.get('undo').onclick = () => { if (this.paused)
+        return; const previous = this.history.pop(); if (!previous)
+        return; this.state.board = previous; this.selection = null; this.store.save(this.state); this.render(); this.announce('One move back. Your keepsakes and progress stay yours.'); }; this.get('hintButton').onclick = () => { if (this.paused || this.animating)
+        return; this.selection = null; this.selectionRender(); const move = BoardEngine.legalMoves(this.state.board)[0]; if (move) {
+        move.forEach(index => this.get('board').querySelector(`[data-cell="${index}"]`)?.classList.add('suggested'));
+        this.announce('Try swapping the two highlighted gummies.');
+    } }; this.get('shuffle').onclick = () => { if (this.paused || this.animating)
+        return; this.history.push([...this.state.board]); const before = [...this.state.board]; this.state.board = BoardEngine.mix(this.state.board); this.selection = null; this.store.save(this.state); void this.playback([{ kind: 'shuffle', before, after: [...this.state.board] }]).then(() => this.announce('A fresh mix. All your keepsakes stay yours.')); }; this.get('sound').onclick = () => { this.state.settings.muted = !this.state.settings.muted; this.audio.unlock(this.state.settings); this.store.save(this.state); this.render(); }; this.get('pause').onclick = () => { this.pause(true); this.get('pauseDialog').showModal(); }; this.get('resume').onclick = () => { this.pause(false); this.get('pauseDialog').close(); }; this.get('pauseDialog').addEventListener('close', () => this.pause(false)); this.get('settingsButton').onclick = () => { this.pause(true); this.get('settings').showModal(); }; this.get('closeSettings').onclick = () => { this.pause(false); this.get('settings').close(); }; this.get('settings').addEventListener('close', () => this.pause(false)); for (const key of ['music', 'motion', 'gloss'])
+        this.get(key).onchange = () => { this.state.settings[key] = this.get(key).checked; this.store.save(this.state); this.render(); }; document.addEventListener('visibilitychange', () => this.audio.pause(document.hidden || this.paused)); document.addEventListener('keydown', event => { if (event.key === 'Escape') {
+        this.selection = null;
+        this.drag = null;
+        this.selectionRender();
+    } }); this.get('recipeArt').innerHTML = GummyArt.gummy(1) + GummyArt.gummy(1) + GummyArt.gummy(1); }
+    snapshot() { return JSON.parse(JSON.stringify({ state: this.state, paused: this.paused, animating: this.animating, history: this.history.length, selection: this.selection })); }
+}
+const production = { BoardEngine, SaveStore, GummyArt, GummyRenderer, GummyAudio, MotionQueue, GummyController };
+Object.assign(globalThis, { GummyProduction: production, GummyCore: BoardEngine, GummyArt, GummyAudio, GummyMotion: MotionQueue });
+if (typeof document !== 'undefined') {
+    const controller = new GummyController();
+    Object.assign(globalThis, { gummySnapshot: () => controller.snapshot(), render: () => undefined, paintBoard: undefined });
+}
 </script></body></html>
 
 

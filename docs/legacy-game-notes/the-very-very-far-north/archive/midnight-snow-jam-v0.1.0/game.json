@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "midnight-snow-jam",
+  "ideaId": "BOB-004-R2",
+  "book": {
+    "title": "The Very, Very Far North",
+    "author": "Dan Bar-el"
+  },
+  "title": "Midnight Snow Jam",
+  "status": "implemented-demo",
+  "primaryMechanic": "Forgiving rhythm performance with an Arctic animal ensemble",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Midnight-Snow-Jam.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first"
+  ],
+  "audioPlanned": false,
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "plannedRevision": {
+    "ideaId": "BOB-004-R2",
+    "title": "Midnight Snow Jam",
+    "primaryMechanic": "Forgiving rhythm performance with an Arctic animal ensemble",
+    "status": "implemented",
+    "plan": "plans/redesign.md",
+    "requirements": "plans/requirements.md"
+  },
+  "previousTitles": [],
+  "version": "0.1.0",
+  "audioImplemented": true,
+  "saveKey": "midnight-snow-jam-v1",
+  "localUrl": "http://127.0.0.1:4323",
+  "experiments": [
+    {
+      "id": "arctic-duet",
+      "ideaId": "BOB-004-ALT1",
+      "title": "Arctic Duet",
+      "version": "0.1.0",
+      "status": "implemented-experiment",
+      "manifest": "experiments/arctic-duet/game.json",
+      "localUrl": "http://127.0.0.1:4323/duet.html"
+    }
+  ]
+}

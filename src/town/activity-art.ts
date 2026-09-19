@@ -17,6 +17,9 @@ export class TownActivityArt {
   private line: THREE.Line;
   private time = 0;
   private stateAge = 0;
+  private renderedState: TownActivityState | null = null;
+  private renderedAction: ActivityAction | null = null;
+  private renderedTarget: Point | null = null;
   private state: TownActivityState = "idle";
   private lastAction: ActivityAction | null = null;
   private target: Point | null = null;
@@ -80,6 +83,13 @@ export class TownActivityArt {
     this.root.add(this.lure, this.splash, this.digMark, this.line);
     scene.add(this.root);
     this.hide();
+  }
+
+  /** Reattach held activity props when the avatar's visual rig changes. */
+  setAvatar(avatar: AnimalRig) {
+    this.avatar.setActivityPose(null);
+    this.avatar = avatar;
+    avatar.root.add(this.rod, this.shovel);
   }
 
   private makeRod() {
@@ -179,6 +189,21 @@ export class TownActivityArt {
     target: Point | null,
     action: ActivityAction | null,
   ) {
+    const sameTarget =
+      target === this.renderedTarget ||
+      (!!target &&
+        !!this.renderedTarget &&
+        target.x === this.renderedTarget.x &&
+        target.z === this.renderedTarget.z);
+    if (
+      state === this.renderedState &&
+      action === this.renderedAction &&
+      sameTarget
+    )
+      return;
+    this.renderedState = state;
+    this.renderedAction = action;
+    this.renderedTarget = target ? { ...target } : null;
     const continuingDigResult =
       this.state === "digging" &&
       state === "result" &&

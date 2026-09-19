@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#132a2c">
+  <title>Wildfire — Dig & Douse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">BATTLE OF THE BOOKS · VISUAL PROTOTYPE</p><h1>Wildfire<span>Dig & Douse</span></h1></div><button id="reset" type="button" disabled>↻ Reset</button></header>
+    <div class="brief"><p>The forest relay</p><span>DEMO LEVEL 03</span></div>
+    <section class="board" aria-label="Dig and douse game">
+      <canvas id="game" width="600" height="750" tabindex="0" aria-label="Clear hillside soil to guide reservoir water to the side-facing blue-drop intake at the right. It powers a separate hose at the campsite below. Fill three optional golden canteens. Avoid the cracked intake at the bottom left. Drag to dig, or arrow keys and hold Space.">Your browser needs canvas and WebAssembly to play this game.</canvas>
+      <div id="loading" class="overlay"><div><span class="loading-dot"></span><h2>Getting the water ready…</h2><p>Loading the physics engine</p></div></div>
+      <div id="win" class="overlay victory" hidden><div><p class="eyebrow">NICE WORK</p><h2>Fire out!</h2><p id="win-buddies"></p><button id="again" type="button">Play again ↻</button></div></div>
+    </section>
+    <div class="readout"><div><span id="state" aria-live="polite">Loading water physics…</span><span id="drops">0% doused</span></div><progress id="progress" max="100" value="0" aria-label="Water delivered to the hose"></progress></div>
+    <footer><p id="buddies" aria-live="polite">Canteen buddies 0 / 3</p><button id="hint" type="button" aria-pressed="false">Show a hint</button></footer>
+    <p class="prototype-note">Drag to clear soil · Grey stone stays put<br><span>Only the large open pipe mouth accepts water. Capped pipes block it.</span></p>
+  </main>
+  <script src="vendor/Box2D.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

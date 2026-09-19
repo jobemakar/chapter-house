@@ -92,6 +92,17 @@ test("a companion settles at a walkable shoulder instead of the avatar position"
   }
 });
 
+test("outdoor pet wander targets stay walkable and close to the avatar", () => {
+  const nav = new TownNavigation();
+  const avatar = { x: 30, z: 40 };
+  for (const angle of [0, Math.PI / 3, Math.PI, Math.PI * 1.7]) {
+    const target = nav.nearbyWanderTarget(avatar, angle, 2.4);
+    assert.equal(nav.walkable(target), true);
+    assert.ok(Math.hypot(target.x - avatar.x, target.z - avatar.z) <= 2.8);
+    assertRoute(nav, avatar, target);
+  }
+});
+
 test("the fountain action has a bounded interaction radius", () => {
   const nav = new TownNavigation();
   assert.equal(nav.nearFountain(TOWN.entry), false);

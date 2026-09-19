@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "dig-and-douse",
+  "ideaId": "BOB-009-R2",
+  "book": {
+    "title": "Wildfire",
+    "author": "Rodman Philbrick"
+  },
+  "title": "Dig & Douse",
+  "status": "implemented-local",
+  "primaryMechanic": "Excavate continuous channels to route finite simulated water into a fire-hose intake",
+  "sourceEntry": "public/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "dist/index.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/design.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first",
+    "mouse",
+    "keyboard"
+  ],
+  "audioPlanned": true,
+  "collectiblePlan": "../plans/11-collectible-catalog.md"
+}

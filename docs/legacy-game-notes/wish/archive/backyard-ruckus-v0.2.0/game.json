@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "wishbones-big-fetch",
+  "ideaId": "BOB-003-R2",
+  "book": {
+    "title": "Wish",
+    "author": "Barbara O'Connor"
+  },
+  "title": "Wishbone’s Big Fetch: Backyard Ruckus",
+  "status": "implemented-demo",
+  "primaryMechanic": "Aim a sock to trigger dog pursuit and rigid-body tower collapse",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Wishbones-Big-Fetch.html",
+  "requirements": "plans/requirements-next.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first"
+  ],
+  "audioPlanned": false,
+  "version": "0.2.0",
+  "audioImplemented": true,
+  "saveKey": "wishbones-big-fetch-v2",
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "legacyPlayable": "playable/Wishbones-Big-Fetch-v0.1.html",
+  "experiments": [
+    {
+      "id": "wishbone-floppy-fetch",
+      "ideaId": "BOB-003-ALT1",
+      "title": "Wishbone Fling",
+      "version": "0.2.0",
+      "status": "implemented-experiment",
+      "sourceEntry": "experiments/floppy-fetch/src/index.html",
+      "hostedEntry": "dist/floppy.html",
+      "offlineEntry": "playable/Wishbone-Fling.html",
+      "requirements": "experiments/floppy-fetch/requirements.md",
+      "saveKey": "wishbone-floppy-fetch-v1",
+      "comparison": "sock-and-chase remains the main candidate"
+    }
+  ]
+}

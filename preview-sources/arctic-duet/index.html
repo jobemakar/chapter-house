@@ -258,6 +258,7 @@ input {
   color: #758079;
   margin: 5px 0;
 }
+.keepsakes { margin: 3px 0; text-align: center; font-size: 10px; color: #5c706b; }
 @media (max-width: 650px) {
   main {
     padding: 14px 12px 8px;
@@ -415,971 +416,452 @@ input {
         </div>
         <div id="record">Every snack is a small celebration.</div>
       </footer>
+      <p class="keepsakes" id="keepsakes">Keepsakes arrive with your catches.</p>
       <p class="footnote">
         Miss a bite? The music keeps going.
         <span id="saveStatus">Progress stays on this device.</span>
       </p>
     </main>
     <script>
-(function (root) {
-  "use strict";
-  const BPM = 78,
-    SPB = 60 / BPM,
-    LENGTH = 32;
-  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-  const names = [
-    "First bites",
-    "A little sway",
-    "Side to side",
-    "Better together",
-    "Sweet syncopation",
-    "Moonlight bounce",
-    "Double scoops",
-    "Aurora party",
-  ];
-  function levelAt(beat) {
-    return 1 + Math.floor(Math.max(0, beat - 4) / LENGTH);
-  }
-  function config(level, gentle = false) {
-    const d = Math.min(gentle ? 2 : 8, level);
-    return {
-      d,
-      lead: 4 - Math.max(0, d - 2) * 0.23,
-      radius: d < 3 ? 0.17 : 0.135,
-      step: d < 3 ? 2 : d < 5 ? 1.5 : 1,
-    };
-  }
-  function phrase(level, gentle = false) {
-    const c = config(level, gentle),
-      start = 4 + (level - 1) * LENGTH,
-      notes = [];
-    // Phrase positions are deterministic and mirrored for learnable musical shapes.
-    const shape = [0, 0.28, -0.28, 0, -0.5, 0, 0.5, 0.28];
-    let i = 0;
-    for (let t = 0; t < 30; t += c.step) {
-      const side = i % 2,
-        spread = c.d === 1 ? 0 : c.d === 2 ? 0.32 : c.d === 3 ? 0.62 : 1;
-      const x =
-        0.5 +
-        shape[(Math.floor(i / 2) + level - 1) % shape.length] * spread * 0.7;
-      notes.push({
-        id: level + ":" + i,
-        side,
-        x,
-        beat: start + t,
-        lead: c.lead,
-        radius: c.radius,
-        state: "fall",
-        flavor: i % 3,
-      });
-      if (c.d >= 4 && i % (c.d < 6 ? 6 : 4) === 4)
-        notes.push({
-          id: level + ":" + i + "b",
-          side: 1 - side,
-          x: 1 - x,
-          beat: start + t,
-          lead: c.lead,
-          radius: c.radius,
-          state: "fall",
-          flavor: (i + 1) % 3,
-        });
-      i++;
+"use strict";
+var ArcticDuet;
+(function (ArcticDuet) {
+    ArcticDuet.BPM = 78;
+    ArcticDuet.SPB = 60 / ArcticDuet.BPM;
+    ArcticDuet.LENGTH = 32;
+    ArcticDuet.names = ["First bites", "A little sway", "Side to side", "Better together", "Sweet syncopation", "Moonlight bounce", "Double scoops", "Aurora party"];
+    ArcticDuet.keepsakes = [
+        { id: "duet-snow-cushion", name: "Duet Snow Cushion", kind: "floor", threshold: 12, description: "A small shared place to rest after a song." },
+        { id: "puffin-window-star", name: "Puffin Window Star", kind: "wall", threshold: 30, description: "A warm little star for an Arctic wall." },
+        { id: "aurora-wool-rug", name: "Aurora Wool Rug", kind: "floor", threshold: 60, description: "A soft original rug for feet and flippers." },
+        { id: "together-pennant", name: "Together Pennant", kind: "wall", threshold: 100, description: "A paper pennant celebrating every catch." }
+    ];
+    ArcticDuet.clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    function levelAt(beat) { return 1 + Math.floor(Math.max(0, beat - 4) / ArcticDuet.LENGTH); }
+    ArcticDuet.levelAt = levelAt;
+    function config(level, gentle = false) {
+        const d = Math.min(gentle ? 2 : 8, level);
+        return { d, lead: 4 - Math.max(0, d - 2) * 0.23, radius: d < 3 ? 0.17 : 0.135, step: d < 3 ? 2 : d < 5 ? 1.5 : 1 };
     }
-    return notes;
-  }
-  class Run {
-    constructor() {
-      this.beat = 0;
-      this.level = 1;
-      this.generated = 0;
-      this.notes = [];
-      this.positions = [0.5, 0.5];
-      this.score = 0;
-      this.catches = 0;
-      this.streak = 0;
-      this.best = 0;
-      this.misses = 0;
-      this.gentle = false;
-    }
-    advance(beat) {
-      const events = [];
-      this.beat = Math.max(this.beat, beat);
-      const l = levelAt(this.beat);
-      if (l !== this.level) {
-        this.level = l;
-        events.push({ type: "level", level: l });
-      }
-      while (this.generated < levelAt(this.beat + 5)) {
-        this.notes.push(...phrase(++this.generated, this.gentle));
-      }
-      for (const n of this.notes) {
-        if (n.state !== "fall") continue;
-        const delta = this.beat - n.beat;
-        if (
-          delta >= -0.06 &&
-          delta <= 0.24 &&
-          Math.abs(this.positions[n.side] - n.x) <= n.radius
-        ) {
-          n.state = "caught";
-          this.catches++;
-          this.streak++;
-          this.best = Math.max(this.best, this.streak);
-          this.score += 10;
-          events.push({ type: "catch", note: n });
-        } else if (delta > 0.24) {
-          n.state = "miss";
-          this.misses++;
-          this.streak = 0;
-          events.push({ type: "miss", note: n });
+    ArcticDuet.config = config;
+    function phrase(level, gentle = false) {
+        const setting = config(level, gentle), start = 4 + (level - 1) * ArcticDuet.LENGTH, shape = [0, .28, -.28, 0, -.5, 0, .5, .28];
+        const notes = [];
+        let index = 0;
+        for (let offset = 0; offset < 30; offset += setting.step) {
+            const side = index % 2 === 0 ? 0 : 1;
+            const spread = setting.d === 1 ? 0 : setting.d === 2 ? .32 : setting.d === 3 ? .62 : 1;
+            const x = .5 + shape[(Math.floor(index / 2) + level - 1) % shape.length] * spread * .7;
+            notes.push({ id: `${level}:${index}`, side, x, beat: start + offset, lead: setting.lead, radius: setting.radius, state: "fall", flavor: index % 3 });
+            if (setting.d >= 4 && index % (setting.d < 6 ? 6 : 4) === 4)
+                notes.push({ id: `${level}:${index}b`, side: side === 0 ? 1 : 0, x: 1 - x, beat: start + offset, lead: setting.lead, radius: setting.radius, state: "fall", flavor: (index + 1) % 3 });
+            index++;
         }
-      }
-      this.notes = this.notes.filter((n) => n.beat > this.beat - 2);
-      return events;
+        return notes;
     }
-  }
-  class Hands {
-    constructor(run) {
-      this.run = run;
-      this.pointers = new Map();
-    }
-    down(id, x) {
-      const side = x < 0.5 ? 0 : 1;
-      if ([...this.pointers.values()].includes(side)) return false;
-      this.pointers.set(id, side);
-      this.move(id, x);
-      return true;
-    }
-    move(id, x) {
-      const side = this.pointers.get(id);
-      if (side === undefined) return;
-      this.run.positions[side] = clamp(x * 2 - side, 0.08, 0.92);
-    }
-    up(id) {
-      this.pointers.delete(id);
-    }
-    clear() {
-      this.pointers.clear();
-    }
-  }
-  function saved(raw) {
-    let a;
-    try {
-      a = JSON.parse(raw);
-    } catch {}
-    a = a && a.version === 1 ? a : {};
-    const num = (n) => (Number.isSafeInteger(n) && n >= 0 ? n : 0);
-    return {
-      version: 1,
-      total: num(a.total),
-      bestLevel: Math.max(1, num(a.bestLevel)),
-      muted: a.muted === true,
-      gentle: a.gentle === true,
-      assist: a.assist === true,
-      motion: a.motion === true,
-    };
-  }
-  const api = {
-    BPM,
-    SPB,
-    LENGTH,
-    names,
-    clamp,
-    levelAt,
-    config,
-    phrase,
-    Run,
-    Hands,
-    saved,
-  };
-  if (typeof module === "object") module.exports = api;
-  else root.Duet = api;
-})(globalThis);
-
-</script>
-    <script>
-/* Original synthesized score. AudioContext time is the transport clock. */
-(function (root) {
-  "use strict";
-  const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
-  class Music {
-    constructor() {
-      this.ctx = null;
-      this.master = null;
-      this.muted = false;
-      this.nodes = new Set();
-      this.fallback = () => performance.now() / 1000;
-    }
-    async start() {
-      try {
-        if (!this.ctx) {
-          const A = root.AudioContext || root.webkitAudioContext;
-          if (!A) return false;
-          this.ctx = new A();
-          this.master = this.ctx.createGain();
-          this.master.gain.value = this.muted ? 0 : 0.32;
-          const compressor = this.ctx.createDynamicsCompressor();
-          compressor.threshold.value = -16;
-          compressor.ratio.value = 6;
-          this.master.connect(compressor);
-          compressor.connect(this.ctx.destination);
-        }
-        await this.ctx.resume();
-        return true;
-      } catch {
-        this.stop();
-        const closing = this.ctx?.close?.();
-        closing?.catch(() => {});
-        this.ctx = null;
-        this.master = null;
-        return false;
-      }
-    }
-    now() {
-      return this.ctx ? this.ctx.currentTime : this.fallback();
-    }
-    setMuted(value) {
-      this.muted = value;
-      if (this.master)
-        this.master.gain.setTargetAtTime(
-          value ? 0 : 0.32,
-          this.ctx.currentTime,
-          0.025,
-        );
-    }
-    tone(midi, time, duration = 0.25, volume = 0.15, type = "sine", slide = 0) {
-      if (!this.ctx || !this.master) return;
-      const t = Math.max(this.ctx.currentTime, time),
-        o = this.ctx.createOscillator(),
-        g = this.ctx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(hz(midi), t);
-      if (slide)
-        o.frequency.exponentialRampToValueAtTime(
-          hz(midi + slide),
-          t + duration,
-        );
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(volume, t + 0.008);
-      g.gain.exponentialRampToValueAtTime(0.001, t + duration);
-      o.connect(g);
-      g.connect(this.master);
-      o.start(t);
-      o.stop(t + duration + 0.02);
-      this.nodes.add(o);
-      o.onended = () => {
-        this.nodes.delete(o);
-        o.disconnect();
-        g.disconnect();
-      };
-    }
-    noise(time, duration = 0.06, volume = 0.06) {
-      if (!this.ctx) return;
-      const rate = this.ctx.sampleRate,
-        buffer = this.ctx.createBuffer(1, Math.ceil(rate * duration), rate),
-        data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++)
-        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
-      const s = this.ctx.createBufferSource(),
-        f = this.ctx.createBiquadFilter(),
-        g = this.ctx.createGain();
-      f.type = "highpass";
-      f.frequency.value = 4500;
-      s.buffer = buffer;
-      g.gain.value = volume;
-      s.connect(f);
-      f.connect(g);
-      g.connect(this.master);
-      const t = Math.max(time, this.ctx.currentTime);
-      s.start(t);
-      this.nodes.add(s);
-      s.onended = () => {
-        this.nodes.delete(s);
-        s.disconnect();
-        f.disconnect();
-        g.disconnect();
-      };
-    }
-    pad(lane, song, beat, when = this.now(), level = 1) {
-      const rootNote = song.roots[Math.floor(Math.max(0, beat - 4) / 16) % 4];
-      if (lane === 0) {
-        this.tone(43, when, 0.19, 0.42 * level, "sine", -24);
-        this.noise(when, 0.07, 0.07 * level);
-      }
-      if (lane === 1) {
-        const note =
-          rootNote + 24 + song.melody[Math.floor(beat) % song.melody.length];
-        this.tone(note, when, 0.6, 0.18 * level);
-        this.tone(note + 12, when, 0.2, 0.04 * level);
-      }
-      if (lane === 2)
-        this.tone(rootNote - 12, when, 0.4, 0.27 * level, "triangle");
-      if (lane === 3) {
-        this.noise(when, 0.13, 0.16 * level);
-        this.tone(88, when, 0.09, 0.04 * level);
-      }
-    }
-    schedule(song, beat, time, active, aurora) {
-      if (beat < 4) {
-        if (Number.isInteger(beat))
-          this.tone(beat === 3 ? 84 : 72, time, 0.09, 0.11);
-        return;
-      }
-      const b = beat - 4,
-        integer = Number.isInteger(b),
-        rootNote = song.roots[Math.floor(b / 16) % 4];
-      if (integer && b % 2 === 0) this.tone(42, time, 0.16, 0.25, "sine", -22);
-      if (integer && b % 2 === 1) this.noise(time, 0.09, 0.07);
-      if (!integer) this.noise(time, 0.035, 0.035);
-      if (integer && b % 4 === 0) {
-        for (const interval of [0, song.id === "aurora-swing" ? 3 : 4, 7])
-          this.tone(rootNote + interval, time, 2.1, 0.045, "triangle");
-      }
-      if (integer && b % 2 === 0)
-        this.tone(
-          rootNote - 12,
-          time,
-          0.36,
-          active >= 3 ? 0.18 : 0.09,
-          "triangle",
-        );
-      if (integer) {
-        const note = rootNote + 12 + song.melody[Math.floor(b) % 8];
-        this.tone(note, time, 0.42, 0.055, "sine");
-        if (aurora) this.tone(note + 12, time, 0.65, 0.1);
-      }
-      if (active === 4 && !integer) this.noise(time, 0.075, 0.045);
-    }
-    flourish() {
-      for (let i = 0; i < 8; i++)
-        this.tone(
-          72 + [0, 4, 7, 9, 12, 16, 19, 24][i],
-          this.now() + i * 0.08,
-          0.6,
-          0.09,
-        );
-    }
-    stop() {
-      for (const o of this.nodes) {
-        try {
-          o.stop();
-        } catch {}
-      }
-      this.nodes.clear();
-    }
-  }
-  root.SnowMusic = Music;
-})(window);
-
-</script>
-    <script>
-(function (root) {
-  "use strict";
-  class Painter {
-    constructor(canvas) {
-      this.canvas = canvas;
-      this.ctx = canvas.getContext("2d");
-      this.effects = [];
-      this.reactions = [
-        { at: -9, kind: "" },
-        { at: -9, kind: "" },
-      ];
-    }
-    react(event, time) {
-      const n = event.note;
-      this.reactions[n.side] = { at: time, kind: event.type };
-      if (event.type === "catch" || event.type === "miss")
-        for (let i = 0; i < 9; i++)
-          this.effects.push({
-            side: n.side,
-            x: n.x,
-            offset: event.type === "miss" ? 75 : 0,
-            time,
-            angle: i * 2.4,
-            color:
-              event.type === "miss"
-                ? "#e8f3ed"
-                : ["#fbd48d", "#a0e6cf", "#fbbcb9"][i % 3],
-          });
-    }
-    draw(run, time, motion, active) {
-      const c = this.ctx,
-        rect = this.canvas.getBoundingClientRect(),
-        W = 1200,
-        H = Math.max(760, (1200 * rect.height) / Math.max(1, rect.width)),
-        dpr = Math.min(2, root.devicePixelRatio || 1),
-        scale = rect.width / W;
-      if (
-        this.canvas.width !== Math.round(rect.width * dpr) ||
-        this.canvas.height !== Math.round(rect.height * dpr)
-      ) {
-        this.canvas.width = Math.round(rect.width * dpr);
-        this.canvas.height = Math.round(rect.height * dpr);
-      }
-      c.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
-      c.clearRect(0, 0, W, H);
-      this.H = H;
-      const oval = (x, y, rx, ry, color) => {
-        c.fillStyle = color;
-        c.beginPath();
-        c.ellipse(x, y, rx, Math.max(0.5, ry), 0, 0, Math.PI * 2);
-        c.fill();
-      };
-      const path = (points, color) => {
-        c.fillStyle = color;
-        c.beginPath();
-        points.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
-        c.closePath();
-        c.fill();
-      };
-      const line = (x, y, x2, y2, color, width = 3) => {
-        c.strokeStyle = color;
-        c.lineWidth = width;
-        c.lineCap = "round";
-        c.beginPath();
-        c.moveTo(x, y);
-        c.lineTo(x2, y2);
-        c.stroke();
-      };
-      const grad = c.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(
-        0,
-        ["#28314a", "#30304d", "#243f51", "#40334f"][
-          Math.floor((run.level - 1) / 2) % 4
-        ],
-      );
-      grad.addColorStop(1, "#4e8589");
-      c.fillStyle = grad;
-      c.fillRect(0, 0, W, H);
-      for (let k = 0; k < 3; k++) {
-        c.beginPath();
-        c.moveTo(-100, 100 + k * 70);
-        c.bezierCurveTo(
-          300,
-          260 + Math.sin(motion ? 0 : time * 0.2) * 60,
-          500,
-          -120 + k * 80,
-          1300,
-          210 + k * 40,
-        );
-        c.lineTo(1300, 300 + k * 40);
-        c.bezierCurveTo(600, -30 + k * 80, 300, 330, -100, 180 + k * 70);
-        c.fillStyle = ["#70d7b51c", "#b4b8fb13", "#9ae6c612"][k];
-        c.fill();
-      }
-      for (let i = 0; i < 60; i++) {
-        let x = (i * 197 + 47) % 1200,
-          y = (i * i * 17 + 37) % (H * 0.65);
-        oval(
-          x,
-          y,
-          i % 7 === 0 ? 2.8 : 1.3,
-          i % 7 === 0 ? 2.8 : 1.3,
-          "#f5ecdb88",
-        );
-      }
-      oval(1050, 105, 44, 44, "#f9e5c2");
-      oval(1067, 92, 39, 39, "#30394e");
-      path(
-        [
-          [0, H - 270],
-          [140, H - 470],
-          [275, H - 320],
-          [455, H - 520],
-          [640, H - 280],
-          [815, H - 470],
-          [1020, H - 310],
-          [1130, H - 470],
-          [1200, H - 310],
-          [1200, H],
-          [0, H],
-        ],
-        "#66848f",
-      );
-      path(
-        [
-          [330, H - 409],
-          [455, H - 520],
-          [558, H - 386],
-          [460, H - 425],
-          [425, H - 400],
-        ],
-        "#b9cfd0",
-      );
-      path(
-        [
-          [0, H - 225],
-          [200, H - 290],
-          [380, H - 225],
-          [680, H - 300],
-          [900, H - 240],
-          [1200, H - 300],
-          [1200, H],
-          [0, H],
-        ],
-        "#98b9bc",
-      );
-      c.fillStyle = "#a6d4ca10";
-      c.fillRect(0, 95, 600, H - 240);
-      c.fillStyle = "#f7bfaf0b";
-      c.fillRect(600, 95, 600, H - 240);
-      c.setLineDash([5, 14]);
-      line(600, 100, 600, H - 85, "#eff6e425", 2);
-      c.setLineDash([]);
-      const mouth = H - 220;
-      // Visible catch horizon makes the timing plane legible even without sound.
-      line(40, mouth, 560, mouth, "#b6e7d54d", 3);
-      line(640, mouth, 1160, mouth, "#f1c4b64d", 3);
-      oval(270, H - 83, 380, 76, "#d6e5dd");
-      oval(920, H - 78, 390, 84, "#dbe4e0");
-      c.font = "bold 22px DM, sans-serif";
-      c.textAlign = "center";
-      c.fillStyle = "#d8e9e8";
-      c.fillText("DUANE", 300, 54);
-      c.fillText("MAJOR PUFF", 900, 54);
-      c.font = "18px DM, sans-serif";
-      c.fillStyle = "#b0c7ce";
-      c.fillText("slide left + right", 300, 78);
-      c.fillText("slide left + right", 900, 78);
-      for (let side = 0; side < 2; side++) {
-        const x = side * 600 + run.positions[side] * 600,
-          re = this.reactions[side],
-          elapsed = time - re.at,
-          chew = re.kind === "catch" && elapsed < 0.5,
-          bob = motion ? 0 : Math.sin(time * 3 + side) * 3;
-        const near = run.notes
-            .filter(
-              (n) =>
-                n.side === side &&
-                n.state === "fall" &&
-                n.beat - run.beat < n.lead,
-            )
-            .sort((a, b) => a.beat - b.beat)[0],
-          look = near
-            ? Duet.clamp((near.x - run.positions[side]) * 15, -6, 6)
-            : 0;
-        oval(x, H - 89, 89, 16, "#42666d25");
-        c.save();
-        c.translate(x, mouth + bob);
-        if (side === 0) {
-          oval(0, 80, 74, 68, "#ece5d6");
-          oval(-48, 119, 35, 21, "#fff4df");
-          oval(48, 119, 35, 21, "#fff4df");
-          oval(-57, -52, 25, 28, "#fff4df");
-          oval(57, -52, 25, 28, "#fff4df");
-          oval(-57, -53, 12, 14, "#dccbc4");
-          oval(57, -53, 12, 14, "#dccbc4");
-          oval(0, -3, 83, 70, "#fff5df");
-          oval(-68, 63, 22, 36, "#f8eed8");
-          oval(68, 63, 22, 36, "#f8eed8");
-          c.fillStyle = "#6ab7a5";
-          c.beginPath();
-          c.roundRect(-67, 48, 134, 20, 10);
-          c.fill();
-          path(
-            [
-              [35, 57],
-              [60, 57],
-              [70, 105],
-              [44, 99],
-            ],
-            "#78c9b3",
-          );
-          oval(-44, 7, 17, 9, "#efb5a5");
-          oval(44, 7, 17, 9, "#efb5a5");
-        } else {
-          oval(0, 67, 73, 83, "#243344");
-          oval(0, 84, 52, 64, "#f4e7d4");
-          oval(-72, 66, 20, 49, "#344857");
-          oval(72, 66, 20, 49, "#344857");
-          oval(-33, 135, 33, 13, "#eeaa70");
-          oval(33, 135, 33, 13, "#eeaa70");
-          oval(0, -6, 75, 70, "#233444");
-          oval(-28, -2, 40, 50, "#fff0dc");
-          oval(28, -2, 40, 50, "#fff0dc");
-          path(
-            [
-              [-12, -69],
-              [7, -91],
-              [10, -69],
-              [27, -82],
-              [23, -62],
-            ],
-            "#233444",
-          );
-          c.fillStyle = "#eab091";
-          c.beginPath();
-          c.roundRect(-61, 51, 122, 16, 8);
-          c.fill();
-        }
-        const blink = !motion && Math.sin(time * 0.61 + side) > 0.996;
-        if (chew || blink) {
-          line(-34 + look, -16, -22 + look, -18, "#293643", 4);
-          line(22 + look, -18, 34 + look, -16, "#293643", 4);
-        } else {
-          oval(-28 + look, -20, 5, 7, "#293643");
-          oval(28 + look, -20, 5, 7, "#293643");
-          oval(-29 + look, -22, 1.6, 2, "#ffffff");
-          oval(27 + look, -22, 1.6, 2, "#ffffff");
-        }
-        if (side === 0) {
-          oval(0, -3, 12, 8, "#293643");
-          oval(
-            0,
-            17,
-            chew ? 17 : near && near.beat - run.beat < 0.6 ? 15 : 8,
-            chew ? 9 : near && near.beat - run.beat < 0.6 ? 17 : 5,
-            "#543944",
-          );
-          if (chew) oval(0, 20, 10, 4, "#eeaaa5");
-        } else {
-          path(
-            [
-              [-21, 0],
-              [21, 0],
-              [0, 30],
-            ],
-            "#f3ad65",
-          );
-          if (chew) line(-10, 10, 10, 10, "#794b3d", 4);
-        }
-        if (chew && !motion) {
-          c.font = "bold 20px DM";
-          c.fillStyle = "#fff3d0";
-          c.fillText(["yum!", "mm!"][side], 0, -92 - elapsed * 25);
-        }
-        c.restore();
-      }
-      for (const n of run.notes) {
-        if (n.state !== "fall" || n.beat - run.beat > n.lead) continue;
-        const x = n.side * 600 + n.x * 600,
-          y = mouth - ((n.beat - run.beat) / n.lead) * (mouth - 120);
-        if (n.beat >= run.beat) {
-          c.setLineDash([3, 12]);
-          line(x, y + 35, x, mouth, "#fff5df20", 2);
-          c.setLineDash([]);
-          oval(x, mouth, 30, 6, n.side ? "#ffcbb750" : "#a4f0d350");
-        }
-        c.save();
-        c.translate(x, y);
-        if (!motion) c.rotate(Math.sin(time * 2 + n.beat) * 0.07);
-        oval(0, 6, 28, 31, "#1b293225");
-        path(
-          [
-            [-20, 3],
-            [20, 3],
-            [0, 40],
-          ],
-          "#d59969",
-        );
-        line(-13, 10, 6, 23, "#b47a524d", 2);
-        line(13, 10, -6, 23, "#b47a524d", 2);
-        oval(0, -7, 27, 25, ["#f9bab6", "#afdfc6", "#d4c0ee"][n.flavor]);
-        oval(-8, -16, 10, 5, "#ffffff60");
-        oval(1, -34, 6, 6, "#e88b87");
-        c.restore();
-      }
-      this.effects = this.effects.filter((p) => time - p.time < 0.7);
-      if (!motion)
-        for (const p of this.effects) {
-          const age = time - p.time,
-            x = p.side * 600 + p.x * 600 + Math.cos(p.angle) * age * 105,
-            y = mouth + p.offset + Math.sin(p.angle) * age * 95 - age * 65;
-          c.globalAlpha = 1 - age / 0.7;
-          oval(x, y, 4, 4, p.color);
-        }
-      c.globalAlpha = 1;
-      if (!active) {
-        c.fillStyle = "#ffffff0c";
-        c.fillRect(0, 0, W, H);
-      }
-    }
-  }
-  root.DuetPainter = Painter;
-})(window);
-
-</script>
-    <script>
-(function () {
-  "use strict";
-  const $ = (id) => document.getElementById(id),
-    key = "arctic-duet-v1";
-  let save = Duet.saved(null),
-    storageOK = true;
-  try {
-    save = Duet.saved(localStorage.getItem(key));
-  } catch {
-    storageOK = false;
-  }
-  const run = new Duet.Run(),
-    hands = new Duet.Hands(run),
-    music = new SnowMusic(),
-    painter = new DuetPainter($("canvas")),
-    pressed = new Set();
-  let started = false,
-    playing = false,
-    starting = false,
-    anchor = 0,
-    frozen = 0,
-    tick = 0,
-    last = 0,
-    activeSide = 0,
-    bannerUntil = 0,
-    lastSaved = 0;
-  run.gentle = save.gentle;
-  save.motion =
-    save.motion || matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const song = {
-    id: "arctic-duet",
-    roots: [48, 53, 55, 48],
-    melody: [0, 4, 7, 9, 7, 4, 2, 0],
-  };
-  function persist() {
-    try {
-      localStorage.setItem(key, JSON.stringify(save));
-    } catch {
-      storageOK = false;
-    }
-    $("saveStatus").textContent = storageOK
-      ? "Progress stays on this device."
-      : "Saving unavailable; you can still play.";
-  }
-  function record() {
-    $("record").textContent =
-      `${save.total} bites caught · Best level ${save.bestLevel}`;
-  }
-  function banner(text) {
-    $("banner").textContent = text;
-    bannerUntil = run.beat + 4;
-    $("banner").classList.add("show");
-  }
-  function update() {
-    const level = run.level;
-    $("level").textContent = "LEVEL " + level;
-    $("chapter").textContent = Duet.names[Math.min(7, level - 1)];
-    $("score").textContent = run.score.toLocaleString();
-    $("progress").style.width =
-      ((Math.max(0, run.beat - 4) % 32) / 32) * 100 + "%";
-    if (run.beat > bannerUntil) $("banner").classList.remove("show");
-    $("hint").textContent =
-      run.beat < 4
-        ? "Get comfy. First bites are coming…"
-        : level === 1
-          ? "Start in the middle. Catch with your mouth — no tapping needed."
-          : level === 2
-            ? "A little left. A little right. Follow each trail."
-            : level === 3
-              ? "A wider sway. You have plenty of time."
-              : save.assist
-                ? "One hand on · your partner follows along."
-                : "Two friends, two thumbs. Missed bites don’t stop the groove.";
-  }
-  async function start() {
-    if (starting || playing) return;
-    starting = true;
-    const audioOK = await music.start();
-    starting = false;
-    if (document.hidden) {
-      music.stop();
-      return;
-    }
-    music.setMuted(save.muted);
-    anchor = music.now() - frozen * Duet.SPB;
-    last = music.now();
-    tick = Math.ceil(frozen * 2);
-    playing = true;
-    started = true;
-    $("welcome").hidden = true;
-    $("paused").hidden = true;
-    $("pause").disabled = false;
-    $("pause").textContent = "Pause";
-    if (!audioOK) {
-      $("saveStatus").textContent =
-        "Audio unavailable — enjoy the silent groove.";
-    }
-  }
-  function pause() {
-    if (!playing) return;
-    frozen = run.beat;
-    playing = false;
-    music.stop();
-    hands.clear();
-    pressed.clear();
-    $("pause").textContent = "Resume";
-    $("paused").hidden = false;
-    persist();
-  }
-  $("play").onclick = start;
-  $("resume").onclick = start;
-  $("pause").onclick = () => (playing ? pause() : start());
-  $("sound").onclick = () => {
-    save.muted = !save.muted;
-    music.setMuted(save.muted);
-    $("sound").textContent = save.muted ? "Sound off" : "Sound on";
-    persist();
-  };
-  $("sound").textContent = save.muted ? "Sound off" : "Sound on";
-  for (const setting of ["assist", "gentle", "motion"]) {
-    $(setting).checked = save[setting];
-    $(setting).onchange = () => {
-      save[setting] = $(setting).checked;
-      run.gentle = save.gentle;
-      if (setting === "gentle") {
-        // Re-chart only unspawned notes so on-screen snacks never teleport.
-        run.notes = run.notes.filter((n) => n.beat - run.beat <= n.lead);
-        for (let l = run.level; l <= run.generated; l++)
-          for (const n of Duet.phrase(l, run.gentle))
-            if (
-              n.beat - run.beat > n.lead &&
-              !run.notes.some((old) => old.id === n.id)
-            )
-              run.notes.push(n);
-      }
-      persist();
-    };
-  }
-  const stage = $("stage");
-  function point(e) {
-    const r = stage.getBoundingClientRect();
-    return Duet.clamp((e.clientX - r.left) / r.width, 0, 1);
-  }
-  stage.addEventListener("pointerdown", (e) => {
-    if (!playing || e.target.closest("button")) return;
-    const x = point(e);
-    if (hands.down(e.pointerId, x)) {
-      activeSide = x < 0.5 ? 0 : 1;
-      stage.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    }
-  });
-  stage.addEventListener("pointermove", (e) => {
-    if (playing) hands.move(e.pointerId, point(e));
-  });
-  for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
-    stage.addEventListener(type, (e) => hands.up(e.pointerId));
-  window.addEventListener("keydown", (e) => {
-    if (["INPUT", "SELECT"].includes(document.activeElement?.tagName)) return;
-    if (
-      ["KeyA", "KeyD", "ArrowLeft", "ArrowRight"].includes(e.code) &&
-      playing
-    ) {
-      pressed.add(e.code);
-      activeSide = e.code.startsWith("Arrow") ? 1 : 0;
-      e.preventDefault();
-    }
-    if (
-      e.code === "Space" &&
-      started &&
-      !e.repeat &&
-      document.activeElement?.tagName !== "BUTTON"
-    ) {
-      e.preventDefault();
-      playing ? pause() : start();
-    }
-  });
-  window.addEventListener("keyup", (e) => pressed.delete(e.code));
-  window.addEventListener("blur", () => {
-    pressed.clear();
-    hands.clear();
-  });
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) pause();
-  });
-  window.addEventListener("pagehide", persist);
-  function frame() {
-    const now = music.now(),
-      dt = Math.min(0.05, Math.max(0, now - last));
-    last = now;
-    if (playing) {
-      const beat = (now - anchor) / Duet.SPB;
-      if (beat - run.beat > 1) {
-        anchor = now - run.beat * Duet.SPB;
-        tick = Math.ceil(run.beat * 2);
-      } else {
-        run.positions[0] = Duet.clamp(
-          run.positions[0] +
-            ((pressed.has("KeyD") ? 1 : 0) - (pressed.has("KeyA") ? 1 : 0)) *
-              dt *
-              1.25,
-          0.08,
-          0.92,
-        );
-        run.positions[1] = Duet.clamp(
-          run.positions[1] +
-            ((pressed.has("ArrowRight") ? 1 : 0) -
-              (pressed.has("ArrowLeft") ? 1 : 0)) *
-              dt *
-              1.25,
-          0.08,
-          0.92,
-        );
-        if (save.assist) {
-          const side = 1 - activeSide;
-          if (![...hands.pointers.values()].includes(side)) {
-            const next = run.notes
-              .filter(
-                (n) =>
-                  n.side === side &&
-                  n.state === "fall" &&
-                  n.beat >= beat - 0.24,
-              )
-              .sort((a, b) => a.beat - b.beat)[0];
-            if (next)
-              run.positions[side] +=
-                (next.x - run.positions[side]) * Math.min(1, dt * 12);
-          }
-        }
-        for (const event of run.advance(beat)) {
-          if (event.type === "level") {
-            save.bestLevel = Math.max(save.bestLevel, event.level);
-            banner(
-              "Level " +
-                event.level +
-                " · " +
-                Duet.names[Math.min(7, event.level - 1)],
-            );
-            music.flourish();
-            persist();
-            record();
-          } else {
-            painter.react(event, now);
-            if (event.type === "catch") {
-              save.total++;
-              const note =
-                60 +
-                song.melody[Math.floor(event.note.beat) % 8] +
-                event.note.side * 12;
-              music.tone(note, now, 0.16, 0.14, "triangle", 3);
-              music.tone(note + 7, now + 0.06, 0.14, 0.05);
-              record();
+    ArcticDuet.phrase = phrase;
+    class Run {
+        beat = 0;
+        level = 1;
+        generated = 0;
+        notes = [];
+        positions = [.5, .5];
+        score = 0;
+        catches = 0;
+        streak = 0;
+        best = 0;
+        misses = 0;
+        gentle = false;
+        advance(nextBeat) {
+            const events = [];
+            this.beat = Math.max(this.beat, nextBeat);
+            const nextLevel = levelAt(this.beat);
+            if (nextLevel !== this.level) {
+                this.level = nextLevel;
+                events.push({ type: "level", level: nextLevel });
             }
-          }
+            while (this.generated < levelAt(this.beat + 5))
+                this.notes.push(...phrase(++this.generated, this.gentle));
+            for (const note of this.notes) {
+                if (note.state !== "fall")
+                    continue;
+                const delta = this.beat - note.beat;
+                if (delta >= -.06 && delta <= .24 && Math.abs(this.positions[note.side] - note.x) <= note.radius) {
+                    note.state = "caught";
+                    this.catches++;
+                    this.streak++;
+                    this.best = Math.max(this.best, this.streak);
+                    this.score += 10;
+                    events.push({ type: "catch", note });
+                }
+                else if (delta > .24) {
+                    note.state = "miss";
+                    this.misses++;
+                    this.streak = 0;
+                    events.push({ type: "miss", note });
+                }
+            }
+            this.notes = this.notes.filter((note) => note.beat > this.beat - 2);
+            return events;
         }
-        const horizon = beat + 0.12 / Duet.SPB;
-        tick = Math.max(tick, Math.ceil((beat - 0.08) * 2));
-        while (tick / 2 <= horizon) {
-          music.schedule(
-            song,
-            tick / 2,
-            anchor + (tick / 2) * Duet.SPB,
-            Math.min(4, 1 + run.level),
-            run.level >= 6,
-          );
-          tick++;
-        }
-        if (now - lastSaved > 5) {
-          persist();
-          lastSaved = now;
-        }
-        update();
-      }
     }
-    painter.draw(run, now, save.motion, playing);
-    requestAnimationFrame(frame);
-  }
-  record();
-  persist();
-  requestAnimationFrame(frame);
-})();
+    ArcticDuet.Run = Run;
+    class Hands {
+        run;
+        pointers = new Map();
+        constructor(run) {
+            this.run = run;
+        }
+        down(id, x) { const side = x < .5 ? 0 : 1; if ([...this.pointers.values()].includes(side))
+            return false; this.pointers.set(id, side); this.move(id, x); return true; }
+        move(id, x) { const side = this.pointers.get(id); if (side === undefined)
+            return; this.run.positions[side] = ArcticDuet.clamp(x * 2 - side, .08, .92); }
+        up(id) { this.pointers.delete(id); }
+        clear() { this.pointers.clear(); }
+    }
+    ArcticDuet.Hands = Hands;
+    function awarded(total, owned) { const valid = new Set(owned.filter((id) => ArcticDuet.keepsakes.some((item) => item.id === id))); for (const item of ArcticDuet.keepsakes)
+        if (total >= item.threshold)
+            valid.add(item.id); return ArcticDuet.keepsakes.filter((item) => valid.has(item.id)).map((item) => item.id); }
+    ArcticDuet.awarded = awarded;
+    function saved(raw) {
+        let value = null;
+        try {
+            value = raw === null ? null : JSON.parse(raw);
+        }
+        catch {
+            value = null;
+        }
+        const data = typeof value === "object" && value !== null && value.version === 1 ? value : {};
+        const number = (entry) => Number.isSafeInteger(entry) && typeof entry === "number" && entry >= 0 ? entry : 0;
+        const total = number(data.total);
+        return { version: 1, total, bestLevel: Math.max(1, number(data.bestLevel)), muted: data.muted === true, gentle: data.gentle === true, assist: data.assist === true, motion: data.motion === true, keepsakes: awarded(total, Array.isArray(data.keepsakes) ? data.keepsakes.filter((id) => typeof id === "string") : []) };
+    }
+    ArcticDuet.saved = saved;
+})(ArcticDuet || (ArcticDuet = {}));
+
+</script>
+    <script>
+"use strict";
+var ArcticDuet;
+(function (ArcticDuet) {
+    const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
+    class Music {
+        context = null;
+        master = null;
+        muted = false;
+        nodes = new Set();
+        fallback = () => performance.now() / 1000;
+        async start() { try {
+            if (!this.context) {
+                const Ctor = window.AudioContext;
+                if (!Ctor)
+                    return false;
+                this.context = new Ctor();
+                this.master = this.context.createGain();
+                this.master.gain.value = this.muted ? 0 : .32;
+                this.master.connect(this.context.destination);
+            }
+            await this.context.resume();
+            return true;
+        }
+        catch {
+            this.stop();
+            this.context = null;
+            this.master = null;
+            return false;
+        } }
+        now() { return this.context?.currentTime ?? this.fallback(); }
+        setMuted(value) { this.muted = value; if (this.context && this.master)
+            this.master.gain.setTargetAtTime(value ? 0 : .32, this.context.currentTime, .025); }
+        tone(midi, at, duration = .25, volume = .15, type = "sine", slide = 0) { if (!this.context || !this.master)
+            return; const time = Math.max(this.context.currentTime, at), oscillator = this.context.createOscillator(), gain = this.context.createGain(); oscillator.type = type; oscillator.frequency.setValueAtTime(hz(midi), time); if (slide)
+            oscillator.frequency.exponentialRampToValueAtTime(hz(midi + slide), time + duration); gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(volume, time + .008); gain.gain.exponentialRampToValueAtTime(.001, time + duration); oscillator.connect(gain); gain.connect(this.master); oscillator.start(time); oscillator.stop(time + duration + .02); this.nodes.add(oscillator); oscillator.onended = () => { this.nodes.delete(oscillator); oscillator.disconnect(); gain.disconnect(); }; }
+        schedule(song, beat, at, active, aurora) { if (beat < 4) {
+            if (Number.isInteger(beat))
+                this.tone(beat === 3 ? 84 : 72, at, .09, .11);
+            return;
+        } const barBeat = beat - 4, integer = Number.isInteger(barBeat), root = song.roots[Math.floor(barBeat / 16) % 4]; if (integer && barBeat % 2 === 0)
+            this.tone(42, at, .16, .25, "sine", -22); if (integer && barBeat % 4 === 0)
+            for (const interval of [0, 4, 7])
+                this.tone(root + interval, at, 2.1, .045, "triangle"); if (integer) {
+            const note = root + 12 + song.melody[Math.floor(barBeat) % 8];
+            this.tone(note, at, .42, .055);
+            if (aurora)
+                this.tone(note + 12, at, .65, .1);
+        } if (active >= 3 && integer && barBeat % 2 === 0)
+            this.tone(root - 12, at, .36, .18, "triangle"); }
+        flourish() { const notes = [0, 4, 7, 9, 12, 16, 19, 24]; for (let i = 0; i < notes.length; i++)
+            this.tone(72 + notes[i], this.now() + i * .08, .6, .09); }
+        stop() { for (const node of this.nodes) {
+            try {
+                node.stop();
+            }
+            catch { /* stopped source */ }
+        } this.nodes.clear(); }
+    }
+    ArcticDuet.Music = Music;
+})(ArcticDuet || (ArcticDuet = {}));
+
+</script>
+    <script>
+"use strict";
+var ArcticDuet;
+(function (ArcticDuet) {
+    class Painter {
+        canvas;
+        context;
+        reactions = [{ at: -9, kind: "" }, { at: -9, kind: "" }];
+        particles = [];
+        constructor(canvas) {
+            this.canvas = canvas;
+            const context = canvas.getContext("2d");
+            if (!context)
+                throw new Error("Canvas is unavailable");
+            this.context = context;
+        }
+        react(event, at) { if (!event.note)
+            return; const note = event.note; this.reactions[note.side] = { at, kind: event.type === "catch" || event.type === "miss" ? event.type : "" }; if (event.type !== "catch" && event.type !== "miss")
+            return; const colors = ["#fbd48d", "#a0e6cf", "#fbbcb9"]; for (let index = 0; index < 8; index++)
+            this.particles.push({ side: note.side, x: note.x + (index - 4) * .012, at, color: event.type === "miss" ? "#e8f3ed" : colors[index % 3] }); }
+        oval(x, y, rx, ry, color) { const c = this.context; c.fillStyle = color; c.beginPath(); c.ellipse(x, y, rx, Math.max(.5, ry), 0, 0, Math.PI * 2); c.fill(); }
+        friend(side, x, mouth, run, time, reduced) {
+            const c = this.context, reaction = this.reactions[side], chew = reaction.kind === "catch" && time - reaction.at < .5, bob = reduced ? 0 : Math.sin(time * 3 + side) * 3, note = run.notes.filter((item) => item.side === side && item.state === "fall").sort((a, b) => a.beat - b.beat)[0], look = note ? ArcticDuet.clamp((note.x - run.positions[side]) * 15, -6, 6) : 0;
+            c.save();
+            c.translate(x, mouth + bob);
+            if (side === 0) {
+                this.oval(0, 62, 77, 78, "#fff5df");
+                this.oval(-55, 20, 24, 47, "#f8eed8");
+                this.oval(55, 20, 24, 47, "#f8eed8");
+                this.oval(-53, -45, 20, 25, "#fff4df");
+                this.oval(53, -45, 20, 25, "#fff4df");
+                c.fillStyle = "#6ab7a5";
+                c.fillRect(-66, 100, 132, 20);
+                this.oval(0, 0, 48, 43, "#ece5d6");
+            }
+            else {
+                this.oval(0, 61, 72, 83, "#243344");
+                this.oval(0, 76, 51, 62, "#f4e7d4");
+                this.oval(-62, 57, 19, 47, "#344857");
+                this.oval(62, 57, 19, 47, "#344857");
+                this.oval(-30, 136, 31, 12, "#eeaa70");
+                this.oval(30, 136, 31, 12, "#eeaa70");
+                this.oval(0, -7, 72, 65, "#233444");
+            }
+            this.oval(-25 + look, -18, 5, 7, "#293643");
+            this.oval(25 + look, -18, 5, 7, "#293643");
+            if (side === 0) {
+                this.oval(0, 2, 10, 7, "#293643");
+                this.oval(0, 20, chew ? 16 : 8, chew ? 10 : 5, "#543944");
+            }
+            else {
+                c.fillStyle = "#f3ad65";
+                c.beginPath();
+                c.moveTo(-20, 0);
+                c.lineTo(20, 0);
+                c.lineTo(0, 29);
+                c.closePath();
+                c.fill();
+            }
+            c.restore();
+        }
+        draw(run, time, reduced, active) {
+            const c = this.context, rect = this.canvas.getBoundingClientRect(), width = 1200, height = Math.max(760, width * rect.height / Math.max(1, rect.width)), dpr = Math.min(2, window.devicePixelRatio || 1), scale = rect.width / width;
+            if (this.canvas.width !== Math.round(rect.width * dpr) || this.canvas.height !== Math.round(rect.height * dpr)) {
+                this.canvas.width = Math.round(rect.width * dpr);
+                this.canvas.height = Math.round(rect.height * dpr);
+            }
+            c.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+            c.clearRect(0, 0, width, height);
+            const gradient = c.createLinearGradient(0, 0, 0, height), skies = ["#28314a", "#30304d", "#243f51", "#40334f"];
+            gradient.addColorStop(0, skies[Math.floor((run.level - 1) / 2) % 4]);
+            gradient.addColorStop(1, "#4e8589");
+            c.fillStyle = gradient;
+            c.fillRect(0, 0, width, height);
+            c.fillStyle = "#a6d4ca18";
+            c.fillRect(0, 95, 600, height - 220);
+            c.fillStyle = "#f7bfaf18";
+            c.fillRect(600, 95, 600, height - 220);
+            c.strokeStyle = "#eff6e445";
+            c.setLineDash([5, 14]);
+            c.beginPath();
+            c.moveTo(600, 95);
+            c.lineTo(600, height - 80);
+            c.stroke();
+            c.setLineDash([]);
+            const mouth = height - 220;
+            c.strokeStyle = "#dcefe5a0";
+            c.lineWidth = 3;
+            for (const side of [0, 1]) {
+                c.beginPath();
+                c.moveTo(side * 600 + 40, mouth);
+                c.lineTo(side * 600 + 560, mouth);
+                c.stroke();
+            }
+            c.font = "bold 22px DM, sans-serif";
+            c.textAlign = "center";
+            c.fillStyle = "#d8e9e8";
+            c.fillText("DUANE", 300, 54);
+            c.fillText("MAJOR PUFF", 900, 54);
+            this.friend(0, run.positions[0] * 600, mouth, run, time, reduced);
+            this.friend(1, 600 + run.positions[1] * 600, mouth, run, time, reduced);
+            const snacks = ["#f9bab6", "#afdfc6", "#d4c0ee"];
+            for (const note of run.notes) {
+                if (note.state !== "fall" || note.beat - run.beat > note.lead)
+                    continue;
+                const x = note.side * 600 + note.x * 600, y = mouth - ((note.beat - run.beat) / note.lead) * (mouth - 110);
+                this.oval(x, y + 8, 30, 33, "#1b293255");
+                this.oval(x, y - 7, 27, 25, snacks[note.flavor]);
+                this.oval(x + 1, y - 34, 6, 6, "#e88b87");
+            }
+            this.particles = this.particles.filter((particle) => time - particle.at < .7);
+            if (!reduced)
+                for (const particle of this.particles) {
+                    const age = time - particle.at;
+                    c.globalAlpha = 1 - age / .7;
+                    this.oval(particle.side * 600 + particle.x * 600, mouth - age * 80, 4, 4, particle.color);
+                }
+            c.globalAlpha = 1;
+            if (!active) {
+                c.fillStyle = "#ffffff0c";
+                c.fillRect(0, 0, width, height);
+            }
+        }
+    }
+    ArcticDuet.Painter = Painter;
+})(ArcticDuet || (ArcticDuet = {}));
+
+</script>
+    <script>
+"use strict";
+var ArcticDuet;
+(function (ArcticDuet) {
+    const element = (id) => { const found = document.getElementById(id); if (!found)
+        throw new Error(`Missing #${id}`); return found; };
+    class Game {
+        key = "arctic-duet-v1";
+        save = ArcticDuet.saved(null);
+        storageOK = true;
+        run = new ArcticDuet.Run();
+        hands = new ArcticDuet.Hands(this.run);
+        music = new ArcticDuet.Music();
+        painter = new ArcticDuet.Painter(element("canvas"));
+        pressed = new Set();
+        playing = false;
+        starting = false;
+        started = false;
+        anchor = 0;
+        frozen = 0;
+        tick = 0;
+        last = 0;
+        activeSide = 0;
+        bannerUntil = 0;
+        lastSaved = 0;
+        song = { id: "arctic-duet", roots: [48, 53, 55, 48], melody: [0, 4, 7, 9, 7, 4, 2, 0] };
+        constructor() { try {
+            this.save = ArcticDuet.saved(localStorage.getItem(this.key));
+        }
+        catch {
+            this.storageOK = false;
+        } this.run.gentle = this.save.gentle; this.save.motion = this.save.motion || matchMedia("(prefers-reduced-motion: reduce)").matches; this.bind(); this.record(); this.persist(); requestAnimationFrame(() => this.frame()); }
+        persist() { this.save.keepsakes = ArcticDuet.awarded(this.save.total, this.save.keepsakes); try {
+            localStorage.setItem(this.key, JSON.stringify(this.save));
+        }
+        catch {
+            this.storageOK = false;
+        } element("saveStatus").textContent = this.storageOK ? "Progress stays on this device." : "Saving unavailable; you can still play."; }
+        record() { element("record").textContent = `${this.save.total} bites caught · Best level ${this.save.bestLevel}`; const collection = element("keepsakes"); collection.textContent = this.save.keepsakes.length ? `Keepsakes: ${this.save.keepsakes.map((id) => ArcticDuet.keepsakes.find((item) => item.id === id)?.name).join(" · ")}` : "Keepsakes arrive with your catches."; }
+        update() { element("level").textContent = `LEVEL ${this.run.level}`; element("chapter").textContent = ArcticDuet.names[Math.min(7, this.run.level - 1)] ?? ArcticDuet.names[0]; element("score").textContent = this.run.score.toLocaleString(); element("progress").style.width = `${(Math.max(0, this.run.beat - 4) % 32) / 32 * 100}%`; if (this.run.beat > this.bannerUntil)
+            element("banner").classList.remove("show"); element("hint").textContent = this.run.beat < 4 ? "Get comfy. First bites are coming…" : this.save.assist ? "One hand on · your partner follows along." : "Two friends, two thumbs. Missed bites don’t stop the groove."; }
+        announce(text) { element("banner").textContent = text; this.bannerUntil = this.run.beat + 4; element("banner").classList.add("show"); }
+        async start() { if (this.starting || this.playing)
+            return; this.starting = true; const audio = await this.music.start(); this.starting = false; if (document.hidden) {
+            this.music.stop();
+            return;
+        } this.music.setMuted(this.save.muted); this.anchor = this.music.now() - this.frozen * ArcticDuet.SPB; this.last = this.music.now(); this.tick = Math.ceil(this.frozen * 2); this.playing = true; this.started = true; element("welcome").hidden = true; element("paused").hidden = true; const pause = element("pause"); pause.disabled = false; pause.textContent = "Pause"; if (!audio)
+            element("saveStatus").textContent = "Audio unavailable — enjoy the silent groove."; }
+        pause() { if (!this.playing)
+            return; this.frozen = this.run.beat; this.playing = false; this.music.stop(); this.hands.clear(); this.pressed.clear(); element("pause").textContent = "Resume"; element("paused").hidden = false; this.persist(); }
+        bind() {
+            element("play").onclick = () => this.start();
+            element("resume").onclick = () => this.start();
+            element("pause").onclick = () => this.playing ? this.pause() : this.start();
+            element("sound").onclick = () => { this.save.muted = !this.save.muted; this.music.setMuted(this.save.muted); element("sound").textContent = this.save.muted ? "Sound off" : "Sound on"; this.persist(); };
+            element("sound").textContent = this.save.muted ? "Sound off" : "Sound on";
+            for (const id of ["assist", "gentle", "motion"]) {
+                const input = element(id);
+                input.checked = this.save[id];
+                input.onchange = () => { this.save[id] = input.checked; this.run.gentle = this.save.gentle; this.persist(); };
+            }
+            const stage = element("stage");
+            const point = (event) => { const rect = stage.getBoundingClientRect(); return ArcticDuet.clamp((event.clientX - rect.left) / rect.width, 0, 1); };
+            stage.addEventListener("pointerdown", (event) => { const target = event.target; if (!this.playing || target?.closest?.("button"))
+                return; const x = point(event); if (this.hands.down(event.pointerId, x)) {
+                this.activeSide = x < .5 ? 0 : 1;
+                stage.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            } });
+            stage.addEventListener("pointermove", (event) => { if (this.playing)
+                this.hands.move(event.pointerId, point(event)); });
+            for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
+                stage.addEventListener(type, (event) => this.hands.up(event.pointerId));
+            window.addEventListener("keydown", (event) => { if (["INPUT", "SELECT"].includes(document.activeElement?.tagName ?? ""))
+                return; if (["KeyA", "KeyD", "ArrowLeft", "ArrowRight"].includes(event.code) && this.playing) {
+                this.pressed.add(event.code);
+                this.activeSide = event.code.startsWith("Arrow") ? 1 : 0;
+                event.preventDefault();
+            } if (event.code === "Space" && this.started && !event.repeat && document.activeElement?.tagName !== "BUTTON") {
+                event.preventDefault();
+                this.playing ? this.pause() : void this.start();
+            } });
+            window.addEventListener("keyup", (event) => this.pressed.delete(event.code));
+            window.addEventListener("blur", () => { this.pressed.clear(); this.hands.clear(); });
+            document.addEventListener("visibilitychange", () => { if (document.hidden)
+                this.pause(); });
+            window.addEventListener("pagehide", () => this.persist());
+        }
+        frame() { const now = this.music.now(), dt = Math.min(.05, Math.max(0, now - this.last)); this.last = now; if (this.playing) {
+            const beat = (now - this.anchor) / ArcticDuet.SPB;
+            this.run.positions[0] = ArcticDuet.clamp(this.run.positions[0] + ((this.pressed.has("KeyD") ? 1 : 0) - (this.pressed.has("KeyA") ? 1 : 0)) * dt * 1.25, .08, .92);
+            this.run.positions[1] = ArcticDuet.clamp(this.run.positions[1] + ((this.pressed.has("ArrowRight") ? 1 : 0) - (this.pressed.has("ArrowLeft") ? 1 : 0)) * dt * 1.25, .08, .92);
+            if (this.save.assist) {
+                const side = this.activeSide === 0 ? 1 : 0;
+                if (![...this.hands.pointers.values()].includes(side)) {
+                    const next = this.run.notes.filter((note) => note.side === side && note.state === "fall" && note.beat >= beat - .24).sort((a, b) => a.beat - b.beat)[0];
+                    if (next)
+                        this.run.positions[side] += (next.x - this.run.positions[side]) * Math.min(1, dt * 12);
+                }
+            }
+            for (const event of this.run.advance(beat)) {
+                this.painter.react(event, now);
+                if (event.type === "level" && event.level) {
+                    this.save.bestLevel = Math.max(this.save.bestLevel, event.level);
+                    this.announce(`Level ${event.level} · ${ArcticDuet.names[Math.min(7, event.level - 1)] ?? ArcticDuet.names[0]}`);
+                    this.music.flourish();
+                    this.persist();
+                }
+                if (event.type === "catch" && event.note) {
+                    this.save.total++;
+                    const note = 60 + this.song.melody[Math.floor(event.note.beat) % 8] + event.note.side * 12;
+                    this.music.tone(note, now, .16, .14, "triangle", 3);
+                    this.record();
+                }
+            }
+            const horizon = beat + .12 / ArcticDuet.SPB;
+            this.tick = Math.max(this.tick, Math.ceil((beat - .08) * 2));
+            while (this.tick / 2 <= horizon) {
+                this.music.schedule(this.song, this.tick / 2, this.anchor + this.tick / 2 * ArcticDuet.SPB, Math.min(4, 1 + this.run.level), this.run.level >= 6);
+                this.tick++;
+            }
+            if (now - this.lastSaved > 5) {
+                this.persist();
+                this.lastSaved = now;
+            }
+            this.update();
+        } this.painter.draw(this.run, now, this.save.motion, this.playing); requestAnimationFrame(() => this.frame()); }
+    }
+    new Game();
+})(ArcticDuet || (ArcticDuet = {}));
 
 </script>
   </body>

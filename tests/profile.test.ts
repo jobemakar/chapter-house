@@ -7,7 +7,11 @@ import {
   type StoragePort,
   type OwnedItem,
 } from "../src/core/profile";
-import { WishboneProgression } from "../src/games/wishbone/progression";
+import {
+  loadWishboneProgress,
+  WishboneProgression,
+} from "@chapter-house/game-wishbone-fling/progress";
+import { loadDigAndDouseProgress } from "@chapter-house/game-dig-and-douse/progress";
 import { RoomNavigation, ROOM } from "../src/room/navigation";
 class MemoryStore implements StoragePort {
   values = new Map<string, string>();
@@ -21,12 +25,13 @@ class MemoryStore implements StoragePort {
 test("fourteen throws unlock one placeable bed, retained across restarts without duplicate grants", () => {
   const store = new MemoryStore();
   let p = new ProfileRepository(store);
+  let wishbone = loadWishboneProgress(p.gameProgress("wishbone-fling"));
   for (let i = 1; i <= 14; i++) {
-    p.state.wishbone.throws = i;
-    WishboneProgression.award(p.state.wishbone);
-    p.syncKeepsakes();
+    wishbone.throws = i;
+    WishboneProgression.award(wishbone);
+    p.saveGameProgress("wishbone-fling", wishbone);
   }
-  assert.ok(p.state.wishbone.owned.includes("bed"));
+  assert.ok(wishbone.owned.includes("bed"));
   const bed = p.state.items.find((i) => i.definitionId === "wish-bed")!;
   assert.ok(bed);
   bed.placement = { x: 2, z: 5, rotation: 1 };
@@ -43,6 +48,51 @@ test("fourteen throws unlock one placeable bed, retained across restarts without
     { x: 2, z: 5, rotation: 1 },
   );
 });
+test("Dig & Douse progress migrates additively and awards one placeable camp lantern", () => {
+  const store = new MemoryStore();
+  let profile = new ProfileRepository(store);
+  assert.deepEqual(profile.gameProgress("dig-and-douse"), {
+    version: 1,
+    firesExtinguished: 0,
+    bestCanteens: 0,
+    totalCanteens: 0,
+    ownedRewardIds: [],
+  });
+  assert.equal(
+    profile.awardGameReward("dig-and-douse", "wildfire:camp-lantern"),
+    true,
+  );
+  assert.equal(
+    profile.awardGameReward("dig-and-douse", "wildfire:camp-lantern"),
+    false,
+  );
+  assert.equal(
+    profile.state.items.filter(
+      (item) => item.definitionId === "wildfire-camp-lantern",
+    ).length,
+    1,
+  );
+  const douse = loadDigAndDouseProgress(
+    profile.gameProgress("dig-and-douse"),
+  );
+  douse.firesExtinguished = 2;
+  douse.bestCanteens = 3;
+  douse.totalCanteens = 5;
+  profile.saveGameProgress("dig-and-douse", douse);
+  profile = new ProfileRepository(store);
+  const restored = loadDigAndDouseProgress(
+    profile.gameProgress("dig-and-douse"),
+  );
+  assert.equal(restored.firesExtinguished, 2);
+  assert.equal(restored.bestCanteens, 3);
+  assert.equal(restored.totalCanteens, 5);
+  assert.equal(
+    profile.state.items.filter(
+      (item) => item.definitionId === "wildfire-camp-lantern",
+    ).length,
+    1,
+  );
+});
 test("legacy Fling progress imports once while all original saves remain untouched", () => {
   const store = new MemoryStore();
   const legacy = JSON.stringify({
@@ -55,15 +105,21 @@ test("legacy Fling progress imports once while all original saves remain untouch
   store.setItem("wishbone-floppy-fetch-v1", legacy);
   store.setItem("wishbones-big-fetch-v2", "untouched");
   const p = new ProfileRepository(store);
-  assert.equal(p.state.wishbone.throws, 16);
-  assert.equal(p.state.wishbone.powers.counts.bounce, 3);
-  assert.ok(p.state.wishbone.owned.includes("power-magnet"));
-  assert.ok(!p.state.wishbone.owned.includes("power-bounce"));
+  const imported = loadWishboneProgress(p.gameProgress("wishbone-fling"));
+  assert.equal(imported.throws, 16);
+  assert.equal(imported.powers.counts.bounce, 3);
+  assert.ok(imported.owned.includes("power-magnet"));
+  assert.ok(!imported.owned.includes("power-bounce"));
   assert.equal(store.getItem("wishbone-floppy-fetch-v1"), legacy);
   assert.equal(store.getItem("wishbones-big-fetch-v2"), "untouched");
-  p.state.wishbone.throws = 20;
-  p.save();
-  assert.equal(new ProfileRepository(store).state.wishbone.throws, 20);
+  imported.throws = 20;
+  p.saveGameProgress("wishbone-fling", imported);
+  assert.equal(
+    loadWishboneProgress(
+      new ProfileRepository(store).gameProgress("wishbone-fling"),
+    ).throws,
+    20,
+  );
 });
 test("currency snapshots are idempotent and purchasing preserves duplicate furniture but unique pets", () => {
   const store = new MemoryStore();

@@ -1,0 +1,6 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { POCKET_FUNHOUSE_CURIO_REWARDS, POCKET_FUNHOUSE_REWARD_IDS, loadPocketFunhouseProgress, toLegacyPocketFunhouseSave } from "../src/progress";
+
+test("legacy pocket-funhouse-v1 data migrates without changing its 12-room state",()=>{const saved=loadPocketFunhouseProgress({room:11,solved:[0,5,11,11],muted:true,rooms:Array.from({length:12},(_,index)=>({rotations:Array.from({length:12},(_,tile)=>(tile+index)%4),gates:{}}))});assert.equal(saved.room,11);assert.deepEqual(saved.solved,[0,5,11]);assert.equal(saved.rooms.length,12);assert.deepEqual(saved.ownedRewardIds,[POCKET_FUNHOUSE_REWARD_IDS[0],POCKET_FUNHOUSE_REWARD_IDS[5],POCKET_FUNHOUSE_REWARD_IDS[11]]);const legacy=toLegacyPocketFunhouseSave(saved,true);assert.equal(legacy.muted,true);assert.equal("ownedRewardIds" in legacy,false);});
+test("codec rejects malformed and future fields while retaining stable curio mapping",()=>{for(const raw of [null,"bad",{room:99,solved:[-1,12,"x",3],rooms:[null]}]){const progress=loadPocketFunhouseProgress(raw);assert.ok(progress.room>=0&&progress.room<12);assert.equal(progress.rooms.length,12);}assert.equal(POCKET_FUNHOUSE_CURIO_REWARDS.length,12);assert.equal(new Set(POCKET_FUNHOUSE_REWARD_IDS).size,12);assert.equal(POCKET_FUNHOUSE_CURIO_REWARDS[0]!.curio,"Brass key");});

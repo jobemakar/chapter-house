@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "wishbone-floppy-fetch",
+  "ideaId": "BOB-003-ALT1",
+  "book": {
+    "title": "Wish",
+    "author": "Barbara O'Connor"
+  },
+  "title": "Wishbone Fling",
+  "status": "canonical-deferred-typescript-port",
+  "primaryMechanic": "Pull and launch an articulated plush Wishbone through authored physics yards",
+  "sourceEntry": "experiments/floppy-fetch/src/index.html",
+  "hostedEntry": "dist/floppy.html",
+  "offlineEntry": "playable/Wishbone-Fling.html",
+  "requirements": "experiments/floppy-fetch/requirements.md",
+  "pitch": "experiments/floppy-fetch/README.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first"
+  ],
+  "audioPlanned": false,
+  "version": "0.2.0",
+  "audioImplemented": true,
+  "saveKey": "wishbone-floppy-fetch-v1",
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "archive": {
+    "id": "wishbones-big-fetch",
+    "ideaId": "BOB-003-R2",
+    "title": "Wishbone’s Big Fetch: Backyard Ruckus",
+    "version": "0.2.0",
+    "path": "archive/backyard-ruckus-v0.2.0",
+    "saveKeys": ["wishbones-big-fetch-v1", "wishbones-big-fetch-v2"]
+  }
+}

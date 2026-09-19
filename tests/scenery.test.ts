@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { WishboneCamera } from "../src/games/wishbone/camera";
-import { WishboneScenery } from "../src/games/wishbone/scenery";
+import { WishboneCamera } from "../packages/game-wishbone-fling/src/camera";
+import { WishboneScenery } from "../packages/game-wishbone-fling/src/scenery";
 
 test("fence stays behind the collision floor through wide overview and detail zoom", () => {
   const camera = new WishboneCamera();

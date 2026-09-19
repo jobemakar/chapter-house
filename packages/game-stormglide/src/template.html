@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#192342" />
+    <meta
+      name="description"
+      content="Ride the sky, catch sparks, and gather a flying pack of pups in a cozy, endless arcade adventure."
+    />
+    <title>Stormglide · Lightning Girl</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas
+      id="game"
+      tabindex="0"
+      aria-label="Stormglide flying game. Drag the thumb pad or anywhere in the sky to steer. Lift to stop. Tap Dash with your other thumb. Keyboard and mouse also supported."
+    ></canvas>
+    <div id="veil"></div>
+    <div class="hud">
+      <div class="brand">
+        <small>LIGHTNING GIRL</small>Stormglide<span style="color: #aee8dc">
+          ✦</span
+        >
+      </div>
+      <div class="stats" id="stats" hidden>
+        <div class="stat">
+          <b
+            ><i>✦</i>
+            <span
+              id="score"
+              style="font: inherit; color: inherit; letter-spacing: 0"
+              >0</span
+            ></b
+          ><span>Sparks</span>
+        </div>
+        <div class="stat">
+          <b
+            ><i class="pink">♥</i>
+            <span
+              id="rescues"
+              style="font: inherit; color: inherit; letter-spacing: 0"
+              >0</span
+            ></b
+          ><span>Pup pals</span>
+        </div>
+        <div class="stat"><b id="distance">0.0</b><span>Sky miles</span></div>
+      </div>
+      <div class="topRight">
+        <button
+          class="iconBtn"
+          id="sound"
+          aria-label="Mute audio"
+          title="Sound on / off"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M11 5 6 9H3v6h3l5 4z" />
+            <path id="soundWaves" d="M15 8q5 4 0 8M18 5q8 7 0 14" />
+          </svg></button
+        ><button
+          class="iconBtn"
+          id="pause"
+          aria-label="Pause game"
+          title="Pause · P"
+          hidden
+        >
+          <svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>
+        </button>
+      </div>
+    </div>
+    <section id="start" aria-labelledby="title">
+      <div class="eyebrow">A little lightning. A big adventure.</div>
+      <h1 id="title"><span class="sub">Lightning Girl:</span>Stormglide</h1>
+      <p class="intro">
+        Surf a cloud. Scoop up starlight.<br />Bring every good dog along for
+        the ride.
+      </p>
+      <button id="play" class="primary">Let’s fly <span>↗</span></button>
+      <div class="instructions touchInstructions">
+        <div><b>Drag to steer.</b> Lift your thumb to stop.</div>
+        <div><b>Tap Dash</b> with your other thumb.</div>
+        <div>A bump is just a wobble. Keep flying.</div>
+      </div>
+      <div class="instructions desktopInstructions">
+        <div>
+          <b>Glide</b> · mouse, touch, or <span class="key">↑ ↓ ← →</span>
+        </div>
+        <div>
+          <b>Dash</b> · <span class="key">space</span> or the dash button
+        </div>
+        <div>A bump is just a wobble. Keep flying.</div>
+      </div>
+    </section>
+    <div id="demoLabel">your cloud is waiting ↗</div>
+    <div class="footnote" id="credit">
+      A playful, unofficial adventure inspired by
+      <a
+        href="https://www.penguinrandomhouse.com/books/557145/the-miscalculations-of-lightning-girl/"
+        target="_blank"
+        rel="noopener"
+        >The Miscalculations of Lightning Girl</a
+      >
+      · no story spoilers
+    </div>
+    <div id="flightUI" hidden>
+      <div id="touchControls">
+        <div
+          id="touchPad"
+          role="group"
+          aria-label="Drag thumb pad to steer. Lift to stop."
+        >
+          <div id="touchKnob"></div>
+          <span>STEER</span>
+        </div>
+      </div>
+      <div id="event"></div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="flow" hidden><b id="flowValue">2×</b>SPARK FLOW</div>
+      <div id="firstHint">
+        <span class="touchCopy"
+          >Drag to steer · lift to stop · tap Dash with your other thumb</span
+        ><span class="desktopCopy"
+          >Follow sparks · glide through rings · dash through grumpy
+          clouds</span
+        >
+      </div>
+      <div class="bottomBar">
+        <div class="location">
+          <small id="chapter">Chapter 01 · Twilight</small
+          ><span id="region">Lantern Town</span>
+          <div class="regionProgress"><i id="regionFill"></i></div>
+        </div>
+        <div class="bottomTools">
+          <button
+            class="chip"
+            id="trail"
+            title="Change your unlocked spark trail"
+          >
+            ✧ Mint trail</button
+          ><button
+            class="chip"
+            id="packButton"
+            aria-label="Pause and view your dog collection"
+          >
+            My pack <span id="packCount">0/12</span></button
+          ><button id="dash" aria-label="Lightning dash">
+            <div id="dashCharge"></div>
+            <b id="dashLabel">ϟ Dash</b><small id="dashHelp">SPACE / TAP</small>
+          </button>
+        </div>
+      </div>
+    </div>
+    <section class="overlay" id="paused" hidden aria-label="Game paused">
+      <div class="panel">
+        <header>
+          <h2>A cloud break.</h2>
+          <span style="font-size: 25px; color: #aee8dc">☾</span>
+        </header>
+        <p>Your sky will be right here.</p>
+        <p class="pauseStats" id="pauseStats"></p>
+        <div class="pack" id="pack"></div>
+        <p id="packHint">
+          Every pup you meet joins your collection. Find all 12.
+        </p>
+        <div class="settings">
+          <button class="chip" id="music">Music on</button
+          ><button class="chip" id="motion">Gentle motion off</button
+          ><button class="chip" id="pauseTrail">Mint trail</button>
+        </div>
+        <button class="primary" id="resume">
+          Back to the sky <span>↗</span>
+        </button>
+        <p style="text-align: center; margin: 18px 0 0; font-size: 10px">
+          Drag to steer · lift to stop · tap Dash<br />Keyboard also works:
+          arrows / WASD · Space to dash · P to pause
+        </p>
+      </div>
+    </section>
+    <script src="game.js"></script>
+  </body>
+</html>

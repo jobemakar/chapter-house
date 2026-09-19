@@ -1,5 +1,11 @@
 import * as THREE from "three";
-export type ReactionKind = "heart" | "surprise" | "question" | "hello" | "nom";
+export type ReactionKind =
+  | "heart"
+  | "surprise"
+  | "question"
+  | "hello"
+  | "nom"
+  | `emoji:${string}`;
 /** Camera-facing illustrated bubbles. One reusable bubble per actor, no DOM overlays. */
 export class ActorReaction {
   readonly sprite = new THREE.Sprite();
@@ -15,6 +21,7 @@ export class ActorReaction {
     );
   }
   show(kind: ReactionKind) {
+    const emoji = kind.startsWith("emoji:") ? kind.slice(6) : null;
     const canvas = document.createElement("canvas");
     canvas.width = 192;
     canvas.height = 192;
@@ -48,7 +55,9 @@ export class ActorReaction {
     c.stroke();
     c.textAlign = "center";
     c.textBaseline = "middle";
-    c.font = `bold ${kind === "nom" ? 34 : kind === "hello" ? 37 : 66}px Georgia`;
+    c.font = emoji
+      ? '64px "Segoe UI Emoji", "Apple Color Emoji", sans-serif'
+      : `bold ${kind === "nom" ? 34 : kind === "hello" ? 37 : 66}px Georgia`;
     c.fillStyle =
       kind === "heart"
         ? "#da7e84"
@@ -56,9 +65,10 @@ export class ActorReaction {
           ? "#d19a35"
           : "#886352";
     c.fillText(
-      { heart: "♥", surprise: "!", question: "?", hello: "Hi!", nom: "nom" }[
-        kind
-      ],
+      emoji ??
+        { heart: "♥", surprise: "!", question: "?", hello: "Hi!", nom: "nom" }[
+          kind as "heart" | "surprise" | "question" | "hello" | "nom"
+        ],
       96,
       78,
     );

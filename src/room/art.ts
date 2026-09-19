@@ -249,7 +249,22 @@ export class RoomArt {
     }
     this.cylinder(g, 0.24, 0.27, 0.08, 0xa57e56, 0, 0.04);
     this.cylinder(g, 0.05, 0.05, 0.34, 0xa57e56, 0, 0.22);
-    if (def.gameReward === "sock") {
+    if (def.gameReward === "wildfire:camp-lantern") {
+      this.cylinder(g, 0.16, 0.2, 0.34, 0x5a4a37, 0, 0.43);
+      this.ball(g, 0.16, 0.2, 0.16, c, 0, 0.44);
+      this.cylinder(g, 0.19, 0.13, 0.08, 0x5a4a37, 0, 0.65);
+      const glow = new THREE.PointLight(0xffd178, 1.4, 2.6, 2);
+      glow.position.y = 0.5;
+      g.add(glow);
+      const handle = new THREE.Mesh(
+        new THREE.TorusGeometry(0.2, 0.025, 8, 20, Math.PI),
+        this.material(0x5a4a37),
+      );
+      handle.rotation.z = Math.PI;
+      handle.position.y = 0.73;
+      handle.castShadow = true;
+      g.add(handle);
+    } else if (def.gameReward === "sock") {
       this.box(g, 0.16, 0.28, 0.13, 0xf1dca9, -0.035, 0.5);
       this.box(g, 0.27, 0.12, 0.13, 0xf1dca9, 0.03, 0.38);
       this.box(g, 0.17, 0.065, 0.14, c, -0.035, 0.62);
@@ -350,7 +365,10 @@ export class RoomArt {
         o.geometry.dispose();
         const materials = Array.isArray(o.material) ? o.material : [o.material];
         materials.forEach((m) => {
-          if (m instanceof THREE.MeshStandardMaterial && m.map?.userData.roomOwned)
+          if (
+            m instanceof THREE.MeshStandardMaterial &&
+            m.map?.userData.roomOwned
+          )
             textures.add(m.map);
           m.dispose();
         });

@@ -510,6 +510,69 @@ small {
   width: 100%;
   background: #f0f1e2;
 }
+.integrated-game-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.integrated-game-entry {
+  min-width: 0;
+}
+.integrated-game-entry .reward-note {
+  min-height: 78px;
+}
+.douse-card-art {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, transparent 45%, #b4773b 46% 67%, transparent 68%),
+    linear-gradient(180deg, #244746 0 42%, #183334 100%);
+}
+.douse-card-art::before,
+.douse-card-art::after {
+  content: "";
+  position: absolute;
+  border-radius: 50% 50% 12% 50%;
+  background: #4fc7d4;
+  transform: rotate(45deg);
+}
+.douse-card-art::before {
+  width: 48px;
+  height: 48px;
+  left: 31%;
+  top: 23%;
+}
+.douse-card-art::after {
+  width: 25px;
+  height: 25px;
+  left: 48%;
+  top: 54%;
+}
+.douse-card-art span,
+.douse-card-art b {
+  position: absolute;
+  z-index: 1;
+  font-size: 30px;
+}
+.douse-card-art span {
+  left: 17%;
+  top: 16%;
+}
+.douse-card-art b {
+  right: 16%;
+  bottom: 13%;
+}
+.douse-card-art i {
+  position: absolute;
+  left: 38%;
+  top: 0;
+  width: 18%;
+  height: 100%;
+  border-radius: 60% 30% 60% 30%;
+  background: #55c2d1c9;
+  transform: rotate(-18deg);
+}
 .game-preview-list {
   display: grid;
   gap: 12px;
@@ -610,6 +673,21 @@ small {
   font-size: 11px;
   color: #919780;
   margin-top: 4px;
+}
+.game-loading {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  color: #526b5a;
+  background: #eef1df;
+  font:
+    600 14px/1.5 system-ui,
+    sans-serif;
+}
+@media (max-width: 680px) {
+  .integrated-game-list {
+    grid-template-columns: 1fr;
+  }
 }
 .style-preview {
   height: 160px;
@@ -1571,6 +1649,7 @@ dialog::backdrop {
     margin-bottom: 7px;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
@@ -2108,6 +2187,356 @@ dialog::backdrop {
   animation: town-heading-reduced 3.2s linear forwards;
 }
 
+/* Unified application shell — one bar, one space descriptor, one action cluster. */
+.topbar {
+  z-index: 10;
+  gap: 14px;
+  padding-inline: 24px;
+  background: rgba(246, 244, 235, 0.7);
+  backdrop-filter: blur(16px);
+}
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.app-nav::-webkit-scrollbar {
+  display: none;
+}
+.app-nav button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: #68715f;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.app-nav button:hover,
+.app-nav button[aria-current] {
+  background: #e4ead9c9;
+  color: var(--green);
+}
+.app-nav button:disabled {
+  opacity: 0.34;
+  background: transparent;
+  cursor: not-allowed;
+}
+.topbar .identity {
+  margin-left: auto;
+}
+.space-descriptor {
+  position: absolute;
+  z-index: 6;
+  left: 24px;
+  top: 106px;
+  max-width: min(360px, calc(100% - 48px));
+  padding: 13px 17px;
+  border: 1px solid #d8ddcb;
+  border-radius: 20px;
+  background: #fff9e7d9;
+  box-shadow: 0 8px 24px #43513d16;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+.space-descriptor .eyebrow {
+  margin-bottom: 3px;
+  font-size: 9px;
+}
+.space-descriptor h1 {
+  margin: 0;
+  color: #53654f;
+  font:
+    500 clamp(20px, 2.2vw, 28px) Fraunces,
+    Georgia,
+    serif;
+}
+.space-descriptor p {
+  margin: 6px 0 0;
+  color: #7e8775;
+  font-size: 11px;
+}
+.space-descriptor.show-space-descriptor {
+  animation: space-descriptor-intro 4.8s ease forwards;
+}
+@keyframes space-descriptor-intro {
+  0%,
+  55% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+  }
+}
+.world-actions {
+  position: absolute;
+  z-index: 7;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  gap: 6px;
+}
+.world-actions > button,
+.quick-reactions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 10px 13px;
+  border: 1px solid #d4d7bc;
+  border-radius: 18px;
+  background: #fff9e8e8;
+  color: #3c5c4b;
+  box-shadow: 0 4px 14px #34462d18;
+  font-size: 11px;
+}
+.world-actions svg {
+  width: 18px;
+  height: 18px;
+}
+.react-face {
+  font-size: 22px;
+  line-height: 1;
+}
+.quick-reactions {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid #d4d7bc;
+  border-radius: 20px;
+  background: #fff8e8ed;
+  box-shadow: 0 8px 24px #34462d22;
+}
+.quick-reactions button {
+  flex-direction: column;
+  min-width: 56px;
+  padding: 7px 10px;
+  color: #bb795d;
+  font-size: 24px;
+}
+.quick-reactions small {
+  color: #6e7767;
+  font-size: 9px;
+}
+.panel-open .world-actions,
+#app:has(.placement-bar:not([hidden])) .world-actions {
+  visibility: hidden;
+}
+#app.playing > .topbar {
+  display: flex;
+}
+#app.playing .game-host,
+.game-host {
+  height: calc(100% - 88px);
+}
+.wishbone-hud .hud-back,
+.wishbone-hud .game-wallet,
+.wishbone-hud .hud-actions {
+  display: none;
+}
+.game-host [data-action="exit"],
+.game-host [data-action="leave"],
+.game-host [data-action="sound"],
+.game-host [data-action="mute"],
+.game-host [data-action="full"],
+.game-host [data-action="fullscreen"],
+.game-host [data-a="exit"],
+.game-host [data-a="sound"],
+.game-host [data-duet="sound"],
+.game-host #sound {
+  display: none !important;
+}
+.wishbone-game .camera-tools {
+  display: none;
+}
+.wishbone-hud {
+  justify-content: flex-start;
+}
+.wishbone-hud .hud-title {
+  flex: 0 1 270px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  background: #fffdf5d9;
+  box-shadow: 0 2px 8px #34462d24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .space-descriptor.show-space-descriptor {
+    animation: town-heading-reduced 3.2s linear forwards;
+  }
+}
+.reduce-motion .space-descriptor.show-space-descriptor {
+  animation: town-heading-reduced 3.2s linear forwards;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    height: 116px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    grid-template-rows: 67px 49px;
+    gap: 0 10px;
+    padding: 0 16px;
+  }
+  .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .identity {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .wallet {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .utilities {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .app-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: stretch;
+    border-top: 1px solid #68764f16;
+  }
+  .app-nav button {
+    min-height: 40px;
+  }
+  .room-page {
+    inset-block-start: 116px;
+  }
+  .town-page,
+  .game-host,
+  #app.playing .game-host {
+    height: calc(100% - 116px);
+  }
+  .space-descriptor {
+    top: 130px;
+  }
+  .panel {
+    top: 128px;
+  }
+  .room-world {
+    inset: 0;
+  }
+}
+
+@media (max-width: 540px) {
+  .topbar {
+    height: 112px;
+    grid-template-rows: 64px 48px;
+    padding-inline: 12px;
+  }
+  .brand {
+    font-size: 19px;
+  }
+  .brand small,
+  .identity {
+    display: none;
+  }
+  .wallet {
+    grid-column: 2 / 4;
+    justify-self: end;
+  }
+  .utilities {
+    grid-column: 4;
+  }
+  .app-nav button {
+    padding-inline: 6px;
+    font-size: 8.5px;
+  }
+  .room-page {
+    inset-block-start: 112px;
+  }
+  .town-page,
+  .game-host,
+  #app.playing .game-host {
+    height: calc(100% - 112px);
+  }
+  .space-descriptor {
+    top: 124px;
+    left: 12px;
+    padding: 10px 13px;
+  }
+  .space-descriptor h1 {
+    font-size: 20px;
+  }
+  .space-descriptor p {
+    font-size: 10px;
+  }
+  .world-actions {
+    right: 10px;
+    left: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    justify-content: center;
+  }
+  .world-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 6px;
+  }
+  .world-actions > button span:last-child {
+    font-size: 9px;
+  }
+  .quick-reactions {
+    right: auto;
+    left: 0;
+  }
+  .panel {
+    top: 122px;
+  }
+  .room-caption {
+    bottom: 76px;
+  }
+}
+
+@media (max-height: 570px) and (min-width: 600px) {
+  .topbar {
+    height: 54px;
+    display: flex;
+    padding-inline: 12px;
+  }
+  .app-nav {
+    border: 0;
+  }
+  .app-nav button {
+    min-height: 38px;
+    padding-inline: 8px;
+    font-size: 9px;
+  }
+  .room-page {
+    inset-block-start: 54px;
+  }
+  .town-page,
+  .game-host,
+  #app.playing .game-host {
+    height: calc(100% - 54px);
+  }
+  .space-descriptor {
+    top: 64px;
+  }
+  .world-actions {
+    right: 12px;
+    bottom: 10px;
+  }
+}
+
 .town-loading {
   position: absolute;
   inset: 42% 12% auto;
@@ -2119,4 +2548,370 @@ dialog::backdrop {
   text-align: center;
   box-shadow: 0 8px 28px #233c3020;
   pointer-events: none;
+}
+
+/* Final icon-shell overrides follow the earlier responsive legacy rules. */
+.topbar {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(246, 244, 235, 0.7);
+}
+.room-page {
+  inset: 0;
+}
+.town-page,
+.game-host,
+#app.playing .game-host {
+  height: 100%;
+}
+.game-host {
+  box-sizing: border-box;
+  padding-top: 88px;
+}
+.app-nav button {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 9px;
+  font-size: 0;
+}
+.app-nav button svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+.reaction-control {
+  position: relative;
+  display: grid;
+}
+.world-actions > button,
+.reaction-control > button {
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 10px;
+}
+.quick-reactions {
+  right: 0;
+  left: auto;
+  bottom: calc(100% + 8px);
+  display: grid;
+  grid-template-columns: repeat(8, 42px);
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  max-height: min(292px, calc(100dvh - 190px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.quick-reactions button {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+  font:
+    24px/1 "Segoe UI Emoji",
+    "Apple Color Emoji",
+    sans-serif;
+}
+.quick-reactions button:hover,
+.quick-reactions button:focus-visible {
+  background: #f0e4c8;
+}
+
+@media (max-width: 900px) {
+  .room-page {
+    inset-block-start: 0;
+  }
+  .town-page,
+  .game-host,
+  #app.playing .game-host {
+    height: 100%;
+  }
+  .game-host {
+    padding-top: 116px;
+  }
+}
+
+@media (max-width: 540px) {
+  .room-page {
+    inset-block-start: 0;
+  }
+  .game-host {
+    padding-top: 112px;
+  }
+  .app-nav {
+    justify-content: space-between;
+  }
+  .app-nav button {
+    width: 42px;
+    min-width: 42px;
+    padding: 10px;
+  }
+  .app-nav button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .world-actions > button,
+  .reaction-control > button {
+    flex: 0 0 48px;
+    width: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 10px;
+  }
+  .quick-reactions {
+    right: auto;
+    left: 0;
+    grid-template-columns: repeat(5, 44px);
+    max-height: min(314px, calc(100dvh - 190px));
+  }
+  .quick-reactions button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-height: 570px) and (min-width: 600px) {
+  .room-page {
+    inset-block-start: 0;
+  }
+  .town-page,
+  .game-host,
+  #app.playing .game-host {
+    height: 100%;
+  }
+  .game-host {
+    padding-top: 54px;
+  }
+  .app-nav button {
+    width: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 8px;
+  }
+  .quick-reactions {
+    grid-template-columns: repeat(8, 40px);
+    max-height: calc(100dvh - 120px);
+  }
+  .quick-reactions button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Shared input feedback and the intentionally minimal in-game application bar. */
+button:not(:disabled) {
+  transition:
+    filter 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease;
+}
+@media (hover: hover) {
+  button:not(:disabled):hover {
+    filter: brightness(0.94) saturate(1.08);
+    box-shadow:
+      0 5px 15px #34462d20,
+      inset 0 0 0 1px #58715b24;
+  }
+}
+button:focus-visible {
+  outline: 2px solid #54745b;
+  outline-offset: 2px;
+}
+.reduce-motion button {
+  transition: none;
+}
+.game-exit {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #c9d2bd;
+  border-radius: 14px;
+  background: #fff9e8df;
+  color: var(--green);
+  font:
+    700 12px/1 system-ui,
+    sans-serif;
+}
+.game-exit svg {
+  width: 20px;
+  height: 20px;
+}
+#app.playing > .topbar {
+  height: 64px;
+  justify-content: flex-start;
+  padding-inline: 18px;
+}
+#app.playing > .topbar > .brand,
+#app.playing > .topbar > .app-nav {
+  display: none;
+}
+#app.playing > .topbar > .game-exit {
+  display: inline-flex;
+}
+#app.playing > .topbar > .identity {
+  display: flex;
+  margin-left: auto;
+}
+#app.playing > .topbar > .wallet,
+#app.playing > .topbar > .utilities {
+  display: flex;
+}
+#app.playing .game-host {
+  height: 100%;
+  padding-top: 64px;
+}
+
+@media (max-width: 540px) {
+  #app.playing > .topbar {
+    height: 58px;
+    gap: 8px;
+    padding-inline: 10px;
+  }
+  #app.playing .game-host {
+    padding-top: 58px;
+  }
+  #app.playing .game-exit {
+    width: 42px;
+    min-width: 42px;
+    padding: 9px;
+  }
+  #app.playing .game-exit span {
+    display: none;
+  }
+  #app.playing > .topbar > .identity {
+    min-width: 0;
+  }
+  #app.playing > .topbar > .identity .name {
+    max-width: 86px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+}
+
+/* Firebase member doorway. Guests remain local until they deliberately sign in. */
+.topbar .identity {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.topbar .identity:hover,
+.topbar .identity:focus-visible {
+  background: #e4ead9c9;
+  color: var(--green);
+}
+.topbar .identity.member .save-dot {
+  box-shadow: 0 0 0 3px #8caf852b;
+}
+.account-dialog {
+  position: relative;
+  width: min(410px, calc(100vw - 28px));
+  box-sizing: border-box;
+}
+.account-dialog .dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #e9eddf;
+  color: #526451;
+  font-size: 22px;
+}
+.account-dialog h2 {
+  margin: 8px 42px 24px 0;
+  font-size: clamp(27px, 6vw, 36px);
+  line-height: 1.08;
+}
+.account-dialog form,
+.account-dialog label {
+  display: grid;
+  gap: 8px;
+}
+.account-dialog form {
+  gap: 16px;
+}
+.account-dialog label {
+  color: #5f6c59;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.account-dialog input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #ccd4bf;
+  border-radius: 13px;
+  outline: none;
+  background: #fffdf6;
+  color: var(--ink);
+  font: 16px/1.2 system-ui, sans-serif;
+}
+.account-dialog input:focus {
+  border-color: #729071;
+  box-shadow: 0 0 0 3px #8caf852d;
+}
+.account-dialog form > .primary {
+  min-height: 48px;
+  border-radius: 14px;
+}
+.account-error {
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #f7e4dc;
+  color: #874b3a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.account-dialog .account-note {
+  margin: 18px 0 0;
+  line-height: 1.5;
+}
+.member-account {
+  padding: 18px;
+  border-radius: 16px;
+  background: #edf1e3;
+}
+.member-account p {
+  margin: 0 0 14px;
+}
+
+@media (max-width: 540px) {
+  .topbar .identity {
+    padding-inline: 6px;
+  }
+  .account-dialog {
+    padding: 26px 22px;
+  }
 }

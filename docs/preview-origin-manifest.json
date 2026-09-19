@@ -1,71 +1,7 @@
 {
-  "verifiedOn": "2026-09-17",
+  "verifiedOn": "2026-09-19",
   "kind": "exact standalone build snapshots; not integrated gameplay source",
   "files": [
-    {
-      "id": "stormglide",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-miscalculations-of-lightning-girl\\playable\\Stormglide.html",
-      "bytes": 3815787,
-      "sha256": "387F37DF62D435D24B0C260376F5C020462FEF9ABA2FF8BEB9EAD3DA29D5BE3F",
-      "originalByteEquality": true
-    },
-    {
-      "id": "pocket-funhouse",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\playable\\Pocket-Funhouse.html",
-      "bytes": 3518621,
-      "sha256": "1B0028631EF42E48F5213946D80D308298D8D407483261A41DC102027D6CC3FD",
-      "originalByteEquality": true
-    },
-    {
-      "id": "backyard-ruckus",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wish\\playable\\Wishbones-Big-Fetch.html",
-      "bytes": 7326345,
-      "sha256": "1026875A85A087A13951DF8C356A03BF246F37B196DD8C17AC7ED8EE5EFF4DC9",
-      "originalByteEquality": true
-    },
-    {
-      "id": "midnight-snow-jam",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-very-very-far-north\\playable\\Midnight-Snow-Jam.html",
-      "bytes": 230979,
-      "sha256": "4FED1136FA0937AEDDCCE6CD4DE7CBE82F078BF4F879848CFDF9794C10781F45",
-      "originalByteEquality": true
-    },
-    {
-      "id": "arctic-duet",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-very-very-far-north\\playable\\Arctic-Duet.html",
-      "bytes": 207130,
-      "sha256": "9F9985208BBDDB47306C80A66542F36B7EA47F63C25FFE4DE14F233EB8456157",
-      "originalByteEquality": true
-    },
-    {
-      "id": "midnight-merienda",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\playable\\Midnight-Merienda.html",
-      "bytes": 9609339,
-      "sha256": "8C9B1EBF1B07BDEFE207BB479EA3CD1BC922F5998E9F84D415AEDA3E85481D0A",
-      "originalByteEquality": true
-    },
-    {
-      "id": "gummy-nook",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\not-if-i-can-help-it\\playable\\Gummy-Nook.html",
-      "bytes": 60329,
-      "sha256": "2E82FD56B59FF88DB2DE22E84022634636F35DD989A215D8EF7359FB2210CC76",
-      "originalByteEquality": true
-    },
-    {
-      "id": "bureau-after-dark",
-      "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\amari-and-the-night-brothers\\playable\\Bureau-After-Dark.html",
-      "bytes": 17708631,
-      "sha256": "9DE4FDBD06EE512FE8922A6052F318F1B7A05DC1FB24F5E684C45D01EA14AD22",
-      "originalByteEquality": true
-    },
     {
       "id": "vedas-great-escape",
       "file": "game.js",
@@ -99,59 +35,187 @@
       "originalByteEquality": true
     },
     {
-      "id": "emberwatch",
-      "file": "clearing.png",
-      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\clearing.png",
-      "bytes": 2691657,
-      "sha256": "8F111393C489D21C7D889499F1C0E1123A79DF1B5CF68BB19C063D6C92135870",
-      "originalByteEquality": true
-    },
-    {
-      "id": "emberwatch",
-      "file": "game.js",
-      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\game.js",
-      "bytes": 8097,
-      "sha256": "CFD67570D8F718055BC353C4CC808D43B6EB240D08576D02A96A5E6715EEAD8E",
-      "originalByteEquality": true
-    },
-    {
-      "id": "emberwatch",
+      "id": "stormglide",
       "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\index.html",
-      "bytes": 3068,
-      "sha256": "2F00D8442E9987BD8C08C6B302693A3C194B0932D419ACBD044091A08F9CB30C",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-miscalculations-of-lightning-girl\\playable\\Stormglide.html",
+      "bytes": 3824044,
+      "sha256": "1BFAABF949CC886C72F4E068C83CD761DF0B77AA781F0304207CF99B8C752F0D",
       "originalByteEquality": true
     },
     {
-      "id": "emberwatch",
-      "file": "style.css",
-      "source": "C:\\Users\\jmakar\\Documents\\Codex\\2026-09-13\\cr\\dist\\style.css",
-      "bytes": 7045,
-      "sha256": "2A5BD10B2D4314FA78A63B640A67B613B95874DFD691F1D6D2B18B6C1D3C41FF",
-      "originalByteEquality": true
-    },
-    {
-      "id": "picture-day-parade",
+      "id": "pocket-funhouse",
       "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\popcorn\\playable\\picture-day-parade.html",
-      "bytes": 43389,
-      "sha256": "B98EFF17C23A488EAFA8CD6F058AABCC4B12F303A046633F2C78BD137C2DD054",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-mystery-of-locked-rooms\\playable\\Pocket-Funhouse.html",
+      "bytes": 3522115,
+      "sha256": "8AC1A2081560BE63D58A794E25887BDC8EAAEE02E3797CA0561451EB42C738B8",
       "originalByteEquality": true
     },
     {
-      "id": "contraption-club",
+      "id": "arctic-duet",
       "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\popcorn\\experiments\\contraption-club\\playable\\popcorn-contraption-club.html",
-      "bytes": 57364,
-      "sha256": "DA520CB26138230F290B8D15096BBDBC386E31D30E3146E0458E59BDDBE43875",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\the-very-very-far-north\\playable\\Arctic-Duet.html",
+      "bytes": 203456,
+      "sha256": "6DEC6CEB5533ED71699D013132ED4903B72E0AF282805E3FA2582423F88EBC0B",
       "originalByteEquality": true
     },
     {
       "id": "moonlight-munch-run",
       "file": "index.html",
-      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\experiments\\moonlight-munch-run\\playable\\moonlight-munch-run.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\mabuhay\\playable\\moonlight-munch-run.html",
       "bytes": 9742784,
       "sha256": "E6C7B2C330679738A8E11D133B384DB94C2E8D2B1AA55C4D9EDB39CD8521A6F2",
+      "originalByteEquality": true
+    },
+    {
+      "id": "gummy-nook",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\not-if-i-can-help-it\\playable\\Gummy-Nook.html",
+      "bytes": 67254,
+      "sha256": "14C0416610AD1D789B9DFC8A109E9EFFA8D5C950B9920E125AB099341A9CC075",
+      "originalByteEquality": true
+    },
+    {
+      "id": "bureau-after-dark",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\amari-and-the-night-brothers\\playable\\Bureau-After-Dark.html",
+      "bytes": 17708631,
+      "sha256": "9DE4FDBD06EE512FE8922A6052F318F1B7A05DC1FB24F5E684C45D01EA14AD22",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\index.html",
+      "bytes": 2116,
+      "sha256": "FDC7860387A50E64484F818E2A9E202C179AC59747DAC96314EC3D1D20F9FFBA",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "style.css",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\style.css",
+      "bytes": 3974,
+      "sha256": "6FE327D1356EF081711BBF628F29D3A19877A175F01A5F613C590765627209F8",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "game.js",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\game.js",
+      "bytes": 39962,
+      "sha256": "B94DB1EE7A1C3303B900430F8697E5FAE25885AEF94524063AF345C9ECB1B065",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/forest-backdrop-v2.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\forest-backdrop-v2.png",
+      "bytes": 3046435,
+      "sha256": "6B7038D6828A7E1E2257AA8AF35FFAC02A174A283DCAF7B7E2780E25CD1162AB",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/bedrock-cluster.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\bedrock-cluster.png",
+      "bytes": 1603784,
+      "sha256": "2209087A0C8EE1A465A7187E4CE9E287E88AEF56D0CC17DBD8F90D2A43C7965F",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/campsite-target.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\campsite-target.png",
+      "bytes": 2503565,
+      "sha256": "B50FE1980E703298D818FEB626C8948D1C6D01E380BBFF1826062BCD03A5E628",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/canteen-buddy.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\canteen-buddy.png",
+      "bytes": 1031181,
+      "sha256": "5BFCE02D5C62778323DDC9108EA670F010DBE086F1EB82959EE68F306BD08B1B",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/forest-frame.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\forest-frame.png",
+      "bytes": 2012073,
+      "sha256": "C5A35B245C251E8F6CAC9ACF650F3414CF144D6D551DFD5B66BAB24C52181351",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/intake-dummy-capped.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\intake-dummy-capped.png",
+      "bytes": 1162488,
+      "sha256": "7C470A11FE8B72B339279DE664C5F4976CB5D6943750514BE392D640BD296014",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/intake-dummy.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\intake-dummy.png",
+      "bytes": 1207080,
+      "sha256": "BC4D532CCEFCF0A285CC6AC1E19201F0733F16280BAA9BFFA9F971AC567C1DBB",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/intake-working.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\intake-working.png",
+      "bytes": 1692367,
+      "sha256": "13276F330CD9178238F194DE390E6764058FB4DFFA92702C04577376379AA7D1",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/reservoir-frame.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\reservoir-frame.png",
+      "bytes": 1969137,
+      "sha256": "885539A9F9354732FC37816891537DDD275DA44D40B2C2EE14C01D5AB7ADF41D",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "assets/v3/soil-texture.png",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\assets\\v3\\soil-texture.png",
+      "bytes": 2378466,
+      "sha256": "8617E3C1E722A375A5F360D2E31BB14ABD15EF04410D2B9D23D6070C76B27462",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "vendor/Box2D.js",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\vendor\\Box2D.js",
+      "bytes": 422074,
+      "sha256": "07DA9DC4471EC3CA14B4A4784C352E842635366C6B28FBCABD11C62AF9ADB508",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "vendor/Box2D.wasm",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\vendor\\Box2D.wasm",
+      "bytes": 257691,
+      "sha256": "32B32969C9FE8D29F8D5AD852D452F5907A3F4562E53E77B10B70403DFF11556",
+      "originalByteEquality": true
+    },
+    {
+      "id": "dig-and-douse",
+      "file": "vendor/LICENSE.zlib.txt",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\wildfire\\dist\\vendor\\LICENSE.zlib.txt",
+      "bytes": 862,
+      "sha256": "A2989000153D04BE865189471F9CF50F9D1E039335FCEDB7386DBEF9141B5B37",
+      "originalByteEquality": true
+    },
+    {
+      "id": "contraption-club",
+      "file": "index.html",
+      "source": "C:\\Users\\jmakar\\Desktop\\codex\\interactive\\battle-of-books\\popcorn\\playable\\popcorn-contraption-club.html",
+      "bytes": 80025,
+      "sha256": "76E65978C8E347D5A4E8C5A7ED705DBC428650489D084B44958186AEF2E89A40",
       "originalByteEquality": true
     }
   ]

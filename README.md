@@ -1,27 +1,24 @@
 # Chapter House — integrated slice
 
-## Standalone demo previews — 2026-09-16
+## Integrated game workspace — 2026-09-19
 
-Open **Games** and scroll to **Explore the other demos**. All ten books are
-represented: integrated Wishbone Fling plus nine other standalone book demos,
-with three extra comparisons (Backyard Ruckus, Arctic Duet and Contraption Club).
-Previews open in new tabs and do not award Chapter House coins or keepsakes.
-They retain their existing gameplay and browser-local save keys.
+Chapter House now integrates all ten canonical TypeScript games:
+Wishbone Fling, Dig & Douse, Pocket Funhouse, Arctic Duet, Gummy Nook,
+Contraption, Stormglide, Bureau After Dark, Moonlight Munch Run, and Veda's
+Great Escape. Each is an
+independent npm workspace package with a direct standalone Vite target and the
+same package-owned gameplay implementation lazy-loaded inside Chapter House—no
+iframe or `postMessage` bridge.
 
-The typed catalog is `src/core/game-previews.ts`. The Vite preview bridge serves
-and packages exact existing standalone builds and allowlisted dependencies.
-Three previously uncatalogued builds are retained as immutable artifacts in
-`preview-sources/`; their original editable projects remain untouched. See
-[source provenance](docs/preview-sources.md), [plan](docs/game-previews-plan.md)
-and [verification](docs/game-previews-verification.md). After building, run
-`npm run verify:previews -- http://127.0.0.1:5191/` against the active local server
-to compare every served and built preview with its source bytes.
+Veda's Great Escape is now the canonical *The Elephant in the Room* game. Its
+five-puzzle JavaScript study was ported to the same strict TypeScript/OOP package
+boundary as the other games; the earlier Sanctuary Seasons proposal is
+superseded. No legacy preview cards remain.
 
-This is access for review, not integration of the other nine games. Bureau After
-Dark and Veda retain optional Google Fonts requests from their original files.
-No publication is implied by this local menu update.
-
-A TypeScript application connecting a cozy 3D library clubhouse to Wishbone Fling. This is checkpoint BOB-SLICE-01A: the shared space plus one game, playable locally or from the static public demo. Accounts, Firebase and live visits are checkpoint B. No other game has been integrated or changed.
+Package/source/save/reward details and verification are in the
+[migration log](docs/workspace-game-package-migration-log.md) and
+[repeatable recipe](docs/game-package-migration.md). Accounts, Firebase and
+live visits remain later work. No publication is implied by this local work.
 
 ## Public demo
 
@@ -47,11 +44,34 @@ npm test
 npm run build
 ```
 
+This repository is an npm workspace. Every game declares its direct runtime
+dependencies in its own package while the repository shares one root lockfile.
+Run any game by itself with its root shortcut:
+
+```sh
+npm run dev:wishbone       # 5193
+npm run dev:douse
+npm run dev:pocket         # 5194
+npm run dev:arctic         # 5195
+npm run dev:gummy          # 5196
+npm run dev:contraption    # 5197
+npm run dev:stormglide     # 5198
+npm run dev:bureau         # 5199
+npm run dev:moonlight      # 5200
+npm run dev:veda           # 5201
+npm run check --workspaces --if-present
+```
+
+Dig & Douse uses port 5192. Each standalone adapter uses its game-specific
+browser save. Chapter House supplies the integrated profile, lifecycle,
+active-play currency, navigation, and reward inventory through the typed
+`@chapter-house/game-host` contract.
+
 The `dist/` directory is generated. Source is in `src/`; never edit the generated bundle. A portable local copy and PowerShell launcher are supplied in the task's outputs folder. That copy needs Node 24, but no npm installation or network connection to play.
 
 ## Play
 
-Choose Clover the cat or Pip the bunny as a free starter. Tap open floor to walk; drag to pan and use +/− to zoom. A focused room also accepts arrow keys/WASD. Wave, jump, call your pet, or pet it through the Pets panel. Tap a visible pet directly for the same interaction.
+Choose Clover the cat or Pip the bunny as a free starter. Tap open floor to walk, drag to pan, and use a mouse wheel or pinch to zoom. A focused room also accepts arrow keys/WASD. The translucent top bar keeps icon-only destinations and activities available throughout the app; accessible names and tooltips retain their meaning, and Decorate dims outside. React opens a scrollable attached grid of 50 emoji. Wave and Jump perform their animations without adding a reaction bubble, while Call pet has its own whistle icon rather than reusing Pets. Every enabled UI button has hover feedback. Tap a visible pet directly to pet it.
 
 Decorate lets you choose furniture, tap its new floor spot, rotate, place, cancel, or store it. Invalid placements preserve the item; Undo reverses the last room edit. Furniture is solid, navigation routes around it, and 3D depth handles occlusion. Floors and walls stay fixed.
 
@@ -59,7 +79,7 @@ Cancel, placement and storage keep decorating active; tap another piece or choos
 
 The [feedback pass](docs/feedback-01.md) adds expressive jump/wave poses, stable arrival direction and rounded action buttons. Larger or connected rooms are recorded for later. More avatar accessories are proposed, not included in this polish pass.
 
-Games opens Wishbone Fling. Pull back from the left of its yard, then release. Five new focused yards showcase a bridge, domino chain, lever gate, bellows and magnet; the two original yards remain under Classics. A forked wooden slingshot and compact overlay controls replace the heavier framing. Recall appears only while Wishbone is away; keepsakes remain accessible. Durable progress persists; collectible pocket powers have been removed. Fourteen throws earn a Patchwork dog bed; return to Decorate to place it. All nine original keepsakes have floor display models. Game rewards cannot be bought.
+Games opens any of the ten integrated titles. While playing, Exit game replaces the brand and destination buttons on the left; name, currency, mute, fullscreen, and help remain on the right. Package-owned duplicate exit/mute/fullscreen controls are hidden only in the integrated host and remain available in standalone builds. Durable game progress persists in the Chapter House profile, and each namespaced reward is validated, granted once, and mapped to a placeable catalog keepsake. Game rewards cannot be bought.
 
 Active play earns one coin per ten counted seconds, independent of score. Idle, paused and hidden games stop earning. A fern costs 12, the cheapest additional pet 60; furniture copies are distinct, pet ownership is unique. These are named developer tuning values, not final economy balancing.
 
@@ -67,7 +87,16 @@ Active play earns one coin per ten counted seconds, independent of score. Idle, 
 
 - `src/main.ts`: application navigation, panels and settings.
 - `src/core/profile.ts`: versioned local profile, inventory, transaction receipts, rewards and monotonic activity credits; storage is injected through `StoragePort`.
-- `src/core/game-session.ts`: common pause/mute/flush/dispose lifecycle boundary.
+- `packages/game-host/`: framework-neutral pause/mute/flush/dispose session and
+  typed host-service contract shared by integrated game packages.
+- `packages/game-dig-and-douse/`: one Dig & Douse gameplay implementation,
+  assets, direct dependencies, tests, standalone adapter, and integrated entry.
+- `packages/game-*/`: the other independently runnable game packages, each with
+  package-owned progress, manifest, runtime, assets, tests, and standalone host.
+- `src/core/integrated-games.ts`: generic game discovery, lazy factories,
+  progress codecs, summaries, and reward allowlists.
+- `src/core/game-session.ts`: compatibility re-export of the shared lifecycle
+  boundary for the existing Wishbone integration.
 - `src/core/catalog.ts`: furniture/pet metadata, prices and legacy reward mapping.
 - `src/room/room.ts`: orthographic Three.js room, actor paths, editor and camera controls.
 - `src/room/navigation.ts`: footprint validation and A*; diagonal corner cutting is rejected.
@@ -75,7 +104,6 @@ Active play earns one coin per ten counted seconds, independent of score. Idle, 
 - `src/room/audio.ts`: gesture-gated procedural ambient music and interaction sounds.
 - `src/room/art.ts`: reusable 3D furniture and animal rig factories; directional animation uses world rotation.
 - `src/room/portraits.ts`: cached catalog and wardrobe portraits from the actual room models.
-- `src/games/wishbone/`: explicit typed physics, articulated dog, renderer, progression, audio and session controller. No iframe, legacy script imports or global script ordering.
 - `tests/`: real physics/regression, save/economy/navigation and controller lifecycle tests. The DOM harness does not claim to be a real browser or audio listening test.
 
 ## Saves and migration
@@ -84,7 +112,7 @@ Active play earns one coin per ten counted seconds, independent of score. Idle, 
 
 Keepsakes use stable `reward-{id}` instances. Repeated sync cannot grant a second bed. Spending and ownership update in one local profile snapshot; replayed purchase IDs are rejected. Active-time snapshots are monotonic and cannot pay twice. This is single-browser persistence, not a substitute for Firebase transactions across multiple clients.
 
-Storage failure leaves the game playable in memory and displays a persistent saving-unavailable notice. Preferences, room layout, inventory, pet roster and durable Wishbone progress save together. A departed yard checkpoint is kept as a convenience, while pause retains the live transient board. Departing disposes frame callbacks, listeners, observers, physics and audio.
+Storage failure leaves the game playable in memory and displays a persistent saving-unavailable notice. Preferences, room layout, inventory, pet roster and durable progress for all integrated games save together. Transient live boards stay package-owned. Departing disposes frame callbacks, listeners, observers, physics and audio.
 
 ## Scope and remaining work
 
@@ -104,7 +132,7 @@ Restack and Keepsakes now use large icons. Drag away from the launcher to pan; u
 
 ## Village and simpler Fling update
 
-Outside opens Willowbrook square: walk or drag to explore, tap the nearby fountain to toss a free cosmetic coin, and return to the clubhouse. There is no separate coin button. Trees, buildings, stream and fountain constrain routes; water sound attenuates with the view. Avatar thought-cloud reactions and pet speech bubbles accompany actions and feeding.
+Outside opens Willowbrook square: walk or drag to explore, tap the nearby fountain to toss a free cosmetic coin, and return through the persistent top bar. There is no fountain shortcut, recenter button, or explicit zoom button; wheel and pinch zoom remain. Trees, buildings, stream and fountain constrain routes; water sound attenuates with the view. One shared roaming controller gives pets the same calm speed, bounded-near-avatar behavior, and obstacle-aware routing indoors and outside. Your Look changes rebuild the visible Willowbrook avatar immediately without leaving the panel.
 
 2026-09-16: Wishbone's fence now has its own near-world layer, with ground-anchored
 zoom and faster parallax than the mountains. The lawn extends to the viewport
@@ -114,6 +142,7 @@ edges in wide overview. See [plan](docs/feedback-05-plan.md) and
 Levels → The Long Walk Home is the new wide spring-only yard. Overview, pan/zoom and flight follow show its full width. The Y-fork launcher holds Wishbone in a lower leather pouch, and dog/block impacts use a short procedural rustle. Pocket power collection and activation are removed; archived data and already-owned displays remain. See docs/feedback-04-plan.md and docs/feedback-04-verification.md.
 
 ## Outdoor woodland pass — 2026-09-15
+
 The outdoor houses have been replaced with a Kenney-based woodland setting. See docs/woodland-village-plan.md, docs/woodland-assets.md and docs/woodland-village-verification.md. Twelve locally packaged GLBs plus their texture and license files total about 272 kB. No external requests are needed at play time. Assets are loaded per outdoor scene and shared between clones; terrain streaming remains future work.
 
 ## Collection feedback — 2026-09-16

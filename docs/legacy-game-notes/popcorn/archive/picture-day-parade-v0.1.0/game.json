@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "popcorn-contraption-club",
+  "ideaId": "BOB-010",
+  "book": {
+    "title": "Popcorn",
+    "author": "Rob Harrell"
+  },
+  "title": "Picture Day Parade",
+  "status": "implemented-local",
+  "primaryMechanic": "Frame and time snapshots of playful animated photo scenes",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/picture-day-parade.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first: drag frame, zoom, cue, snap, burst",
+    "keyboard: arrows, G, Space, B, P, +/-"
+  ],
+  "audioPlanned": false,
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "plannedRevision": {
+    "ideaId": "BOB-010-R2",
+    "title": "Picture Day Parade",
+    "primaryMechanic": "Frame and time snapshots of playful animated photo scenes",
+    "status": "implemented-local",
+    "plan": "plans/redesign.md",
+    "requirements": "plans/requirements.md"
+  },
+  "previousTitles": [
+    "Popcorn Contraption Club"
+  ],
+  "version": "0.1.0",
+  "audio": true,
+  "saveKey": "picture-day-parade.v1",
+  "collectibles": "src/core.js",
+  "experiments": [
+    {
+      "id": "popcorn-contraption-experiment",
+      "title": "Popcorn Contraption Club",
+      "ideaId": "BOB-010-R3",
+      "status": "implemented-local-experiment",
+      "version": "0.2.0",
+      "manifest": "experiments/contraption-club/game.json",
+      "playable": "experiments/contraption-club/playable/popcorn-contraption-club.html",
+      "requirements": "experiments/contraption-club/plans/requirements.md",
+      "levelCount": 6
+    }
+  ]
+}

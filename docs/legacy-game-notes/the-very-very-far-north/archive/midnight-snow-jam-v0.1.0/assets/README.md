@@ -1,0 +1,2 @@
+# Asset provenance
+All canvas scenery, characters, item illustrations and synthesized music are original code authored for this game. Character species/names reference the publisher premise; their visual designs are original, not copied from the book illustrations. Local DM Sans and Fraunces fonts are reused from this collection, licensed under the accompanying SIL Open Font License notices. No remote assets or third-party runtime dependencies.

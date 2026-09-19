@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import M from "matter-js";
-import { PowerYard, loadPowers } from "../src/games/wishbone/powers";
-import { FloppyYard } from "../src/games/wishbone/floppy-yard";
-import { aim } from "../src/games/wishbone/yard";
+import { PowerYard, loadPowers } from "../packages/game-wishbone-fling/src/powers";
+import { FloppyYard } from "../packages/game-wishbone-fling/src/floppy-yard";
+import { aim } from "../packages/game-wishbone-fling/src/yard";
 
 const run = (yard: FloppyYard, seconds: number, fps = 120) => {
   for (let n = 0; n < seconds * fps; n++) yard.step(1 / fps);

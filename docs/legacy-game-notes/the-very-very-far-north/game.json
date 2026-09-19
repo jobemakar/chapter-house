@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "arctic-duet",
+  "ideaId": "BOB-004-ALT1",
+  "book": {
+    "title": "The Very, Very Far North",
+    "author": "Dan Bar-el"
+  },
+  "title": "Arctic Duet",
+  "status": "implemented",
+  "primaryMechanic": "Two independently controlled Arctic friends catch falling musical snacks",
+  "sourceEntry": "src/arctic-duet/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Arctic-Duet.html",
+  "requirements": "plans/requirements.md",
+  "portPlan": "plans/arctic-duet-typescript-port.md",
+  "verification": "plans/verification.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first"
+  ],
+  "audioPlanned": false,
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "plannedRevision": {
+    "ideaId": "BOB-004-ALT1",
+    "title": "Arctic Duet",
+    "primaryMechanic": "Two independently controlled Arctic friends catch falling musical snacks",
+    "status": "implemented",
+    "plan": "plans/redesign.md",
+    "requirements": "plans/requirements.md"
+  },
+  "previousTitles": [],
+  "version": "0.1.0",
+  "audioImplemented": true,
+  "saveKey": "arctic-duet-v1",
+  "localUrl": "http://127.0.0.1:4323",
+  "archive": { "id": "midnight-snow-jam", "ideaId": "BOB-004-R2", "version": "0.1.0", "path": "archive/midnight-snow-jam-v0.1.0", "saveKey": "midnight-snow-jam-v1" },
+  "aliases": ["dist/duet.html"],
+  "keepsakes": { "source": "src/arctic-duet/core.ts", "awardedFrom": "arctic-duet-v1.total", "importsSnowJamProgress": false }
+}

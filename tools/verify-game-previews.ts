@@ -30,16 +30,19 @@ class PreviewVerification {
           `${path}: served bytes`,
         );
         const type = response.headers.get("content-type") ?? "";
+        const expectedType = asset?.endsWith(".png")
+          ? "image/png"
+          : asset?.endsWith(".js")
+            ? "javascript"
+            : asset?.endsWith(".css")
+              ? "text/css"
+              : asset?.endsWith(".wasm")
+                ? "application/wasm"
+                : asset?.endsWith(".txt")
+                  ? "text/plain"
+                  : "text/html";
         assert.ok(
-          type.includes(
-            asset?.endsWith(".png")
-              ? "image/png"
-              : asset?.endsWith(".js")
-                ? "javascript"
-                : asset?.endsWith(".css")
-                  ? "text/css"
-                  : "text/html",
-          ),
+          type.includes(expectedType),
           `${path}: ${type}`,
         );
         files++;

@@ -58,6 +58,8 @@ export class GamePreviewBridge {
               ".css": "text/css; charset=utf-8",
               ".js": "text/javascript; charset=utf-8",
               ".png": "image/png",
+              ".wasm": "application/wasm",
+              ".txt": "text/plain; charset=utf-8",
             };
             res.setHeader(
               "Content-Type",

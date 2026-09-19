@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "moonlight-munch-run",
+  "ideaId": "BOB-005-ALT1",
+  "book": {
+    "title": "Mabuhay!",
+    "author": "Zachary Sterling"
+  },
+  "title": "Moonlight Munch Run",
+  "status": "implemented-local",
+  "primaryMechanic": "Traveling arcade food shooter with avoid-only road hazards, retained upgrades and bosses",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/moonlight-munch-run.html",
+  "requirements": "plans/requirements.md",
+  "plan": "plans/plan.md",
+  "publicUrl": null,
+  "controls": [
+    "mouse / WASD / arrows / left-origin touch drag: 2D steering",
+    "automatic forward food fire",
+    "Space/F / right touch / special button: rechargeable burst"
+  ],
+  "audio": "Gesture-unlocked original WebAudio with mute and safe unsupported-browser fallback",
+  "saveKey": "moonlight-munch-run-v1",
+  "collectibleDefinitions": "src/model.ts",
+  "version": "0.4.0",
+  "archive": "archive/midnight-merienda-v0.1.2"
+}

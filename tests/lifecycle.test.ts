@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { WishboneGame } from "../src/games/wishbone/game";
+import { WishboneGame } from "../packages/game-wishbone-fling/src/game";
+import { loadWishboneProgress } from "@chapter-house/game-wishbone-fling/progress";
 import { ProfileRepository, type StoragePort } from "../src/core/profile";
 /** Headless DOM contract harness: actual controller/physics, inert canvas and audio. */
 class ElementStub extends EventTarget {
@@ -145,12 +146,21 @@ class Harness {
     this.game = this.mount();
   }
   mount() {
-    return new WishboneGame(
-      this.host as unknown as HTMLElement,
-      this.profile,
-      () => {},
-      () => {},
-    );
+    return new WishboneGame(this.host as unknown as HTMLElement, {
+      progress: loadWishboneProgress(
+        this.profile.gameProgress("wishbone-fling"),
+      ),
+      muted: this.profile.state.muted,
+      reducedMotion: this.profile.state.reduced,
+      activePlaySeconds: this.profile.state.activeSeconds,
+      exit: () => {},
+      notify: () => {},
+      saveProgress: (progress) =>
+        this.profile.saveGameProgress("wishbone-fling", progress),
+      creditActivePlay: (total) => this.profile.creditActivity(total),
+      awardReward: (rewardId) =>
+        this.profile.awardGameReward("wishbone-fling", rewardId),
+    });
   }
   advance(count: number) {
     for (let i = 0; i < count; i++) {
@@ -229,13 +239,18 @@ test("actual session saves rewards and disposes its frames, observers, and input
     h.advance(360);
     assert.equal(h.game.status().throws, 1);
     assert.ok(h.game.status().rescued > 0);
-    const saved = h.profile.state.wishbone.throws;
+    const saved = loadWishboneProgress(
+      h.profile.gameProgress("wishbone-fling"),
+    ).throws;
     const canvas = h.host.querySelector("canvas")!;
     h.game.dispose();
     assert.equal(h.frames.size, 0);
     assert.equal(h.observers.size, 0);
     canvas.dispatchEvent(new Event("pointerdown"));
-    assert.equal(h.profile.state.wishbone.throws, saved);
+    assert.equal(
+      loadWishboneProgress(h.profile.gameProgress("wishbone-fling")).throws,
+      saved,
+    );
     for (let i = 0; i < 3; i++) {
       h.game = h.mount();
       h.advance(2);
@@ -245,7 +260,10 @@ test("actual session saves rewards and disposes its frames, observers, and input
       assert.equal(h.frames.size, 0);
       assert.equal(h.observers.size, 0);
     }
-    assert.equal(h.profile.state.wishbone.throws, 4);
+    assert.equal(
+      loadWishboneProgress(h.profile.gameProgress("wishbone-fling")).throws,
+      4,
+    );
   } finally {
     h.finish();
   }

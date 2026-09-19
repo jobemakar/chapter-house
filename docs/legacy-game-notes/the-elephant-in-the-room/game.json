@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "vedas-great-escape",
+  "ideaId": "BOB-008",
+  "book": {
+    "title": "The Elephant in the Room",
+    "author": "Holly Goldberg Sloan"
+  },
+  "title": "Veda's Great Escape",
+  "status": "implemented-local",
+  "version": "1.0.0",
+  "primaryMechanic": "Five authored crate-and-switch route puzzles leading Veda to the sanctuary",
+  "sourceEntry": "../application/packages/game-vedas-great-escape/src/standalone.ts",
+  "hostedEntry": null,
+  "offlineEntry": "../application/packages/game-vedas-great-escape/index.html",
+  "requirements": "plans/pitch.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "tap-select and tap-destination",
+    "swipe",
+    "keyboard"
+  ],
+  "audioPlanned": false,
+  "levelCount": 5,
+  "collectiblePlan": "../plans/11-collectible-catalog.md"
+}

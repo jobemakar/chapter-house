@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "pocket-funhouse",
+  "ideaId": "BOB-002",
+  "book": {
+    "title": "The Mystery of Locked Rooms",
+    "author": "Lindsay Currie"
+  },
+  "title": "Pocket Funhouse",
+  "status": "implemented-demo",
+  "primaryMechanic": "Tactile mechanical room puzzles",
+  "sourceEntry": "src/game.ts",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Pocket-Funhouse.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "touch-first"
+  ],
+  "audioPlanned": false,
+  "version": "0.1.1",
+  "audioImplemented": true,
+  "saveKey": "pocket-funhouse-v1",
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "typescriptPort": {
+    "status": "implemented",
+    "plan": "plans/typescript-port.md",
+    "compiledOutput": ".build/game.js"
+  },
+  "experiments": [{ "id": "door-atelier", "manifest": "experiments/door-atelier/game.json", "hostedEntry": "experiments/door-atelier/dist/index.html", "status": "archived-rejected" }],
+  "plannedRevision": {
+    "ideaId": "BOB-002-R2",
+    "title": "Pocket Funhouse: The Wandering Key",
+    "primaryMechanic": "Rearrange platforms and mechanisms to guide an autonomous wind-up key to a lock",
+    "status": "redesign-planned",
+    "plan": "plans/redesign.md",
+    "requirements": "plans/requirements-next.md"
+  }
+}

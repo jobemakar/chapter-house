@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      // Keep the new backend closed until account roles and the multiplayer
+      // document model have explicit, tested access rules.
+      allow read, write: if false;
+    }
+  }
+}

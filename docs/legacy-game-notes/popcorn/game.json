@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "popcorn-contraption-club",
+  "ideaId": "BOB-010-R3",
+  "book": {"title": "Popcorn", "author": "Rob Harrell"},
+  "title": "Contraption",
+  "version": "0.3.0",
+  "status": "implemented-local",
+  "primaryMechanic": "Solve authored popcorn-routing levels with movable tools, fixed fixtures and corn-triggered switches",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/popcorn-contraption-club.html",
+  "sandboxEntry": "playable/popcorn-contraption-club-sandbox-v1.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": ["touch-first drag and toolbox placement", "keyboard: arrows, R, Delete, Space, Ctrl/Cmd+Z"],
+  "audio": true,
+  "saveKey": "popcorn-contraption.levels.v2",
+  "legacySaveKey": "popcorn-contraption.v1",
+  "levelCatalog": {"count": 6, "stableIds": true, "legacyIndices": "immutable 0-5; append future levels only"},
+  "archive": {"id": "picture-day-parade-v0.1.0", "path": "archive/picture-day-parade-v0.1.0", "saveKey": "picture-day-parade.v1"}
+}

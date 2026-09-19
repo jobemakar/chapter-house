@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
 import { RouteMotion } from "./motion";
+import { PetRoamingController } from "./pet-motion";
 import { InteractiveFurnishing } from "./furnishings";
 import { ActorReaction, type ReactionKind } from "./reactions";
 import type { RoomSound } from "./audio";
@@ -60,6 +61,7 @@ export class ClubhouseRoom {
     arrived: boolean;
     facing: number;
   } | null = null;
+  private petMotion: PetRoamingController;
   private avatar: Actor<AnimalRig>;
   private pets: Actor<AnimalRig | PetRig>[] = [];
   private ray = new THREE.Raycaster();
@@ -92,6 +94,15 @@ export class ClubhouseRoom {
     private sound: (sound: RoomSound) => void = () => {},
     private petAssets: PetAssets = new PetAssets(),
   ) {
+    this.petMotion = new PetRoamingController(
+      {
+        walkable: (point) => this.nav.walkable(point),
+        path: (start, end) => this.nav.path(start, end),
+      },
+      undefined,
+      Math.random,
+      (origin) => this.freeNear(origin),
+    );
     if (window.matchMedia("(max-width: 540px)").matches) this.zoom = 1.18;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -777,12 +788,10 @@ export class ClubhouseRoom {
   }
   wave() {
     this.avatar.rig.wave();
-    this.react("hello");
     this.sound("wave");
   }
   jump() {
     this.avatar.rig.jump();
-    this.react("surprise");
     this.sound("jump");
   }
   pet(id: string) {
@@ -800,8 +809,7 @@ export class ClubhouseRoom {
     this.cancelPetPlay();
     this.sound("call");
     for (const pet of this.pets) {
-      pet.path = this.nav.path(pet.point, this.freeNear(this.avatar.point));
-      pet.wait = 4;
+      this.petMotion.call(pet, this.avatar, pet.rig.root.rotation.y);
       this.showReaction(pet, "question");
     }
     this.avatar.rig.wave();
@@ -821,30 +829,22 @@ export class ClubhouseRoom {
     this.last = timestamp;
     if (!this.paused && !document.hidden) {
       for (const actor of this.actors()) {
-        if (
-          actor !== this.avatar &&
-          actor !== this.petPlay?.pet &&
-          !actor.path.length &&
-          !this.draft
-        ) {
-          actor.wait -= dt;
-          if (actor.wait <= 0) {
-            const target = {
-              x: 0.6 + Math.random() * 8.8,
-              z: 0.6 + Math.random() * 6.8,
-            };
-            actor.path = this.nav.path(actor.point, target);
-            actor.wait = 3 + Math.random() * 4;
-          }
-        }
         const motion = !this.draft
-          ? RouteMotion.step(
-              actor.point,
-              actor.path,
-              actor.rig.root.rotation.y,
-              actor === this.avatar ? 2.35 : 0.8,
-              dt,
-            )
+          ? actor === this.avatar
+            ? RouteMotion.step(
+                actor.point,
+                actor.path,
+                actor.rig.root.rotation.y,
+                2.35,
+                dt,
+              )
+            : this.petMotion.update(
+                actor,
+                this.avatar,
+                actor.rig.root.rotation.y,
+                dt,
+                actor !== this.petPlay?.pet,
+              )
           : { facing: actor.rig.root.rotation.y, moved: false };
         actor.rig.root.rotation.y = motion.facing;
         actor.rig.root.position.set(actor.point.x, 0, actor.point.z);

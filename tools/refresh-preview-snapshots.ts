@@ -4,29 +4,43 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { GamePreviews } from "../src/core/game-previews.ts";
 
+const canonicalSources: Readonly<Record<string, string>> = {
+  stormglide:
+    "the-miscalculations-of-lightning-girl/playable/Stormglide.html",
+  "pocket-funhouse":
+    "the-mystery-of-locked-rooms/playable/Pocket-Funhouse.html",
+  "arctic-duet": "the-very-very-far-north/playable/Arctic-Duet.html",
+  "moonlight-munch-run": "mabuhay/playable/moonlight-munch-run.html",
+  "gummy-nook": "not-if-i-can-help-it/playable/Gummy-Nook.html",
+  "bureau-after-dark":
+    "amari-and-the-night-brothers/playable/Bureau-After-Dark.html",
+  "dig-and-douse": "wildfire/dist/index.html",
+  "contraption-club": "popcorn/playable/popcorn-contraption-club.html",
+};
+
 /** Mechanical packaging: original standalone builds remain the source of truth. */
 class SnapshotRefresh {
   async run() {
     const root = fileURLToPath(new URL("../", import.meta.url));
     const manifestPath = resolve(root, "docs/preview-origin-manifest.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-    const files = manifest.files.filter((f: { id: string }) =>
-      GamePreviews.entries.some((p) => p.id === f.id),
-    );
     const collection = resolve(root, "..");
-    for (const [id, source] of [
-      [
-        "moonlight-munch-run",
-        "mabuhay/experiments/moonlight-munch-run/playable/moonlight-munch-run.html",
-      ],
-    ]) {
-      if (!files.some((f: { id: string }) => f.id === id)) {
+    const retained = manifest.files.filter(
+      (f: { id: string }) => f.id === "vedas-great-escape",
+    );
+    const files = [...retained];
+    for (const preview of GamePreviews.entries) {
+      const main = canonicalSources[preview.id];
+      if (!main) continue;
+      const mainSource = resolve(collection, main);
+      const sourceDir = dirname(mainSource);
+      files.push({ id: preview.id, file: "index.html", source: mainSource });
+      for (const asset of preview.assets ?? [])
         files.push({
-          id,
-          file: "index.html",
-          source: resolve(collection, source),
+          id: preview.id,
+          file: asset,
+          source: resolve(sourceDir, asset),
         });
-      }
     }
     for (const entry of files) {
       const preview = GamePreviews.entries.find((p) => p.id === entry.id)!;
@@ -51,7 +65,7 @@ class SnapshotRefresh {
       manifestPath,
       JSON.stringify(
         {
-          verifiedOn: "2026-09-17",
+          verifiedOn: "2026-09-19",
           kind: "exact standalone build snapshots; not integrated gameplay source",
           files,
         },

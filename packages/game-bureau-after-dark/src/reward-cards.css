@@ -1,0 +1,133 @@
+/* A collectible field record, not a trading card. All text stays in HTML. */
+.bureau-record {
+  --record-gold: #e7cb91;
+  --record-teal: #b9dfd3;
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 550px;
+  min-width: 0;
+  margin: 22px auto;
+  padding: 9px;
+  border: 1px solid #d7bc7e;
+  border-radius: 12px 12px 5px 5px;
+  background: linear-gradient(135deg, #31434b, #172137 48%, #153337);
+  box-shadow: 0 0 0 3px #d9bd7712, 0 14px 28px #02091555;
+  text-align: left;
+  color: #f2ebd9;
+  overflow-wrap: anywhere;
+}
+.bureau-record *, .bureau-record *::before, .bureau-record *::after { box-sizing: border-box; }
+.bureau-record .bureau-record__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 5px 12px;
+  padding: 7px 9px 12px;
+  border: 0;
+  color: var(--record-gold);
+  font: 600 12px/1.5 'DM Sans', system-ui, sans-serif;
+  letter-spacing: .65px;
+  text-transform: uppercase;
+}
+.bureau-record .bureau-record__catalog {
+  color: #c3d1d5;
+  font-weight: 400;
+  letter-spacing: .4px;
+}
+.bureau-record .bureau-record__art {
+  margin: 0;
+  padding: 3px;
+  border: 1px solid #dbbf8066;
+  border-radius: 7px;
+  background: #0d1926;
+  box-shadow: 0 0 18px #b7dfca12;
+}
+.bureau-record .bureau-record__art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.bureau-record .bureau-record__body { padding: 15px 12px 17px; }
+.bureau-record .bureau-record__title {
+  margin: 0 0 8px;
+  color: #f2dba8;
+  font: 600 clamp(30px, 6vw, 39px)/1.08 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: -.3px;
+}
+.bureau-record .bureau-record__introduction {
+  margin: 0;
+  color: #d2dfe0;
+  font: 400 14px/1.6 'DM Sans', system-ui, sans-serif;
+}
+.bureau-record .bureau-record__notes {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #d4bd793d;
+}
+.bureau-record .bureau-record__notes h4 {
+  margin: 0 0 10px;
+  color: var(--record-gold);
+  font: 600 12px/1.5 'DM Sans', system-ui, sans-serif;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+}
+.bureau-record .bureau-record__notes dl { display: grid; gap: 10px; margin: 0; }
+.bureau-record .bureau-record__notes dl > div { min-width: 0; }
+.bureau-record .bureau-record__notes dt {
+  margin: 0 0 2px;
+  color: var(--record-teal);
+  font: 600 12px/1.5 'DM Sans', system-ui, sans-serif;
+}
+.bureau-record .bureau-record__notes dd {
+  margin: 0;
+  color: #e0e5df;
+  font: 400 14px/1.6 'DM Sans', system-ui, sans-serif;
+}
+.bureau-record .bureau-record__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 9px 12px;
+  margin: 0;
+  padding: 11px 12px;
+  border-top: 1px solid #d4bd793d;
+  color: #b7c7c7;
+  font: 400 12px/1.5 'DM Sans', system-ui, sans-serif;
+}
+.bureau-record .bureau-record__stamp {
+  display: inline-block;
+  padding: 4px 7px;
+  border: 1px solid #b9dfd37d;
+  border-radius: 3px;
+  color: var(--record-teal);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+/* Only a newly earned record receives this quiet, one-time reveal. */
+.reward-reveal .bureau-record { animation: bureau-record-arrive .65s ease-out both; }
+@keyframes bureau-record-arrive {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 380px) {
+  .bureau-record { padding: 6px; margin: 18px auto; }
+  .bureau-record .bureau-record__body { padding: 13px 9px 14px; }
+  .bureau-record .bureau-record__header, .bureau-record .bureau-record__footer { padding-left: 9px; padding-right: 9px; }
+}
+@media (max-height: 550px) and (min-width: 600px) {
+  .bureau-record .bureau-record__art img { aspect-ratio: 2 / 1; }
+  .bureau-record .bureau-record__notes dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bureau-record, .bureau-record *, .bureau-record *::before, .bureau-record *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

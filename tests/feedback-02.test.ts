@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PowerYard } from "../src/games/wishbone/powers";
-import { yards } from "../src/games/wishbone/levels";
-import { WishboneProgression } from "../src/games/wishbone/progression";
+import { PowerYard } from "../packages/game-wishbone-fling/src/powers";
+import { yards } from "../packages/game-wishbone-fling/src/levels";
+import { WishboneProgression } from "../packages/game-wishbone-fling/src/progression";
 import { ProfileRepository, type StoragePort } from "../src/core/profile";
 
 const step = (yard: PowerYard, seconds: number) => {

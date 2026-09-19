@@ -1,0 +1,17 @@
+# Arctic Duet — selected alternative, 2026-09-12
+
+Separate BOB-004-ALT1 experiment, requested by Jobe after enjoying Snow Jam. Preserve original playable, routes and saves. Inspired by Duet Cats' high-level two-character sliding/catching mechanic (official developer listing: https://play.google.com/store/apps/details?id=com.amanotes.gs.g06). All art, arrangements and snacks original. Publisher-backed Duane/polar bear and Major Puff/puffin friendship anchors are documented in ../../plans/requirements.md; falling snacks are invented fiction.
+
+Signature: independently drag two friends horizontally within two fixed halves, align mouths with falling snacks on musical beats, continuously enter increasingly lively verses. Spatial musical anticipation replaces Snow Jam's stationary timed tapping. This deliberately shares the same book/rhythm territory at the user's request. Compared with all ten reserved signatures: no free flight/dash (Stormglide), routing/construction (Funhouse and retired Popcorn), launch/collapse (Wish), cooking queue (Merienda), merging (Gummy), stealth (Bureau), habitat building (Sanctuary), containment (Emberwatch), or framing/shutter timing (Picture Day).
+
+## Numbered requirements, written before implementation
+1. AD-01 User: independent alternative playable with original Snow Jam preserved.
+2. AD-02 User: two-character touch sliding to catch falling musical food, inspired by Duet Cats. Each touch owns its half until release/cancel. Mouse plus optional partner assist; A/D and left/right arrows also supported.
+3. AD-03 User: genuinely easy opening: 78 BPM, four-beat lead, central sparse alternating snacks; level 2 introduces small offsets, level 3 wider motion, level 4 first pairs. Level every 32 beats, without stopping or clearing existing notes.
+4. AD-04 Designer: level progression continuous; difficulty capped at level 8, later levels vary scenery/patterns. Fixed tempo keeps soundtrack seamless, density and fall speed add difficulty. Gentle mode caps difficulty at level 2 but level numbers keep advancing.
+5. AD-05 Collection: misses never end play or remove score/progress. Catch window generous; feedback, expressive eyes, chewing, bobbing and particles make characters responsive. No questions, lives or restart gates.
+6. AD-06 Designer: music and notes share transport clock; pause freezes and cancels scheduled audio, visibility pauses. Silent fallback. Original synthesized backing and catch chirps; mute accessible.
+7. AD-07 Designer: cool plum/turquoise Arctic sweet-shop stage, big ivory bear and puffin, clearly split playfield, visible landing trails. Level progress and brief banners communicate growth while play continues.
+8. AD-08 Collection: touch-first responsive canvas, readable HTML controls, keyboard, one-hand partner assist, gentle difficulty and reduced-motion controls. No zoom-blocking page viewport.
+9. AD-09 Designer: independent validated save arctic-duet-v1 stores total catches, best level, settings; each new visit starts at level 1. No named collectibles in this prototype; snacks are transient notes, score/levels are not inventory.
+10. AD-10 Collection: editable source, dependency-free reproducible build to dist/duet.html and standalone Arctic-Duet.html; local preview, source commits, catalog/manifest updates. Test chart difficulty, catches/misses, continuity, input and pause. Inspect browser layout. State untested physical-device/audio limits honestly.

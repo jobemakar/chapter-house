@@ -85,6 +85,17 @@ export class TownNavigation {
       }
     );
   }
+  /** A walkable roaming target that remains close enough to its avatar. */
+  nearbyWanderTarget(origin: Point, angle: number, distance: number): Point {
+    const boundedDistance = Math.max(0.7, Math.min(2.8, distance));
+    const candidates = [0, Math.PI / 3, -Math.PI / 3, Math.PI].map((turn) => ({
+      x: origin.x + Math.cos(angle + turn) * boundedDistance,
+      z: origin.z + Math.sin(angle + turn) * boundedDistance,
+    }));
+    return candidates.find((candidate) => this.walkable(candidate)) ?? {
+      ...origin,
+    };
+  }
   private clear(a: Point, b: Point) {
     const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.1));
     for (let i = 1; i <= n; i++)

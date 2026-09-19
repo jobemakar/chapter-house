@@ -1,0 +1,2 @@
+import assert from "node:assert/strict";import {ContraptionEngine} from "../src/engine";import {levels,normalizeLayout} from "../src/levels";
+for(let i=0;i<levels.length;i++){const layout=normalizeLayout(i,levels[i].solution);assert.equal(layout.filter(p=>p.locked).length,levels[i].solution.filter(p=>p.locked).length);const e=new ContraptionEngine(i,layout,123);for(let n=0;n<120;n++)e.step();assert.ok(e.particles.length<=42)}const fixed=normalizeLayout(5,[{...levels[5].solution[0],x:10}]);assert.equal(fixed[0].x,levels[5].solution[0].x);

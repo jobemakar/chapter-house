@@ -1,0 +1,23 @@
+/** Deterministic, DOM-free rules retained from Pocket Funhouse 0.1.1. */
+export const COLS = 4;
+export type Direction = 0 | 1 | 2 | 3;
+export type Point = readonly [number, number];
+export const DIR: readonly Point[] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+export interface RoomDefinition { readonly name: string; readonly curio: string; readonly path: readonly number[]; readonly wing: number; readonly gates: readonly number[]; readonly tiles: readonly (readonly Direction[])[]; }
+export interface RoomState { rotations: number[]; gates: Record<number, boolean>; }
+export interface TraceStep { id: number; entry: Direction; exit: Direction; }
+export interface TraceResult { visited: TraceStep[]; solved: boolean; blocked?: number; }
+export interface NudgeResult { id: number; kind: "track" | "shutter"; }
+const paths: readonly (readonly number[])[] = [[4,5,1,2,6,7],[0,4,5,9,10,6,2,3],[8,4,0,1,5,6,10,11],[4,0,1,2,6,5,9,10,11,7],[0,1,5,4,8,9,10,6,2,3,7,11],[8,9,5,4,0,1,2,6,10,11,7,3],[4,8,9,5,1,2,6,10,11,7,3],[0,4,8,9,5,1,2,6,10,11],[8,4,0,1,5,9,10,6,2,3,7,11],[4,0,1,5,9,10,6,2,3,7,11],[0,1,2,6,5,4,8,9,10,11,7,3],[8,9,5,4,0,1,2,6,10,11,7,3]];
+const names = ["The Brass Welcome","A Crooked Little Hall","The Moonlit Shortcut","The Velvet Switchback","The Clockmaker’s Curtain","The Wandering Stair","The Peacock Passage","The Secret Intermission","The Starlight Attic","The Midnight Detour","The Impossible Parlor","The Pocket Grand Finale"] as const;
+const curios = ["Brass key","Mirror fragment","Passage lantern","Hidden-door hinge","Curtain pull","Sliding panel","Optical prism","Secret-door bookcase","Funhouse map","Turning lock","Treasure latch","Miniature funhouse"] as const;
+export function direction(a: number, b: number): number { const dx = b % COLS - a % COLS; const dy = Math.floor(b / COLS) - Math.floor(a / COLS); return DIR.findIndex(([x, y]) => x === dx && y === dy); }
+function directionValue(value: number): Direction { return value as Direction; }
+function tilePorts(path: readonly number[], id: number): readonly Direction[] { const position = path.indexOf(id); if (position < 0) return id % 2 ? [0,2] : [0,1]; return [directionValue(position === 0 ? 3 : direction(id, path[position - 1]!)), directionValue(position === path.length - 1 ? 1 : direction(id, path[position + 1]!) )]; }
+export const rooms: readonly RoomDefinition[] = paths.map((path, index) => ({ name: names[index]!, curio: curios[index]!, path, wing: Math.floor(index / 4), gates: index < 4 ? [] : index < 8 ? [path[3]!] : [path[2]!, path[path.length - 3]!], tiles: Array.from({length: 12}, (_, id) => tilePorts(path, id)) }));
+function roomAt(index: number): RoomDefinition { return rooms[index] ?? rooms[0]!; }
+export function freshRoom(index: number): RoomState { const room = roomAt(index); return { rotations: room.tiles.map((_, tile) => ((tile * 7 + index * 3) % 3) + 1), gates: Object.fromEntries(room.gates.map((id) => [id, false])) }; }
+export function ports(room: RoomDefinition, state: RoomState, id: number): Direction[] { return (room.tiles[id] ?? []).map((value) => directionValue((value + (state.rotations[id] ?? 0)) % 4)); }
+export function trace(index: number, state: RoomState): TraceResult { const room = roomAt(index); const visited: TraceStep[] = []; const seen = new Set<number>(); let id = room.path[0]!; let entry: Direction = 3; for (let step = 0; step < 25; step++) { const connected = ports(room, state, id); if (!connected.includes(entry)) return {visited, solved:false, blocked:id}; const exit = connected.find((value) => value !== entry); if (exit === undefined) return {visited, solved:false, blocked:id}; visited.push({id, entry, exit}); if (room.gates.includes(id) && !state.gates[id]) return {visited, solved:false, blocked:id}; const delta = DIR[exit]!; const x = id % COLS + delta[0]; const y = Math.floor(id / COLS) + delta[1]; if (x < 0 || x > 3 || y < 0 || y > 2) return {visited, solved:id === room.path.at(-1) && exit === 1}; id = y * COLS + x; entry = directionValue((exit + 2) % 4); if (seen.has(id)) return {visited, solved:false}; seen.add(id); } return {visited, solved:false}; }
+export function rotate(index: number, state: RoomState, id: number): void { if (!Number.isInteger(id) || id < 0 || id >= roomAt(index).tiles.length) return; state.rotations[id] = ((state.rotations[id] ?? 0) + 1) % 4; }
+export function nudge(index: number, state: RoomState): NudgeResult | null { const room = roomAt(index); for (const id of room.path) { if (!ports(room,state,id).every((port) => room.tiles[id]!.includes(port))) { state.rotations[id] = 0; return {id,kind:"track"}; } if (room.gates.includes(id) && !state.gates[id]) { state.gates[id] = true; return {id,kind:"shutter"}; } } return null; }

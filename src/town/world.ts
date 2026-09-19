@@ -19,10 +19,12 @@ export interface TownContextViewAction {
 import { AnimalRig, RoomArt } from "../room/art";
 import { ActorReaction, type ReactionKind } from "../room/reactions";
 import { RouteMotion } from "../room/motion";
+import { PetRoamingController, type PetMotionActor } from "../room/pet-motion";
 import { PetAssets, PetRig, type PetAssetKey } from "../room/pet-assets";
 import { getPet } from "../core/catalog";
 import type { ProfileRepository, Point } from "../core/profile";
 import { PointerGesture, type ScreenPoint } from "../core/pointer-gesture";
+import { TownRenderPerformance } from "./render-performance";
 
 export interface TownContextView {
   mode: "hidden" | "radial" | "reel";
@@ -49,6 +51,7 @@ export class TownWorld {
   private audio: TownAudio;
   private nav = new TownNavigation();
   private avatar: AnimalRig;
+  private avatarAppearance = "";
   private activityArt: TownActivityArt;
   private activities = new TownActivities();
   private contextMenu = new TownContextMenu();
@@ -62,12 +65,24 @@ export class TownWorld {
   private avatarReaction = new ActorReaction("avatar");
   private petReaction = new ActorReaction("pet");
   private point: Point = { ...TOWN.entry };
-  private petPoint: Point = { x: TOWN.entry.x + 0.7, z: TOWN.entry.z };
+  private petActor: PetMotionActor = {
+    point: { x: TOWN.entry.x + 0.7, z: TOWN.entry.z },
+    path: [],
+    wait: 0,
+  };
+  private get petPoint() {
+    return this.petActor.point;
+  }
   private route: Point[] = [];
-  private petRoute: Point[] = [];
-  private petWait = 0;
+  private get petRoute() {
+    return this.petActor.path;
+  }
+  private get petWait() {
+    return this.petActor.wait;
+  }
+  private petMotion: PetRoamingController;
   private focus: Point = { ...TOWN.entry };
-  private zoom = 0.8;
+  private renderPerformance = new TownRenderPerformance();
   private following = false;
   private gesture = new PointerGesture(9);
   private pinch: { zoom: number; anchor: THREE.Vector3 } | null = null;
@@ -80,6 +95,11 @@ export class TownWorld {
   private disposed = false;
   private coinCooldown = 0;
   private coinAvailable = false;
+  private readonly fountainProjection = new THREE.Vector3();
+  private readonly contextProjection = new THREE.Vector3();
+  private readonly discoveryProjection = new THREE.Vector3();
+  private lastContextView: TownContextView | null = null;
+  private lastDiscoveryView: TownDiscoveryView | null = null;
   constructor(
     private host: HTMLElement,
     private profile: ProfileRepository,
@@ -89,13 +109,25 @@ export class TownWorld {
     private discoveryChanged: (view: TownDiscoveryView) => void = () => {},
     private petAssets: PetAssets = new PetAssets(),
   ) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    this.petMotion = new PetRoamingController(
+      this.nav,
+      undefined,
+      Math.random,
+      (origin, facing) => this.nav.companionTarget(origin, facing),
+    );
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance",
+    });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setClearColor(0xdce8cd);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.12;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.shadowMap.needsUpdate = true;
     host.append(this.renderer.domElement);
     const canvas = this.renderer.domElement;
     canvas.tabIndex = 0;
@@ -121,6 +153,7 @@ export class TownWorld {
       "fox",
       profile.state.avatar.accessory,
     );
+    this.avatarAppearance = JSON.stringify(profile.state.avatar);
     this.avatar.root.add(this.avatarReaction.sprite);
     this.avatar.root.userData.kind = "avatar";
     this.scene.add(this.avatar.root);
@@ -273,6 +306,27 @@ export class TownWorld {
     this.pet = replacement;
     this.scene.add(replacement.root);
   }
+  /** Keep Willowbrook's visible avatar in sync with the shared profile. */
+  syncAvatarAppearance() {
+    const appearance = JSON.stringify(this.profile.state.avatar);
+    if (appearance === this.avatarAppearance) return;
+    const previous = this.avatar;
+    const replacement = new AnimalRig(
+      this.profile.state.avatar.color,
+      "fox",
+      this.profile.state.avatar.accessory,
+    );
+    replacement.root.position.copy(previous.root.position);
+    replacement.root.rotation.copy(previous.root.rotation);
+    replacement.root.userData.kind = "avatar";
+    replacement.root.add(this.avatarReaction.sprite);
+    this.activityArt.setAvatar(replacement);
+    previous.root.removeFromParent();
+    RoomArt.release(previous.root);
+    this.avatar = replacement;
+    this.avatarAppearance = appearance;
+    this.scene.add(replacement.root);
+  }
   setMuted(value: boolean) {
     this.audio.setMuted(value);
   }
@@ -281,7 +335,15 @@ export class TownWorld {
       h = this.host.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h);
-    const height = 15 / this.zoom,
+    this.updateProjection(w, h);
+    this.positionCamera();
+  }
+  private updateProjection(
+    w = this.host.clientWidth,
+    h = this.host.clientHeight,
+  ) {
+    if (!w || !h) return;
+    const height = 15 / this.renderPerformance.zoom,
       aspect = w / h;
     this.camera.left = (-height * aspect) / 2;
     this.camera.right = (height * aspect) / 2;
@@ -290,7 +352,6 @@ export class TownWorld {
     this.camera.near = 0.1;
     this.camera.far = 100;
     this.camera.updateProjectionMatrix();
-    this.positionCamera();
   }
   private positionCamera() {
     this.focus.x = Math.max(3, Math.min(TOWN.width - 3, this.focus.x));
@@ -312,7 +373,7 @@ export class TownWorld {
   }
   private beginPinch(midpoint: ScreenPoint) {
     const anchor = this.floor(midpoint.x, midpoint.y);
-    this.pinch = anchor ? { zoom: this.zoom, anchor } : null;
+    this.pinch = anchor ? { zoom: this.renderPerformance.zoom, anchor } : null;
     this.following = false;
   }
   private moveGesture(event: PointerEvent) {
@@ -323,8 +384,8 @@ export class TownWorld {
     if (update.kind === "pinch") {
       const pinch = this.pinch;
       if (!pinch) return;
-      this.zoom = Math.max(0.65, Math.min(1.7, pinch.zoom * update.scale));
-      this.resize();
+      this.renderPerformance.setZoomImmediate(pinch.zoom * update.scale);
+      this.updateProjection();
       const after = this.floor(update.midpoint.x, update.midpoint.y);
       if (after) {
         this.focus.x += pinch.anchor.x - after.x;
@@ -398,19 +459,27 @@ export class TownWorld {
     this.positionCamera();
   }
   setZoom(delta: number) {
-    this.zoom = Math.max(0.65, Math.min(1.7, this.zoom + delta));
-    this.resize();
+    this.renderPerformance.nudgeZoom(delta);
   }
   react(kind: ReactionKind) {
     this.avatarReaction.show(kind);
   }
   wave() {
     this.avatar.wave();
-    this.react("hello");
   }
   jump() {
     this.avatar.jump();
-    this.react("surprise");
+  }
+  callPet() {
+    if (!this.pet) return;
+    this.petMotion.call(
+      this.petActor,
+      { point: this.point },
+      this.avatar.root.rotation.y,
+    );
+    this.petReaction.show("question");
+    this.avatar.wave();
+    this.notify("Here, little friend!");
   }
   tossCoin() {
     if (!this.coinAvailable) {
@@ -513,41 +582,91 @@ export class TownWorld {
         : mode === "reel"
           ? ([{ id: "reel", label: "Reel", enabled: true }] as const)
           : [];
-    const projected = new THREE.Vector3(
-      this.point.x,
-      1.72,
-      this.point.z,
-    ).project(this.camera);
-    const width = this.host.clientWidth;
-    const height = this.host.clientHeight;
-    this.contextChanged({
+    const contextActive = mode !== "hidden";
+    const discoveryActive = this.discoveryTime > 0 && !!this.discovery;
+    const width = contextActive || discoveryActive ? this.host.clientWidth : 0;
+    const height =
+      contextActive || discoveryActive ? this.host.clientHeight : 0;
+    const projected = contextActive
+      ? this.contextProjection
+          .set(this.point.x, 1.72, this.point.z)
+          .project(this.camera)
+      : null;
+    const contextView: TownContextView = {
       mode,
       actions,
-      x: Math.max(58, Math.min(width - 58, ((projected.x + 1) / 2) * width)),
-      y: Math.max(74, Math.min(height - 88, ((1 - projected.y) / 2) * height)),
-      visible: mode !== "hidden" && Math.abs(projected.z) <= 1,
-    });
-    const discoveryPoint = new THREE.Vector3(
-      this.point.x,
-      2.08,
-      this.point.z,
-    ).project(this.camera);
-    this.discoveryChanged({
+      x: projected
+        ? Math.round(
+            Math.max(58, Math.min(width - 58, ((projected.x + 1) / 2) * width)),
+          )
+        : 0,
+      y: projected
+        ? Math.round(
+            Math.max(
+              74,
+              Math.min(height - 88, ((1 - projected.y) / 2) * height),
+            ),
+          )
+        : 0,
+      visible: !!projected && Math.abs(projected.z) <= 1,
+    };
+    if (!this.sameContextView(contextView, this.lastContextView)) {
+      this.lastContextView = contextView;
+      this.contextChanged(contextView);
+    }
+    const discoveryPoint = discoveryActive
+      ? this.discoveryProjection
+          .set(this.point.x, 2.08, this.point.z)
+          .project(this.camera)
+      : null;
+    const discoveryView: TownDiscoveryView = {
       discovery: this.discovery,
       count: this.discoveryCount,
-      x: Math.max(
-        72,
-        Math.min(width - 72, ((discoveryPoint.x + 1) / 2) * width),
-      ),
-      y: Math.max(
-        94,
-        Math.min(height - 110, ((1 - discoveryPoint.y) / 2) * height),
-      ),
-      visible:
-        this.discoveryTime > 0 &&
-        !!this.discovery &&
-        Math.abs(discoveryPoint.z) <= 1,
-    });
+      x: discoveryPoint
+        ? Math.round(
+            Math.max(
+              72,
+              Math.min(width - 72, ((discoveryPoint.x + 1) / 2) * width),
+            ),
+          )
+        : 0,
+      y: discoveryPoint
+        ? Math.round(
+            Math.max(
+              94,
+              Math.min(height - 110, ((1 - discoveryPoint.y) / 2) * height),
+            ),
+          )
+        : 0,
+      visible: !!discoveryPoint && Math.abs(discoveryPoint.z) <= 1,
+    };
+    if (!this.sameDiscoveryView(discoveryView, this.lastDiscoveryView)) {
+      this.lastDiscoveryView = discoveryView;
+      this.discoveryChanged(discoveryView);
+    }
+  }
+  private sameContextView(a: TownContextView, b: TownContextView | null) {
+    return (
+      !!b &&
+      a.mode === b.mode &&
+      a.visible === b.visible &&
+      (!a.visible || (a.x === b.x && a.y === b.y)) &&
+      a.actions.length === b.actions.length &&
+      a.actions.every(
+        (action, index) =>
+          action.id === b.actions[index]?.id &&
+          action.enabled === b.actions[index]?.enabled,
+      )
+    );
+  }
+  private sameDiscoveryView(a: TownDiscoveryView, b: TownDiscoveryView | null) {
+    return (
+      !!b &&
+      a.visible === b.visible &&
+      a.discovery === b.discovery &&
+      a.count === b.count &&
+      (!a.visible || (a.x === b.x && a.y === b.y))
+    );
   }
   private updateCoinAvailability() {
     const available = this.nav.nearFountain(this.point);
@@ -559,6 +678,10 @@ export class TownWorld {
     const dt = this.last ? Math.min((time - this.last) / 1000, 0.05) : 0;
     this.last = time;
     if (!document.hidden) {
+      const renderFrame = this.renderPerformance.update(dt);
+      if (renderFrame.zoomChanged) this.updateProjection();
+      if (renderFrame.refreshShadows)
+        this.renderer.shadowMap.needsUpdate = true;
       this.updateActivity(dt);
       const moved = this.activities.view.busy
         ? { facing: this.avatar.root.rotation.y, moved: false }
@@ -574,24 +697,10 @@ export class TownWorld {
       this.avatar.update(dt, moved.moved, this.profile.state.reduced);
       this.updateCoinAvailability();
       if (this.pet) {
-        this.petWait -= dt;
-        if (this.petWait <= 0) {
-          this.petWait = 0.35;
-          const target = this.nav.companionTarget(
-            this.point,
-            this.avatar.root.rotation.y,
-          );
-          if (
-            Math.hypot(this.petPoint.x - target.x, this.petPoint.z - target.z) >
-            0.3
-          )
-            this.petRoute = this.nav.path(this.petPoint, target);
-        }
-        const pm = RouteMotion.step(
-          this.petPoint,
-          this.petRoute,
+        const pm = this.petMotion.update(
+          this.petActor,
+          { point: this.point },
           this.pet.root.rotation.y,
-          3.1,
           dt,
         );
         this.pet.root.rotation.y = pm.facing;
@@ -610,9 +719,9 @@ export class TownWorld {
       this.activityArt.update(dt, this.profile.state.reduced);
       this.discoveryTime = Math.max(0, this.discoveryTime - dt);
       this.coinCooldown = Math.max(0, this.coinCooldown - dt);
-      const p = new THREE.Vector3(TOWN.fountain.x, 1, TOWN.fountain.z).project(
-        this.camera,
-      );
+      const p = this.fountainProjection
+        .set(TOWN.fountain.x, 1, TOWN.fountain.z)
+        .project(this.camera);
       this.audio.setView(
         Math.abs(p.x) < 1.12 && Math.abs(p.y) < 1.12,
         Math.hypot(
@@ -629,9 +738,13 @@ export class TownWorld {
   status() {
     return {
       avatar: { ...this.point },
+      avatarAppearance: JSON.parse(this.avatarAppearance) as {
+        color: string;
+        accessory: string;
+      },
       walking: this.route.length > 0,
       focus: { ...this.focus },
-      zoom: this.zoom,
+      zoom: this.renderPerformance.zoom,
       coinFlipping: this.coinCooldown > 0,
       coinAvailable: this.coinAvailable,
       activity: this.activities.view,
@@ -641,9 +754,18 @@ export class TownWorld {
       scenery: this.art.status(),
       pet:
         this.pet instanceof PetRig
-          ? { id: this.petId, renderer: "cube-pet", ...this.pet.status() }
+          ? {
+              id: this.petId,
+              renderer: "cube-pet",
+              ...this.petPoint,
+              ...this.pet.status(),
+            }
           : this.pet
-            ? { id: this.petId, renderer: "procedural-fallback" }
+            ? {
+                id: this.petId,
+                renderer: "procedural-fallback",
+                ...this.petPoint,
+              }
             : null,
     };
   }

@@ -1,0 +1,7 @@
+{
+  "name": "@chapter-house/game-wishbone-fling", "version": "0.1.0", "private": true, "type": "module",
+  "exports": { ".": "./src/index.ts", "./progress": "./src/progress.ts", "./manifest": "./src/manifest.ts" },
+  "scripts": { "dev": "vite --host 127.0.0.1 --port 5193 --strictPort", "build": "vite build", "typecheck": "tsc --noEmit", "test": "tsx tests/camera.ts && tsx tests/physics.ts && tsx tests/scenery.ts && tsx tests/progress.ts", "check": "npm run typecheck && npm test && npm run build" },
+  "dependencies": { "@chapter-house/game-host": "*", "matter-js": "0.20.0" },
+  "devDependencies": { "@types/matter-js": "0.20.2", "@types/node": "26.5.1", "tsx": "4.23.13", "typescript": "7.0.2", "vite": "8.3.0" }
+}

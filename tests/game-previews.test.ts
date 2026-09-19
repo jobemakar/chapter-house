@@ -5,13 +5,24 @@ import { GamePreviews } from "../src/core/game-previews";
 import { GamePreviewBridge } from "../tools/game-previews";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-test("standalone menu has unique safe routes and separate-tab preview labels", () => {
+test("all canonical games have left the legacy preview shelf", () => {
   assert.equal(
     new Set(GamePreviews.entries.map((p) => p.id)).size,
     GamePreviews.entries.length,
   );
   const markup = GamePreviews.markup();
-  assert.match(markup, /saves and rewards stay separate/);
+  assert.equal(markup, "");
+  assert.equal(
+    GamePreviews.entries.filter((preview) => preview.technology === "TypeScript")
+      .length,
+    0,
+  );
+  assert.deepEqual(
+    GamePreviews.entries
+      .filter((preview) => preview.technology === "JavaScript")
+      .map((preview) => preview.id),
+    [],
+  );
   for (const preview of GamePreviews.entries) {
     assert.match(preview.id, /^[a-z0-9-]+$/);
     assert.ok(markup.includes(GamePreviews.url(preview)));
@@ -53,22 +64,31 @@ test("every preview has its existing build and all required assets packaged", as
   }
 });
 
-test("preview bridge rejects non-allowlisted assets", async () => {
-  await assert.rejects(
-    new GamePreviewBridge(root).read(
-      GamePreviews.entries[0],
-      "../../catalog.json",
-    ),
-    /not allowlisted/,
-  );
-});
-
 test("preview bridge rejects collection traversal", async () => {
   await assert.rejects(
     new GamePreviewBridge(root).read({
-      ...GamePreviews.entries[0],
+      id: "invalid",
+      title: "Invalid",
+      book: "Invalid",
+      description: "Invalid",
+      technology: "JavaScript",
       source: "../outside.html",
     }),
     /escapes collection/,
+  );
+});
+
+test("preview bridge rejects non-allowlisted assets", async () => {
+  await assert.rejects(
+    new GamePreviewBridge(root).read({
+      id: "invalid",
+      title: "Invalid",
+      book: "Invalid",
+      description: "Invalid",
+      technology: "JavaScript",
+      source: "preview-sources/vedas-great-escape/index.html",
+      assets: [],
+    }, "../../catalog.json"),
+    /not allowlisted/,
   );
 });

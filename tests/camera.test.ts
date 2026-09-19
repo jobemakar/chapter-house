@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { WishboneCamera } from "../src/games/wishbone/camera";
+import { WishboneCamera } from "../packages/game-wishbone-fling/src/camera";
 
 test("camera transforms invert at multiple zooms and anchored zoom keeps world point", () => {
   const c = new WishboneCamera();

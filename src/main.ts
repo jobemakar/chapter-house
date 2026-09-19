@@ -8,7 +8,13 @@ import { ClubhouseRoom } from "./room/room";
 import { RoomAudio } from "./room/audio";
 import { CatalogPortraits } from "./room/portraits";
 import { PetAssets } from "./room/pet-assets";
-import { WishboneGame } from "./games/wishbone/game";
+import { REACTION_CHOICES } from "./room/reaction-catalog";
+import type { ReactionKind } from "./room/reactions";
+import type { GameSession } from "./core/game-session";
+import {
+  IntegratedGames,
+  type IntegratedGameId,
+} from "./core/integrated-games";
 import {
   TownWorld,
   type TownContextView,
@@ -18,9 +24,13 @@ import { FISH, FINDS, type DiscoveryDefinition } from "./town/activities";
 import { assetUrl } from "./core/asset-url";
 import { GamePreviews } from "./core/game-previews";
 import { furniture, pets, getFurniture } from "./core/catalog";
+import {
+  FirebaseSession,
+  type MemberSessionState,
+} from "./firebase/session";
+import { InvalidUsernameError } from "./firebase/username";
 import "./styles.css";
 import "./room/actions.css";
-import "./games/wishbone/ui.css";
 const paths: Record<string, string> = {
   book: "M4 4h6c2 0 2 2 2 2s0-2 2-2h6v15h-6c-2 0-2 2-2 2s0-2-2-2H4z M12 6v15",
   game: "M7 7h10c3 0 5 9 4 11s-4-1-5-3H8c-1 2-4 5-5 3S4 7 7 7z M7 9v5 M4.5 11.5h5 M16 10h.1 M19 13h.1",
@@ -32,32 +42,57 @@ const paths: Record<string, string> = {
   expand: "M8 3H3v5 M16 3h5v5 M21 16v5h-5 M3 16v5h5",
   wave: "M8 13V5c0-2 3-2 3 0v6-8c0-2 3-2 3 0v8-6c0-2 3-2 3 0v7-4c0-2 3-2 3 0v7c0 7-10 9-13 4l-4-5c-1-2 1-3 3-1l2 2",
   jump: "M12 20V4 M6 10l6-6 6 6 M4 20h3 M17 20h3",
+  outside: "M4 18l5-7 4 4 3-5 4 8z M5 18h14 M12 5a2 2 0 110-4 2 2 0 010 4z",
+  home: "M3 11l9-8 9 8 M5 10v10h14V10 M9 20v-6h6v6",
+  collection: "M5 4h14v16H5z M8 2v4 M16 2v4 M8 10h8 M8 14h5",
+  call: "M4 8h9v5c0 4-2 7-5 7s-5-3-5-6c0-3 2-6 5-6 M13 9h5c2 0 3 1 3 3s-1 3-3 3h-3 M7 12h2",
+  back: "M19 12H5 M11 6l-6 6 6 6",
 };
 function icon(name: string) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] ?? paths.book}"/></svg>`;
 }
 class ChapterHouse {
   private profile = new ProfileRepository(browserStorage());
+  private memberSession = new FirebaseSession();
+  private memberState: MemberSessionState = { status: "loading" };
   private audio = new RoomAudio(this.profile.state.muted);
   private petAssets = new PetAssets();
   private room: ClubhouseRoom;
   private portraits = new CatalogPortraits();
-  private game: WishboneGame | null = null;
+  private game: GameSession | null = null;
+  private activeGameId: IntegratedGameId | null = null;
+  private gameLoadToken = 0;
   private town: TownWorld | null = null;
   private panel: string | null = null;
   private toastTimer = 0;
   private panelFocus: HTMLElement | null = null;
   constructor(private root: HTMLElement) {
     root.innerHTML = `<header class="topbar">
+<button data-action="exit-game" class="game-exit" aria-label="Exit game">${icon("back")}<span>Exit game</span></button>
 <a class="brand" href="#" aria-label="Chapter House home">${icon("book")}<span>chapter house<small>BATTLE OF THE BOOKS</small>
 </span>
 </a>
-<div class="identity">
+<nav class="app-nav" aria-label="Chapter House activities">${[
+      ["outside", "outside", "Outside"],
+      ["clubhouse", "home", "Clubhouse"],
+      ["collection", "collection", "Collection"],
+      ["games", "game", "Games"],
+      ["decorate", "sofa", "Decorate"],
+      ["pets", "paw", "Pets"],
+      ["style", "style", "Your look"],
+      ["shop", "shop", "Shop"],
+    ]
+      .map(
+        ([id, symbol, label]) =>
+          `<button data-action="${id}" aria-label="${label}" title="${label}">${icon(symbol)}</button>`,
+      )
+      .join("")}</nav>
+<button class="identity" data-action="account" aria-label="Open account">
 <span class="name">
 </span>
 <span class="save-dot" title="Saved on this device">
 </span>
-</div>
+</button>
 <div class="wallet" aria-label="Your coins">
 <span class="coin" aria-hidden="true">C</span>
 <b data-ui="coins">0</b>
@@ -69,30 +104,29 @@ class ChapterHouse {
 </div>
 </header>
 <div class="save-warning" role="status" hidden>Saving is unavailable. Keep this tab open to retain this session.</div>
-<main class="room-page">
-<div class="room-intro">
-<span class="eyebrow">MAKE YOURSELF AT HOME</span>
-<h1>Your little<br>story corner.</h1>
-<p>Good books. Small adventures.<br>A space that’s all yours.</p>
+<section class="space-descriptor" aria-live="polite">
+<span class="eyebrow" data-ui="space-label"></span>
+<h1 data-ui="space-title"></h1>
+<p data-ui="space-detail"></p>
+</section>
+<div class="world-actions" role="group" aria-label="Avatar actions">
+<div class="reaction-control">
+<div class="quick-reactions" role="menu" aria-label="Choose a reaction" hidden>${REACTION_CHOICES.map(
+      (reaction) =>
+        `<button data-action="react-choice" data-id="${reaction.value}" role="menuitem" aria-label="${reaction.label} reaction" title="${reaction.label}">${reaction.emoji}</button>`,
+    ).join("")}</div>
+<button data-action="reactions" aria-label="Reactions" title="Reactions" aria-expanded="false"><span class="react-face">☺</span></button>
 </div>
+<button data-action="wave" aria-label="Wave" title="Wave">${icon("wave")}</button>
+<button data-action="jump" aria-label="Jump" title="Jump">${icon("jump")}</button>
+<button data-action="call" aria-label="Call pet" title="Call pet">${icon("call")}</button>
+</div>
+<main class="room-page">
 <div class="room-world">
 </div>
 <div class="room-caption">
 <span class="leaf-dot">
 </span> Tap an open spot to wander</div>
-<div class="view-controls">
-<button data-action="zoomout" aria-label="Zoom out">−</button>
-<button data-action="zoomin" aria-label="Zoom in">+</button>
-</div>
-<div class="emotes">
-<button data-action="reactions" aria-label="Reactions"><span style="font-size:26px">☺</span><span>React</span></button>
-<button data-action="wave" aria-label="Wave">${icon("wave")}<span>Wave</span>
-</button>
-<button data-action="jump" aria-label="Jump">${icon("jump")}<span>Jump</span>
-</button>
-<button data-action="call" aria-label="Call pet">${icon("paw")}<span>Call pet</span>
-</button>
-</div>
 <div class="edit-mode-bar"><span>Decorating · Tap a piece to move it</span><button data-action="done-decorating">Done</button></div>
 <div class="placement-bar" hidden>
 <div>
@@ -108,34 +142,12 @@ class ChapterHouse {
 <button data-action="place" class="primary">Place here</button>
 </div>
 </div>
-<nav class="dock" aria-label="Clubhouse activities">${[
-      ["games", "game", "Games"],
-      ["outside", "book", "Outside"],
-      ["decorate", "sofa", "Decorate"],
-      ["pets", "paw", "Pets"],
-      ["style", "style", "Your look"],
-      ["shop", "shop", "Shop"],
-    ]
-      .map(
-        ([
-          id,
-          i,
-          label,
-        ]) => `<button data-action="${id}">${icon(i)}<span>${label}</span>
-<i>
-</i>
-</button>`,
-      )
-      .join("")}</nav>
 </main>
 <main class="game-host" hidden>
 </main>
 <main class="town-page" hidden><div class="town-world"></div>
-<div class="town-heading"><span class="eyebrow">A LITTLE FURTHER AFIELD</span><h2>Willowbrook square</h2><p>Tap a path to walk · drag to explore · pinch to zoom</p></div>
-<div class="town-controls"><button data-action="inside">← Clubhouse</button><button data-action="collection">Collection</button><button data-action="plaza">Fountain square</button><button data-action="town-center" aria-label="Center on avatar">◎</button><button data-action="town-out" aria-label="Town zoom out">−</button><button data-action="town-in" aria-label="Town zoom in">+</button></div>
 <div class="town-context" role="group" aria-label="Avatar actions" data-mode="hidden" hidden><button data-action="town-fish"><span>🎣</span> Fish</button><button data-action="town-dig"><span>♠</span> Dig</button><button data-action="town-reel"><span>!</span> Reel!</button></div>
 <div class="town-discovery" role="status" aria-live="polite" hidden><img alt=""><div><small>NEW DISCOVERY</small><b></b><span></span></div></div>
-<div class="town-emotes"><button data-action="town-wave">Wave</button><button data-action="town-jump">Jump</button><button data-action="town-heart" aria-label="Heart reaction">♥</button><button data-action="town-question" aria-label="Curious reaction">?</button></div>
 </main>
 <aside class="panel" aria-label="Clubhouse options" hidden>
 <header>
@@ -159,6 +171,22 @@ class ChapterHouse {
 <p>Choose a pet to share your clubhouse.<br>There are more friends to collect as you play.</p>
 <div class="starter-options">
 </div>
+</dialog>
+<dialog class="account-dialog" aria-labelledby="account-title">
+<button class="dialog-close" data-action="close-account" aria-label="Close account">×</button>
+<span class="eyebrow">MEMBER DOOR</span>
+<h2 id="account-title">Come back to your clubhouse</h2>
+<form data-form="member-login">
+<label>Username<input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required minlength="3" maxlength="24"></label>
+<label>Password<input name="password" type="password" autocomplete="current-password" required minlength="6"></label>
+<p class="account-error" role="alert" hidden></p>
+<button class="primary" type="submit">Sign in</button>
+</form>
+<section class="member-account" hidden>
+<p>Signed in as <b data-ui="member-name"></b>.</p>
+<button data-action="account-sign-out">Return to local guest</button>
+</section>
+<p class="quiet account-note">Accounts are created privately by Jobe. No email address is needed.</p>
 </dialog>`;
     this.root.querySelector(".brand")!.addEventListener("click", (e) => {
       e.preventDefault();
@@ -187,6 +215,7 @@ class ChapterHouse {
       });
     root.addEventListener("click", this.click);
     root.addEventListener("change", this.change);
+    root.addEventListener("submit", this.submit);
     root.addEventListener("pointerdown", () => this.audio.unlock(), {
       capture: true,
     });
@@ -207,9 +236,17 @@ class ChapterHouse {
       this.refreshHeader();
       this.audio.setMuted(this.profile.state.muted);
       this.town?.setMuted(this.profile.state.muted);
+      this.town?.syncAvatarAppearance();
       if (this.panel === "collection") this.renderPanel();
     });
+    this.memberSession.subscribe((state) => {
+      this.memberState = state;
+      this.refreshHeader();
+      this.renderAccountDialog();
+    });
     this.refreshHeader();
+    this.showSpaceDescriptor("clubhouse");
+    this.refreshNavigation();
     if (!this.profile.state.starterChosen) {
       this.root.querySelector(".starter-options")!.innerHTML = pets
         .filter((p) => p.starter)
@@ -224,12 +261,12 @@ class ChapterHouse {
     }
     const debug = window as unknown as { chapterHouseStatus: () => unknown };
     debug.chapterHouseStatus = () => ({
-      screen: this.game ? "wishbone" : this.town ? "town" : "clubhouse",
+      screen: this.activeGameId ?? (this.town ? "town" : "clubhouse"),
       profile: structuredClone(this.profile.state),
       saved: this.profile.saved,
       room: this.room.status(),
       audio: this.audio.status(),
-      game: this.game?.status() ?? null,
+      game: this.game?.status?.() ?? null,
       town: this.town?.status() ?? null,
     });
     new LocalDiagnostics(debug.chapterHouseStatus);
@@ -242,7 +279,19 @@ class ChapterHouse {
     this.root.querySelector<HTMLElement>(".save-warning")!.hidden =
       this.profile.saved;
     this.ui("coins").textContent = String(this.profile.state.currency);
-    this.root.querySelector(".name")!.textContent = this.profile.state.name;
+    const username =
+      this.memberState.status === "member"
+        ? this.memberState.username
+        : this.profile.state.name;
+    this.root.querySelector(".name")!.textContent = username;
+    const identity = this.root.querySelector<HTMLElement>(".identity")!;
+    identity.classList.toggle("member", this.memberState.status === "member");
+    identity.setAttribute(
+      "aria-label",
+      this.memberState.status === "member"
+        ? `Account: ${username}`
+        : `Local guest: ${username}. Open member sign in`,
+    );
     const dot = this.root.querySelector<HTMLElement>(".save-dot")!;
     dot.classList.toggle("unavailable", !this.profile.saved);
     dot.title = this.profile.saved
@@ -267,7 +316,6 @@ class ChapterHouse {
         "style",
         "shop",
         "help",
-        "reactions",
         "collection",
       ].includes(action!)
     ) {
@@ -275,35 +323,24 @@ class ChapterHouse {
       return;
     }
     switch (action) {
+      case "account":
+        this.openAccountDialog();
+        break;
+      case "close-account":
+        this.closeAccountDialog();
+        break;
+      case "account-sign-out":
+        void this.signOutMember();
+        break;
       case "outside":
         this.enterTown();
         break;
+      case "clubhouse":
+        this.leaveTown();
+        this.leaveGame();
+        break;
       case "inside":
         this.leaveTown();
-        break;
-      case "plaza":
-        this.town?.visitSquare();
-        break;
-      case "town-center":
-        this.town?.center();
-        break;
-      case "town-out":
-        this.town?.setZoom(-0.15);
-        break;
-      case "town-in":
-        this.town?.setZoom(0.15);
-        break;
-      case "town-wave":
-        this.town?.wave();
-        break;
-      case "town-jump":
-        this.town?.jump();
-        break;
-      case "town-heart":
-        this.town?.react("heart");
-        break;
-      case "town-question":
-        this.town?.react("question");
         break;
       case "town-dig":
         this.town?.dig();
@@ -314,27 +351,24 @@ class ChapterHouse {
       case "town-reel":
         this.town?.reel();
         break;
-      case "react-heart":
-        this.closePanel();
-        this.room.react("heart");
+      case "react-choice":
+        this.applyReaction(id as ReactionKind);
         break;
-      case "react-question":
-        this.closePanel();
-        this.room.react("question");
-        break;
-      case "react-surprise":
-        this.closePanel();
-        this.room.react("surprise");
+      case "reactions":
+        this.toggleQuickReactions();
         break;
       case "close-panel":
         this.closePanel();
         break;
-      case "play":
-        this.enterGame();
+      case "play-game":
+        void this.enterGame(id as IntegratedGameId);
+        break;
+      case "exit-game":
+        this.leaveGame();
         break;
       case "starter":
         if (this.profile.chooseStarter(id)) {
-          this.root.querySelector("dialog")!.close();
+          this.root.querySelector<HTMLDialogElement>(".welcome")!.close();
           this.notify("Welcome home. Tap the floor to take a little walk.");
         }
         break;
@@ -345,19 +379,16 @@ class ChapterHouse {
         void this.fullscreen();
         break;
       case "wave":
-        this.room.wave();
+        if (this.town) this.town.wave();
+        else this.room.wave();
         break;
       case "jump":
-        this.room.jump();
+        if (this.town) this.town.jump();
+        else this.room.jump();
         break;
       case "call":
-        this.room.callPets();
-        break;
-      case "zoomin":
-        this.room.zoomBy(1.12);
-        break;
-      case "zoomout":
-        this.room.zoomBy(1 / 1.12);
+        if (this.town) this.town.callPet();
+        else this.room.callPets();
         break;
       case "furnish":
         this.closePanel(false);
@@ -421,6 +452,26 @@ class ChapterHouse {
         break;
     }
   };
+  private toggleQuickReactions() {
+    const list = this.root.querySelector<HTMLElement>(".quick-reactions")!;
+    const button = this.root.querySelector<HTMLElement>(
+      '[data-action="reactions"]',
+    )!;
+    list.hidden = !list.hidden;
+    button.setAttribute("aria-expanded", String(!list.hidden));
+  }
+  private closeQuickReactions() {
+    const list = this.root.querySelector<HTMLElement>(".quick-reactions")!;
+    list.hidden = true;
+    this.root
+      .querySelector('[data-action="reactions"]')!
+      .setAttribute("aria-expanded", "false");
+  }
+  private applyReaction(kind: ReactionKind) {
+    if (this.town) this.town.react(kind);
+    else this.room.react(kind);
+    this.closeQuickReactions();
+  }
   private change = (event: Event) => {
     const el = event.target as HTMLInputElement;
     if (el.dataset.action === "reduced") {
@@ -428,6 +479,94 @@ class ChapterHouse {
       this.profile.save();
     }
   };
+  private submit = (event: SubmitEvent) => {
+    const form = (event.target as Element).closest<HTMLFormElement>(
+      '[data-form="member-login"]',
+    );
+    if (!form) return;
+    event.preventDefault();
+    void this.signInMember(form);
+  };
+  private openAccountDialog() {
+    const dialog = this.root.querySelector<HTMLDialogElement>(
+      ".account-dialog",
+    )!;
+    this.renderAccountDialog();
+    if (!dialog.open) dialog.showModal();
+    if (this.memberState.status !== "member") {
+      dialog.querySelector<HTMLInputElement>('[name="username"]')!.focus();
+    }
+  }
+  private closeAccountDialog() {
+    const dialog = this.root.querySelector<HTMLDialogElement>(
+      ".account-dialog",
+    )!;
+    if (dialog.open) dialog.close();
+    this.setAccountError("");
+  }
+  private renderAccountDialog() {
+    const dialog = this.root.querySelector<HTMLDialogElement>(
+      ".account-dialog",
+    );
+    if (!dialog) return;
+    const form = dialog.querySelector<HTMLFormElement>(
+      '[data-form="member-login"]',
+    )!;
+    const member = dialog.querySelector<HTMLElement>(".member-account")!;
+    const signedIn = this.memberState.status === "member";
+    form.hidden = signedIn;
+    member.hidden = !signedIn;
+    if (this.memberState.status === "member") {
+      this.ui("member-name").textContent = this.memberState.username;
+      dialog.querySelector("h2")!.textContent = "You’re home";
+      dialog.querySelector<HTMLElement>(".account-note")!.textContent =
+        "Your local guest save remains on this device while online profile syncing is connected next.";
+    } else {
+      dialog.querySelector("h2")!.textContent = "Come back to your clubhouse";
+      dialog.querySelector<HTMLElement>(".account-note")!.textContent =
+        "Accounts are created privately by Jobe. No email address is needed.";
+    }
+  }
+  private async signInMember(form: HTMLFormElement) {
+    const submit = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    const data = new FormData(form);
+    submit.disabled = true;
+    submit.textContent = "Opening…";
+    this.setAccountError("");
+    try {
+      const username = await this.memberSession.signIn(
+        String(data.get("username") ?? ""),
+        String(data.get("password") ?? ""),
+      );
+      form.reset();
+      this.closeAccountDialog();
+      this.notify(`Signed in as ${username}. Your local guest save is safe.`);
+    } catch (error) {
+      this.setAccountError(
+        error instanceof InvalidUsernameError
+          ? error.message
+          : "That username and password did not match. Check them and try again.",
+      );
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Sign in";
+    }
+  }
+  private async signOutMember() {
+    try {
+      await this.memberSession.signOut();
+      this.closeAccountDialog();
+      this.notify(`Back to local guest ${this.profile.state.name}.`);
+    } catch {
+      this.setAccountError("Sign out did not finish. Please try again.");
+    }
+  }
+  private setAccountError(message: string) {
+    const error = this.root.querySelector<HTMLElement>(".account-error");
+    if (!error) return;
+    error.textContent = message;
+    error.hidden = !message;
+  }
   notify = (text: string) => {
     const toast = this.root.querySelector<HTMLElement>(".toast")!;
     toast.textContent = text;
@@ -472,11 +611,13 @@ class ChapterHouse {
     this.root.querySelector<HTMLElement>(".panel")!.hidden = true;
     this.root.classList.remove("panel-open");
     this.root
-      .querySelectorAll(".dock button")
+      .querySelectorAll(".app-nav button")
       .forEach((b) => b.removeAttribute("aria-current"));
     if (stopEdit) this.room?.setEditing(false);
+    if (this.game) this.game.setPaused(false);
     this.panelFocus?.focus();
     this.panelFocus = null;
+    this.refreshNavigation();
   }
   private renderPanel() {
     const name = this.panel;
@@ -495,7 +636,7 @@ class ChapterHouse {
     this.ui("panel-label").textContent = labels[name][0];
     this.ui("panel-title").textContent = labels[name][1];
     this.root
-      .querySelectorAll(".dock button")
+      .querySelectorAll(".app-nav button")
       .forEach((b) =>
         b.setAttribute(
           "aria-current",
@@ -503,7 +644,16 @@ class ChapterHouse {
         ),
       );
     if (name === "games")
-      content.innerHTML = `<button class="game-card" data-action="play"><div class="game-card-art"><img src="${assetUrl("backdrop.png")}" alt="A sunny backyard"><span>WISH · INTEGRATED</span></div><div><span class="eyebrow">WISHBONE FLING</span><h3>Big tumbles.<br>Happy little dog.</h3><p>Pull back, let go, and see what wobbles.</p><span class="primary faux-button">Let’s play →</span></div></button><div class="reward-note"><span>✦</span><div><b>A keepsake for your corner</b><p>${Math.min(14, this.profile.state.wishbone.throws)} / 14 throws toward your Patchwork dog bed.</p></div></div>${GamePreviews.markup()}`;
+      content.innerHTML = `<div class="integrated-game-list">${IntegratedGames.entries
+        .map((game) => {
+          const adapter = IntegratedGames.get(game.id)!;
+          const art = `<img src="${game.cardArtUrl}" alt="${game.cardArtAlt}">`;
+          const progress = adapter.summarize(
+            this.profile.gameProgress(game.id),
+          );
+          return `<div class="integrated-game-entry"><button class="game-card" data-action="play-game" data-id="${game.id}"><div class="game-card-art">${art}<span>${game.book.toUpperCase()} · INTEGRATED</span></div><div><span class="eyebrow">${game.title.toUpperCase()}</span><h3>${game.heading}</h3><p>${game.description}</p><span class="primary faux-button">Let’s play →</span></div></button><div class="reward-note"><span>✦</span><div><b>A keepsake for your corner</b><p>${progress}</p></div></div></div>`;
+        })
+        .join("")}</div>${GamePreviews.markup()}`;
     if (name === "decorate")
       content.innerHTML = `<p>Pick something below, or tap furniture in the room. Tap the floor to find its new home.</p><button data-action="undo" class="text-button">↶ Undo last room change</button><div class="catalog-grid">${this.profile.state.items
         .map((item) => {
@@ -560,7 +710,7 @@ class ChapterHouse {
     if (name === "collection")
       content.innerHTML = `<p>Fish beside the stream or dig on walkable ground. Duplicates stack, and rare discoveries sparkle a little brighter.</p>${this.collectionSection("Fish", FISH)}${this.collectionSection("Finds", FINDS)}`;
     if (name === "help")
-      content.innerHTML = `<p>This is your local clubhouse. Tap the floor to walk, or focus the room and use the arrow keys. Drag to pan; use + and −, a mouse wheel, or pinch with two fingers to zoom. Wave, jump, and call your pet with the buttons by the room.</p><h3>Make a little space</h3><p>Open Decorate to move, rotate, or store furniture. Choose a spot on the floor, then Place here. Undo reverses your last room change.</p><h3>Play. Collect. Come home.</h3><p>Open Games for Wishbone Fling. Outside, tap your stationary avatar to open the Dig and Fish action arc. Your collection and room save automatically on this device.</p><label class="setting"><input type="checkbox" data-action="reduced" ${this.profile.state.reduced ? "checked" : ""}> Reduce motion</label><p class="quiet">${this.profile.saved ? "Saved on this device." : "Saving is unavailable in this browser. Keep this tab open to retain this session."} Accounts and shared visits are planned for the next checkpoint.</p>`;
+      content.innerHTML = `<p>Use the top bar to move between spaces and open your activities. Tap the floor to walk, or focus the world and use the arrow keys. Drag to pan; use a mouse wheel or pinch with two fingers to zoom. React, wave, jump, and call your pet with the shared action buttons.</p><h3>Make a little space</h3><p>Open Decorate inside the clubhouse to move, rotate, or store furniture. Choose a spot on the floor, then Place here. Undo reverses your last room change.</p><h3>Play. Collect. Come home.</h3><p>Open Games for Wishbone Fling or Dig &amp; Douse. Outside, tap your stationary avatar to open the Dig and Fish action arc. Your collection and room save automatically on this device.</p><h3>Members</h3><p>Tap your name in the top bar to sign in with the username and password Jobe gave you. No email is needed.</p><label class="setting"><input type="checkbox" data-action="reduced" ${this.profile.state.reduced ? "checked" : ""}> Reduce motion</label><p class="quiet">${this.profile.saved ? "Saved on this device." : "Saving is unavailable in this browser. Keep this tab open to retain this session."} Member profile syncing and shared visits are the next Firebase step.</p>`;
   }
   private collectionSection(
     title: string,
@@ -610,38 +760,60 @@ class ChapterHouse {
     bubble.querySelector("b")!.textContent = view.discovery.name;
     bubble.querySelector("span")!.textContent = `Collection ×${view.count}`;
   };
-  private enterGame() {
+  private async enterGame(id: IntegratedGameId) {
     this.leaveTown();
+    this.leaveGame();
     this.closePanel();
     this.audio.setRoomActive(false);
     this.room.setPaused(true);
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = true;
     const host = this.root.querySelector<HTMLElement>(".game-host")!;
     host.hidden = false;
-    this.game = new WishboneGame(
-      host,
-      this.profile,
-      () => this.leaveGame(),
-      this.notify,
-      {
-        toggleSound: () => this.toggleSound(),
-        fullscreen: () => {
-          void this.fullscreen();
-        },
-      },
-    );
+    const loadToken = ++this.gameLoadToken;
+    this.activeGameId = id;
+    const adapter = IntegratedGames.get(id);
+    if (!adapter) return;
+    host.innerHTML = `<div class="game-loading" role="status">Opening ${adapter.definition.title}…</div>`;
     this.root.classList.add("playing");
+    this.closeQuickReactions();
+    this.hideSpaceDescriptor();
+    this.refreshNavigation();
+    try {
+      const createGame = await adapter.load();
+      if (loadToken !== this.gameLoadToken) return;
+      this.game = createGame(host, {
+        progress: this.profile.gameProgress(id),
+        muted: this.profile.state.muted,
+        reducedMotion: this.profile.state.reduced,
+        activePlaySeconds: this.profile.state.activeSeconds,
+        exit: () => this.leaveGame(),
+        notify: this.notify,
+        saveProgress: (progress) => this.profile.saveGameProgress(id, progress),
+        creditActivePlay: (total) => this.profile.creditActivity(total),
+        awardReward: (rewardId) =>
+          this.profile.awardGameReward(id, rewardId),
+      });
+    } catch (error) {
+      if (loadToken !== this.gameLoadToken) return;
+      console.error("Unable to open integrated game", error);
+      this.notify("That game couldn't open. Please try again.");
+      this.leaveGame();
+    }
   }
   private leaveGame() {
-    if (!this.game) return;
+    if (!this.game && !this.root.classList.contains("playing")) return;
+    this.gameLoadToken++;
     this.closePanel();
-    this.game.dispose();
+    this.game?.dispose();
     this.game = null;
+    this.activeGameId = null;
     this.root.querySelector<HTMLElement>(".game-host")!.hidden = true;
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = false;
     this.root.classList.remove("playing");
     this.room.setPaused(false);
     this.audio.setRoomActive(true);
+    this.showSpaceDescriptor("clubhouse");
+    this.refreshNavigation();
   }
   private toggleSound() {
     this.profile.state.muted = !this.profile.state.muted;
@@ -657,11 +829,9 @@ class ChapterHouse {
     this.audio.setRoomActive(false);
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = true;
     this.root.querySelector<HTMLElement>(".town-page")!.hidden = false;
-    const heading = this.root.querySelector<HTMLElement>(".town-heading")!;
-    heading.classList.remove("show-town-heading");
-    void heading.offsetWidth;
-    heading.classList.add("show-town-heading");
     this.root.classList.add("outside");
+    this.closeQuickReactions();
+    this.showSpaceDescriptor("willowbrook");
     this.town = new TownWorld(
       this.root.querySelector<HTMLElement>(".town-world")!,
       this.profile,
@@ -671,6 +841,7 @@ class ChapterHouse {
       this.townDiscoveryChanged,
       this.petAssets,
     );
+    this.refreshNavigation();
   }
   private leaveTown() {
     if (!this.town) return;
@@ -681,6 +852,54 @@ class ChapterHouse {
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = false;
     this.room.setPaused(false);
     this.audio.setRoomActive(true);
+    this.closeQuickReactions();
+    this.showSpaceDescriptor("clubhouse");
+    this.refreshNavigation();
+  }
+  private showSpaceDescriptor(space: "clubhouse" | "willowbrook") {
+    const copy = {
+      clubhouse: [
+        "MAKE YOURSELF AT HOME",
+        "Your little story corner.",
+        "Good books · small adventures · a space that’s all yours",
+      ],
+      willowbrook: [
+        "A LITTLE FURTHER AFIELD",
+        "Willowbrook square",
+        "Tap a path to walk · drag to explore · pinch to zoom",
+      ],
+    } as const;
+    const [label, title, detail] = copy[space];
+    this.ui("space-label").textContent = label;
+    this.ui("space-title").textContent = title;
+    this.ui("space-detail").textContent = detail;
+    const descriptor =
+      this.root.querySelector<HTMLElement>(".space-descriptor")!;
+    descriptor.classList.remove("show-space-descriptor");
+    void descriptor.offsetWidth;
+    descriptor.classList.add("show-space-descriptor");
+  }
+  private hideSpaceDescriptor() {
+    this.root
+      .querySelector<HTMLElement>(".space-descriptor")!
+      .classList.remove("show-space-descriptor");
+  }
+  private refreshNavigation() {
+    const space = this.game ? "games" : this.town ? "outside" : "clubhouse";
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>(
+      ".app-nav button",
+    )) {
+      const action = button.dataset.action!;
+      if (action === space) button.setAttribute("aria-current", "page");
+      else if (action !== this.panel) button.removeAttribute("aria-current");
+      const unavailable = action === "decorate" && !!this.town;
+      button.disabled = unavailable;
+      button.title = unavailable
+        ? "Decorate inside the clubhouse"
+        : (button.getAttribute("aria-label") ?? "");
+    }
+    this.root.querySelector<HTMLElement>(".world-actions")!.hidden =
+      this.activeGameId !== null;
   }
   private async fullscreen() {
     try {

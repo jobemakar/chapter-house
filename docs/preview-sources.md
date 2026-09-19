@@ -54,6 +54,12 @@ Fonts requests in older demos retain their system-font fallbacks.
 - Display title: `Veda's Great Escape`
 - Original source directory: `C:\Users\jmakar\Documents\Codex\2026-09-13\cre-2\dist`
 - Original repository/source: `C:\Users\jmakar\Documents\Codex\2026-09-13\cre-2`, local Git commit `6917df22673d310b30fc095f9ae2e7e873c17771` (`Replace care simulation with Veda escape puzzles`, 2026-09-14 08:23:25 -04:00). No Git remote was configured.
+
+Promotion note (2026-09-19): Jobe selected this game as the canonical
+*The Elephant in the Room* entry. The snapshot described here remains immutable
+provenance; its behavior and sanctuary image were ported to the strict
+TypeScript package `@chapter-house/game-vedas-great-escape`, which now provides
+both the standalone and Chapter House runtime.
 - Required local files were copied exactly: `index.html` loads `style.css` and `game.js`; `style.css` loads `sanctuary.png`.
 - Optional network request: `style.css` has a CSS `@import` for Google Fonts (`DM Sans` and `Manrope`).
 

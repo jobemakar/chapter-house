@@ -1,0 +1,259 @@
+.dig-and-douse {
+  color-scheme: dark;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: #edf1dd;
+  background: radial-gradient(ellipse at 50% 20%, #244043, #132a2c 65%);
+  min-height: 100%;
+}
+.dig-and-douse *,
+.dig-and-douse *::before,
+.dig-and-douse *::after {
+  box-sizing: border-box;
+}
+.dig-and-douse__shell {
+  width: min(100% - 32px, 500px);
+  margin: 0 auto;
+  padding: 23px 0 max(20px, env(safe-area-inset-bottom));
+}
+.dig-and-douse header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.dig-and-douse .eyebrow {
+  margin: 0 0 7px;
+  color: #b1c9b2;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+.dig-and-douse h1 {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1;
+  margin: 0;
+}
+.dig-and-douse h1 span {
+  display: block;
+  font:
+    11px ui-sans-serif,
+    system-ui,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #d5b78c;
+  margin-top: 9px;
+}
+.dig-and-douse button {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  background: #2c4646;
+  border: 1px solid #60746b;
+  border-radius: 9px;
+  min-height: 44px;
+  padding: 0 15px;
+  font-size: 13px;
+}
+.dig-and-douse button:hover {
+  background: #3c5751;
+}
+.dig-and-douse button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.dig-and-douse button:focus-visible,
+.dig-and-douse canvas:focus-visible {
+  outline: 3px solid #b0eddf;
+  outline-offset: 3px;
+}
+.dig-and-douse .brief {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin: 19px 0 11px;
+}
+.dig-and-douse .brief p {
+  font-size: 12px;
+  margin: 0;
+  color: #c4d4c4;
+}
+.dig-and-douse .brief span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  color: #adbdaf;
+}
+.dig-and-douse .board {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background: #112527;
+  border: 1px solid #44605b;
+  box-shadow: 0 12px 45px #07161655;
+}
+.dig-and-douse canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+.dig-and-douse .overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 25px;
+  background: #102b2deb;
+}
+.dig-and-douse .overlay[hidden] {
+  display: none;
+}
+.dig-and-douse .overlay h2 {
+  font:
+    36px/1.1 Georgia,
+    serif;
+  margin: 10px 0;
+}
+.dig-and-douse .overlay p:not(.eyebrow) {
+  font-size: 13px;
+  color: #bacfc1;
+}
+.dig-and-douse .overlay button {
+  background: #c9e7b9;
+  color: #17382c;
+  border: 0;
+  margin-top: 15px;
+}
+.dig-and-douse .victory {
+  inset: 8% 30% auto;
+  padding: 14px;
+  border: 1px solid #a9b877;
+  border-radius: 16px;
+  background: #173c32ee;
+  pointer-events: none;
+}
+.dig-and-douse .victory button {
+  pointer-events: auto;
+  margin-top: 4px;
+  min-height: 36px;
+}
+.dig-and-douse .victory h2 {
+  font-size: 30px;
+}
+.dig-and-douse .victory .eyebrow {
+  font-size: 8px;
+}
+.dig-and-douse .victory p:not(.eyebrow) {
+  font-size: 11px;
+}
+.dig-and-douse [data-douse="loading"] h2 {
+  font-size: 24px;
+}
+.dig-and-douse .loading-dot {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background: #62cee6;
+  border-radius: 50%;
+}
+.dig-and-douse .readout {
+  padding-top: 13px;
+}
+.dig-and-douse .readout div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+.dig-and-douse [data-douse="state"] {
+  color: #e5c396;
+}
+.dig-and-douse [data-douse="drops"] {
+  color: #a9cbbc;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dig-and-douse progress {
+  width: 100%;
+  display: block;
+  height: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: #304c47;
+  overflow: hidden;
+}
+.dig-and-douse progress::-webkit-progress-bar {
+  background: #304c47;
+}
+.dig-and-douse progress::-webkit-progress-value {
+  background: #80d8dd;
+}
+.dig-and-douse progress::-moz-progress-bar {
+  background: #80d8dd;
+}
+.dig-and-douse footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 3px;
+}
+.dig-and-douse footer p {
+  color: #c0cdbc;
+  font-size: 11px;
+}
+.dig-and-douse footer button {
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  color: #c8dbc8;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dig-and-douse .prototype-note {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.8;
+  color: #a1b8aa;
+}
+.dig-and-douse .prototype-note span {
+  color: #90a69a;
+}
+@media (max-width: 370px) {
+  .dig-and-douse__shell {
+    width: calc(100% - 24px);
+    padding-top: 16px;
+  }
+  .dig-and-douse .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .dig-and-douse .brief p {
+    font-size: 11px;
+  }
+  .dig-and-douse h1 {
+    font-size: 32px;
+  }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .dig-and-douse__shell {
+    max-width: 380px;
+  }
+}

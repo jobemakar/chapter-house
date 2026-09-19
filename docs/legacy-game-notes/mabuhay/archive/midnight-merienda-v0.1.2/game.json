@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "midnight-merienda",
+  "ideaId": "BOB-005",
+  "book": {
+    "title": "Mabuhay!",
+    "author": "Zachary Sterling"
+  },
+  "title": "Midnight Merienda",
+  "status": "implemented-local",
+  "primaryMechanic": "Food-truck assembly and station juggling",
+  "sourceEntry": "src/index.html",
+  "hostedEntry": "dist/index.html",
+  "offlineEntry": "playable/Midnight-Merienda.html",
+  "requirements": "plans/requirements.md",
+  "pitch": "plans/pitch.md",
+  "publicUrl": null,
+  "controls": [
+    "touch tap-select/tap-target",
+    "pointer drag",
+    "keyboard buttons"
+  ],
+  "audioPlanned": false,
+  "collectiblePlan": "../plans/11-collectible-catalog.md",
+  "version": "0.1.2",
+  "audio": "Original gesture-unlocked Web Audio music and effects",
+  "saveKey": "midnight-merienda-v1",
+  "collectibleDefinitions": "src/core.js"
+}

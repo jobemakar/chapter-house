@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "door-atelier",
+  "ideaId": "BOB-002-ALT2",
+  "parentGameId": "pocket-funhouse",
+  "title": "Door Atelier",
+  "version": "1.0.0",
+  "status": "implemented-standalone-concept",
+  "sourceEntry": "src/main.ts",
+  "hostedEntry": "dist/index.html",
+  "requirements": "REQUIREMENTS.md",
+  "saveKey": "door-atelier-v1",
+  "primaryMechanic": "Orbit miniature 3D doors, inspect props, collect and install pieces, operate mechanisms and unlock passages",
+  "audio": true,
+  "sceneCount": 3,
+  "publicUrl": null
+}

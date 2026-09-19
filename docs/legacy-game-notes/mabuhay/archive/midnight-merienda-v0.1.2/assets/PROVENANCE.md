@@ -1,0 +1,4 @@
+# Asset provenance
+Customers and keepsakes are original SVG authored in src/art.js; scenery is original CSS. On 2026-09-16 the pan, three foods and three toppings were replaced by original AI-generated transparent PNGs under assets/kitchen. The build embeds these seven files once in the offline playable; no runtime network is required. Customers, foods and keepsakes are game inventions, not book illustrations, specific folklore creatures or claimed traditional dishes. All music/effects are original oscillator compositions in src/audio.js. No external samples, fonts or runtime packages.
+
+Premise source inspected 2026-09-12: https://www.scholastic.ca/our-books/book/mabuhay-9781338738643 . The publisher confirms the family-food-truck and supernatural premise. Requirements separate those verified anchors from invented mechanics. Four keepsake definitions in src/core.js include thematic rationale and future placement geometry.

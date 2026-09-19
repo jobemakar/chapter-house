@@ -1,9 +1,10 @@
 import { record, count, finite, strings, parse } from "./validation";
-import { getFurniture, getPet, furniture } from "./catalog";
+import { getFurniture, getPet } from "./catalog";
+import { loadWishboneProgress } from "@chapter-house/game-wishbone-fling/progress";
 import {
-  WishboneProgression,
-  type WishboneProgress,
-} from "../games/wishbone/progression";
+  IntegratedGames,
+  type IntegratedGameId,
+} from "./integrated-games";
 import { FISH, FINDS, type DiscoveryKind } from "../town/activities";
 export interface Point {
   x: number;
@@ -33,7 +34,8 @@ export interface Profile {
   items: OwnedItem[];
   /** Additive v1 collection counts. A positive count also means discovered. */
   collection: Record<DiscoveryKind, Record<string, number>>;
-  wishbone: WishboneProgress;
+  /** Versioned package-owned durable progress; transient game sessions stay out. */
+  games: Record<IntegratedGameId, unknown>;
   muted: boolean;
   reduced: boolean;
   legacyImported: boolean;
@@ -115,7 +117,7 @@ function fresh(): Profile {
       },
     ],
     collection: { fish: {}, finds: {} },
-    wishbone: WishboneProgression.load(null),
+    games: IntegratedGames.fresh(),
     muted: false,
     reduced: false,
     legacyImported: false,
@@ -210,7 +212,17 @@ export class ProfileRepository {
           if (value > 0) initial.collection[kind][definition.id] = value;
         }
       }
-      initial.wishbone = WishboneProgression.load(data.wishbone);
+      const savedGames = record(data.games);
+      for (const adapter of IntegratedGames.adapters) {
+        const id = adapter.definition.id;
+        const legacy =
+          id === "wishbone-fling"
+            ? data.wishbone
+            : id === "dig-and-douse"
+              ? data.douse
+              : null;
+        initial.games[id] = adapter.normalize(savedGames[id] ?? legacy);
+      }
       initial.muted = data.muted === true;
       initial.reduced = data.reduced === true;
       initial.legacyImported = data.legacyImported === true;
@@ -220,11 +232,15 @@ export class ProfileRepository {
     if (!initial.legacyImported) {
       try {
         const old = storage?.getItem("wishbone-floppy-fetch-v1");
-        if (old && !initial.wishbone.throws) {
+        const wishbone = loadWishboneProgress(
+          initial.games["wishbone-fling"],
+        );
+        if (old && !wishbone.throws) {
           initial.legacySnapshot = parse(old);
-          initial.wishbone = WishboneProgression.load(initial.legacySnapshot);
-          initial.muted = initial.wishbone.muted;
-          initial.reduced = initial.wishbone.reduced;
+          const imported = loadWishboneProgress(initial.legacySnapshot);
+          initial.games["wishbone-fling"] = imported;
+          initial.muted = imported.muted;
+          initial.reduced = imported.reduced;
         }
         initial.legacyImported = true;
       } catch {}
@@ -283,19 +299,49 @@ export class ProfileRepository {
     return true;
   }
   syncKeepsakes(notify = true): void {
-    for (const item of furniture) {
-      if (
-        item.gameReward &&
-        this.state.wishbone.owned.includes(item.gameReward) &&
-        !this.state.items.some((i) => i.id === "reward-" + item.gameReward)
-      )
+    for (const adapter of IntegratedGames.adapters) {
+      const progress = this.state.games[adapter.definition.id];
+      for (const rewardId of adapter.ownedRewardIds(progress)) {
+        const reward = adapter.definition.rewards.find(
+          (candidate) => candidate.rewardId === rewardId,
+        );
+        if (!reward || !getFurniture(reward.catalogId)) continue;
+        const instanceId =
+          reward.legacyInstanceId ?? `reward-${reward.rewardId}`;
+        if (
+          this.state.items.some(
+            (item) =>
+              item.id === instanceId || item.definitionId === reward.catalogId,
+          )
+        )
+          continue;
         this.state.items.push({
-          id: "reward-" + item.gameReward,
-          definitionId: item.id,
+          id: instanceId,
+          definitionId: reward.catalogId,
           placement: null,
         });
+      }
     }
     if (notify) this.save();
+  }
+  awardGameReward(gameId: IntegratedGameId, rewardId: string): boolean {
+    const adapter = IntegratedGames.get(gameId);
+    if (!adapter) return false;
+    const progress = adapter.addReward(this.state.games[gameId], rewardId);
+    if (!progress) return false;
+    this.state.games[gameId] = adapter.normalize(progress);
+    this.syncKeepsakes();
+    return true;
+  }
+  gameProgress(gameId: IntegratedGameId): unknown {
+    const adapter = IntegratedGames.get(gameId);
+    return adapter?.normalize(this.state.games[gameId]) ?? null;
+  }
+  saveGameProgress(gameId: IntegratedGameId, progress: unknown): void {
+    const adapter = IntegratedGames.get(gameId);
+    if (!adapter) return;
+    this.state.games[gameId] = adapter.normalize(progress);
+    this.syncKeepsakes();
   }
   addDiscovery(kind: DiscoveryKind, id: string): number {
     const catalog = kind === "fish" ? FISH : FINDS;
