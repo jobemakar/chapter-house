@@ -1,3 +1,4 @@
 # Shared repository tracks planning and catalog; application and local archives keep separate history/storage.
+archive/
 /*/
 !/plans/
