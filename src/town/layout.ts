@@ -19,6 +19,8 @@ export const TOWN = {
   width: 60,
   depth: 48,
   entry: { x: 30, z: 44 },
+  // A short walk from the entry, deliberately clear of the main gate path.
+  piratePortal: { x: 34.2, z: 43.8, radius: 1.05 },
   fountain: { x: 30, z: 35, radius: 2, interactionRadius: 4.35 },
   stream: { minZ: 22, maxZ: 26 },
   bridge: { x: 30, z: 24, width: 3.8, depth: 5.2 },

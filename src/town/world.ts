@@ -20,7 +20,7 @@ import { AnimalRig, RoomArt } from "../room/art";
 import { ActorReaction, type ReactionKind } from "../room/reactions";
 import { RouteMotion } from "../room/motion";
 import { PetRoamingController, type PetMotionActor } from "../room/pet-motion";
-import { PetAssets, PetRig, type PetAssetKey } from "../room/pet-assets";
+import { PetAssets, PetRig } from "../room/pet-assets";
 import { getPet } from "../core/catalog";
 import type { ProfileRepository, Point } from "../core/profile";
 import { PointerGesture, type ScreenPoint } from "../core/pointer-gesture";
@@ -42,6 +42,8 @@ export interface TownDiscoveryView {
   visible: boolean;
 }
 
+export const DISCOVERY_CALLOUT_SECONDS = 5;
+
 /** Disposable outdoor scene; the shared profile remains authoritative inside and outside. */
 export class TownWorld {
   private scene = new THREE.Scene();
@@ -61,7 +63,7 @@ export class TownWorld {
   private discoveryCount = 0;
   private discoveryTime = 0;
   private pet: AnimalRig | PetRig | null = null;
-  private petId: PetAssetKey | null = null;
+  private petId: string | null = null;
   private avatarReaction = new ActorReaction("avatar");
   private petReaction = new ActorReaction("pet");
   private point: Point = { ...TOWN.entry };
@@ -95,6 +97,7 @@ export class TownWorld {
   private disposed = false;
   private coinCooldown = 0;
   private coinAvailable = false;
+  private portalTriggered = false;
   private readonly fountainProjection = new THREE.Vector3();
   private readonly contextProjection = new THREE.Vector3();
   private readonly discoveryProjection = new THREE.Vector3();
@@ -108,6 +111,7 @@ export class TownWorld {
     private contextChanged: (view: TownContextView) => void = () => {},
     private discoveryChanged: (view: TownDiscoveryView) => void = () => {},
     private petAssets: PetAssets = new PetAssets(),
+    private piratePortal: () => void = () => {},
   ) {
     this.petMotion = new PetRoamingController(
       this.nav,
@@ -133,7 +137,7 @@ export class TownWorld {
     canvas.tabIndex = 0;
     canvas.setAttribute(
       "aria-label",
-      "Woodland village. Tap paths to walk, cross the stream by its bridge, and tap the fountain nearby to toss a coin.",
+      "Woodland village. Tap paths to walk, cross the stream by its bridge, tap the fountain nearby to toss a coin, or walk onto the turquoise compass patch to visit Pirate Island.",
     );
     canvas.style.touchAction = "none";
     this.scene.add(new THREE.HemisphereLight(0xfff7dc, 0x7c997e, 2.5));
@@ -160,7 +164,7 @@ export class TownWorld {
     this.activityArt = new TownActivityArt(this.scene, this.avatar);
     const selected = getPet(profile.state.activePets[0]);
     if (selected) {
-      this.petId = selected.id as PetAssetKey;
+      this.petId = selected.id;
       this.pet = this.createPetRig(this.petId);
       this.pet.root.userData.kind = "pet";
       this.pet.root.add(this.petReaction.sprite);
@@ -283,13 +287,14 @@ export class TownWorld {
     this.resize();
     this.raf = requestAnimationFrame(this.frame);
   }
-  private createPetRig(id: PetAssetKey): AnimalRig | PetRig {
+  private createPetRig(id: string): AnimalRig | PetRig {
     const selected = getPet(id)!;
     try {
-      return this.petAssets.create(id);
+      return this.petAssets.create(selected.assetKey);
     } catch {
-      return new AnimalRig(selected.color, selected.shape, "none", true);
+      // The imported model can be unavailable only while loading or on failure.
     }
+    return new AnimalRig(selected.color, "fox", "none", true);
   }
   /** Swap the initial stand-in if the shared pet package loaded after entry. */
   useLoadedPetAssets() {
@@ -545,7 +550,7 @@ export class TownWorld {
         );
         this.discovery = outcome.discovery;
         this.discoveryCount = count;
-        this.discoveryTime = 2;
+        this.discoveryTime = DISCOVERY_CALLOUT_SECONDS;
         if (outcome.action === "fish")
           this.audio.catchFish(outcome.discovery.rarity);
         else this.audio.discover(outcome.discovery.rarity);
@@ -696,6 +701,11 @@ export class TownWorld {
       this.avatar.root.position.set(this.point.x, 0, this.point.z);
       this.avatar.update(dt, moved.moved, this.profile.state.reduced);
       this.updateCoinAvailability();
+      if (!this.portalTriggered && this.nav.atPiratePortal(this.point)) {
+        this.portalTriggered = true;
+        this.piratePortal();
+        return;
+      }
       if (this.pet) {
         const pm = this.petMotion.update(
           this.petActor,

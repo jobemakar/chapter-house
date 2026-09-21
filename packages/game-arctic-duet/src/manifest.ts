@@ -1,6 +1,6 @@
 import { ARCTIC_DUET_REWARDS } from "./progress";
 
-const cardArtUrl = new URL("./assets/card-art.svg", import.meta.url).href;
+const cardArtUrl = new URL("./assets/arctic-duet-option-a-card.png", import.meta.url).href;
 
 /** Static discovery data: safe to load for a menu card without mounting game code or CSS. */
 export const arcticDuetManifest = {

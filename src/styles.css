@@ -512,7 +512,7 @@ small {
 }
 .integrated-game-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 .integrated-game-entry {
@@ -701,6 +701,7 @@ small {
 }
 .swatches {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 .swatches button {
@@ -2875,7 +2876,9 @@ button:focus-visible {
   outline: none;
   background: #fffdf6;
   color: var(--ink);
-  font: 16px/1.2 system-ui, sans-serif;
+  font:
+    16px/1.2 system-ui,
+    sans-serif;
 }
 .account-dialog input:focus {
   border-color: #729071;

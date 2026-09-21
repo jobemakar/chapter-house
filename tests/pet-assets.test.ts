@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import * as THREE from "three";
-import { PetAssets, type PetLoader } from "../src/room/pet-assets";
+import { CUBE_PET_ASSET_KEYS, pets } from "../src/core/catalog";
+import { PET_SOURCES, PetAssets, type PetLoader } from "../src/room/pet-assets";
 
 type LoaderResult = Awaited<ReturnType<PetLoader["loadAsync"]>>;
-const petCount = 3;
+const petCount = CUBE_PET_ASSET_KEYS.length;
 const clipNames = ["idle", "walk", "eat", "dance", "gesture-positive"];
 
 function sourceScene() {
@@ -74,13 +77,60 @@ test("PetAssets loads its local catalog once and rigs keep mixers independent", 
   assets.dispose();
 });
 
+test("the 23 ordinary catalog pets each point to a packaged Kenney GLB and preview", () => {
+  assert.equal(pets.length, 23);
+  assert.equal(new Set(pets.map((pet) => pet.id)).size, 23);
+  assert.ok(pets.every((pet) => pet.price === 60));
+  assert.ok(!pets.some((pet) => pet.id === "tiger"));
+  assert.ok(CUBE_PET_ASSET_KEYS.includes("tiger"));
+  for (const pet of pets) {
+    assert.equal(
+      pet.id,
+      pet.assetKey,
+      `${pet.id} should use its direct source key`,
+    );
+    assert.ok(PET_SOURCES[pet.assetKey].endsWith(`animal-${pet.assetKey}.glb`));
+    assert.ok(
+      existsSync(
+        fileURLToPath(
+          new URL(
+            `../public/assets/pets/animal-${pet.assetKey}.glb`,
+            import.meta.url,
+          ),
+        ),
+      ),
+      `${pet.id} GLB should be packaged`,
+    );
+    assert.ok(
+      existsSync(
+        fileURLToPath(
+          new URL(
+            `../public/assets/pets/previews/animal-${pet.assetKey}.png`,
+            import.meta.url,
+          ),
+        ),
+      ),
+      `${pet.id} preview should be packaged`,
+    );
+  }
+  for (const key of CUBE_PET_ASSET_KEYS)
+    assert.ok(
+      existsSync(
+        fileURLToPath(
+          new URL(`../public/assets/pets/animal-${key}.glb`, import.meta.url),
+        ),
+      ),
+      `${key} should remain locally packaged`,
+    );
+});
+
 test("PetAssets reports the local URL and missing required clips", async () => {
   const assets = new PetAssets({
     loadAsync: async () => result(sourceScene().scene, clips(["walk"])),
   });
   await assert.rejects(
     assets.load(),
-    /cat.*\/assets\/pets\/animal-cat\.glb.*idle/,
+    /beaver.*\/assets\/pets\/animal-beaver\.glb.*idle/,
   );
   assets.dispose();
 });

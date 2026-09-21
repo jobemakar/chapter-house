@@ -13,6 +13,8 @@ import {
 } from "@chapter-house/game-wishbone-fling/progress";
 import { loadDigAndDouseProgress } from "@chapter-house/game-dig-and-douse/progress";
 import { RoomNavigation, ROOM } from "../src/room/navigation";
+import { AVATAR_COLOR_CATALOG } from "../src/core/avatar-colors";
+import { pets } from "../src/core/catalog";
 class MemoryStore implements StoragePort {
   values = new Map<string, string>();
   getItem(k: string) {
@@ -72,9 +74,7 @@ test("Dig & Douse progress migrates additively and awards one placeable camp lan
     ).length,
     1,
   );
-  const douse = loadDigAndDouseProgress(
-    profile.gameProgress("dig-and-douse"),
-  );
+  const douse = loadDigAndDouseProgress(profile.gameProgress("dig-and-douse"));
   douse.firesExtinguished = 2;
   douse.bestCanteens = 3;
   douse.totalCanteens = 5;
@@ -146,6 +146,35 @@ test("currency snapshots are idempotent and purchasing preserves duplicate furni
   assert.equal(loaded.state.currency, 0);
   assert.deepEqual(loaded.state.pets, ["cat", "bunny"]);
 });
+test("the official Cube Pet store roster has 23 uniform-price kinds and keeps original IDs stable", () => {
+  assert.equal(pets.length, 23);
+  assert.equal(new Set(pets.map((pet) => pet.id)).size, 23);
+  assert.deepEqual(
+    pets.filter((pet) => pet.starter).map((pet) => pet.id),
+    ["bunny", "cat"],
+  );
+  assert.ok(pets.every((pet) => pet.price === 60));
+  assert.ok(!pets.some((pet) => pet.id === "tiger"));
+  assert.equal(new Set(pets.map((pet) => pet.name)).size, pets.length);
+  assert.ok(
+    pets.every((pet) => /^\p{L}[\p{L}’'-]* the [a-z][a-z -]*$/u.test(pet.name)),
+    "every ordinary pet should have an individual 'Name the species' label",
+  );
+  for (const [id, name] of [
+    ["cat", "Clover"],
+    ["bunny", "Pip"],
+    ["fox", "Fig"],
+  ])
+    assert.ok(pets.some((pet) => pet.id === id && pet.name.includes(name)));
+
+  const profile = new ProfileRepository(new MemoryStore());
+  assert.ok(profile.chooseStarter("cat"));
+  profile.creditActivity(100_000);
+  for (const pet of pets.filter((pet) => pet.id !== "cat"))
+    assert.ok(profile.buyPet(pet.id), pet.id);
+  assert.equal(profile.state.pets.length, 23);
+  for (const pet of pets) assert.equal(profile.buyPet(pet.id), false, pet.id);
+});
 test("idle, paused, and hidden time do not generate currency or catch up after resume", () => {
   const clock = new ActivityClock();
   for (let i = 0; i < 100; i++) clock.step(0.1, false, false);
@@ -179,6 +208,35 @@ test("malformed or unavailable saves preserve a playable in-memory profile", () 
   assert.equal(unavailable.saved, false);
   assert.ok(unavailable.chooseStarter("cat"));
   assert.ok(unavailable.state.pets.includes("cat"));
+});
+test("avatar color catalog is unique and every color survives save/reload", () => {
+  const values = AVATAR_COLOR_CATALOG.map((color) => color.value);
+  const names = AVATAR_COLOR_CATALOG.map((color) => color.name);
+  assert.equal(values.length, 10);
+  assert.equal(new Set(values).size, values.length);
+  assert.equal(new Set(names).size, names.length);
+  for (const color of values) {
+    const store = new MemoryStore();
+    const profile = new ProfileRepository(store);
+    profile.state.avatar.color = color;
+    profile.save();
+    assert.equal(new ProfileRepository(store).state.avatar.color, color);
+  }
+});
+test("malformed avatar colors fall back to Autumn while old colors remain compatible", () => {
+  const store = new MemoryStore();
+  store.setItem(
+    PROFILE_KEY,
+    JSON.stringify({ version: 1, avatar: { color: "#not-a-color" } }),
+  );
+  assert.equal(new ProfileRepository(store).state.avatar.color, "#cc8957");
+  for (const color of ["#cc8957", "#8e9eae", "#d3ad85", "#af96b3"] as const) {
+    store.setItem(
+      PROFILE_KEY,
+      JSON.stringify({ version: 1, avatar: { color } }),
+    );
+    assert.equal(new ProfileRepository(store).state.avatar.color, color);
+  }
 });
 test("routes avoid solid furniture and do not cut diagonal corners", () => {
   const p = new ProfileRepository(new MemoryStore());

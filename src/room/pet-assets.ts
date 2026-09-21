@@ -2,12 +2,13 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { assetUrl } from "../core/asset-url";
+import { CUBE_PET_ASSET_KEYS, type PetAssetKey } from "../core/catalog";
 
-const PET_SOURCES = {
-  cat: assetUrl("pets/animal-cat.glb"),
-  bunny: assetUrl("pets/animal-bunny.glb"),
-  fox: assetUrl("pets/animal-fox.glb"),
-} as const;
+/** All 24 local Kenney Cube Pets 2.0 source models, including the withheld
+ * tiger. The catalog controls which of these can be adopted. */
+export const PET_SOURCES: Record<PetAssetKey, string> = Object.fromEntries(
+  CUBE_PET_ASSET_KEYS.map((key) => [key, assetUrl(`pets/animal-${key}.glb`)]),
+) as Record<PetAssetKey, string>;
 
 const REQUIRED_CLIPS = [
   "idle",
@@ -18,7 +19,6 @@ const REQUIRED_CLIPS = [
 ] as const;
 const PET_SCALE = 0.48;
 
-export type PetAssetKey = keyof typeof PET_SOURCES;
 export type PetActivity = "eat" | "dance" | null;
 export type PetLoader = Pick<GLTFLoader, "loadAsync">;
 
@@ -29,7 +29,7 @@ type LoadedPet = {
 };
 
 /**
- * A locally packaged, shared-resource owner for the three Cube Pets trial models.
+ * A locally packaged, shared-resource owner for the complete Cube Pets roster.
  * PetRig clones never dispose imported geometry, materials, or textures; this owner
  * releases those resources once all consumers have detached their rigs.
  */
@@ -44,7 +44,7 @@ export class PetAssets {
     this.loader = loader;
   }
 
-  /** Loads the three local GLBs exactly once for this resource owner. */
+  /** Loads the 24 local GLBs exactly once for this resource owner. */
   load(): Promise<void> {
     if (this.disposed)
       return Promise.reject(
@@ -92,7 +92,7 @@ export class PetAssets {
   private async loadAll(): Promise<void> {
     const generation = this.generation;
     const results = await Promise.allSettled(
-      (Object.entries(PET_SOURCES) as [PetAssetKey, string][]).map(
+      CUBE_PET_ASSET_KEYS.map((key) => [key, PET_SOURCES[key]] as const).map(
         async ([key, url]) => {
           try {
             const gltf = await this.loader.loadAsync(url);

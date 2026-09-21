@@ -14,6 +14,6 @@ export function createArcticDuetGame(
 export { ArcticDuetGame };
 export { ARCTIC_DUET_REWARDS, ARCTIC_DUET_SAVE_KEY, loadArcticDuetProgress } from "./progress";
 export type { ArcticDuetProgress } from "./progress";
-export { default as arcticDuetCardArt } from "./assets/card-art.svg";
+export { default as arcticDuetCardArt } from "./assets/arctic-duet-option-a-card.png";
 export { arcticDuetManifest } from "./manifest";
 export type { ArcticDuetManifest } from "./manifest";

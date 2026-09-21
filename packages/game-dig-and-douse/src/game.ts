@@ -731,6 +731,8 @@ export class DigAndDouseGame implements GameSession {
   private muted: boolean;
   private disposed = false;
   private animationFrame = 0;
+  private resizeFrame = 0;
+  private readonly resizeObserver: ResizeObserver;
   private runDirty = false;
   private progressDirty = false;
   private completedThisRun = false;
@@ -756,6 +758,10 @@ export class DigAndDouseGame implements GameSession {
     this.root.innerHTML = markup();
     target.replaceChildren(this.root);
     this.canvas = required(this.root, '[data-douse="game"]');
+    this.resizeObserver = new ResizeObserver(() => this.scheduleResize());
+    this.resizeObserver.observe(this.root);
+    window.addEventListener("resize", this.scheduleResize);
+    this.resizeBoard();
     this.hud = new HudController(this.root);
     this.input = new InputController(
       this.canvas,
@@ -812,12 +818,40 @@ export class DigAndDouseGame implements GameSession {
     if (this.disposed) return;
     this.disposed = true;
     cancelAnimationFrame(this.animationFrame);
+    cancelAnimationFrame(this.resizeFrame);
+    this.resizeObserver.disconnect();
+    window.removeEventListener("resize", this.scheduleResize);
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
     this.input.clear();
     this.persistRun();
     this.flushProgress();
     this.level?.dispose();
     this.root.remove();
+  }
+
+  private readonly scheduleResize = (): void => {
+    cancelAnimationFrame(this.resizeFrame);
+    this.resizeFrame = requestAnimationFrame(() => this.resizeBoard());
+  };
+
+  private resizeBoard(): void {
+    if (this.disposed) return;
+    const shell = required<HTMLElement>(this.root, ".dig-and-douse__shell");
+    const board = required<HTMLElement>(this.root, ".board");
+    const rootRect = this.root.getBoundingClientRect();
+    const windowHeight = Math.max(
+      0,
+      window.innerHeight - Math.max(0, rootRect.top),
+    );
+    const viewportHeight = Math.min(this.root.clientHeight, windowHeight);
+    const nonBoardHeight = shell.scrollHeight - board.offsetHeight;
+    const availableBoardHeight = Math.max(0, viewportHeight - nonBoardHeight);
+    const aspectRatio = this.canvas.width / this.canvas.height;
+    const maxWidth = Math.min(shell.clientWidth, availableBoardHeight * aspectRatio);
+    this.root.style.setProperty(
+      "--douse-board-max-width",
+      `${Math.max(1, Math.floor(maxWidth))}px`,
+    );
   }
 
   private async start(): Promise<void> {

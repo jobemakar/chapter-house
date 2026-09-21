@@ -64,3 +64,23 @@ pack's `PNG/Double/` directory are locally packaged as
 `fish-orange.png`, `fish-pink.png`, `fish-grey-long-a.png`, and
 `fish-grey-long-b.png`. The supplied license is retained unchanged as
 `public/assets/collections/fish/Fish-Pack-CC0.txt`.
+
+## Kenney Cube Pets roster — 2026-09-20
+
+[Cube Pets 2.0](https://kenney.nl/assets/cube-pets) by Kenney is distributed
+under CC0. All 24 original `Models/GLB format/animal-*.glb` files, matching
+`Previews/animal-*.png` files, shared `Textures/colormap.png`, and the supplied
+license are locally packaged under `public/assets/pets/`. The extracted source
+was `C:\Users\jmakar\AppData\Local\Temp\chapter-house-cube-pets-2c3d4bdf3c904d9f9713d4793d7b3813\pack`.
+Tiger remains packaged but is deliberately not an ordinary store pet.
+
+## Kenney Pirate Kit source package — 2026-09-20
+
+Pirate Kit 2.1: https://kenney.nl/assets/pirate-kit (CC0). The complete
+official download is retained as
+`application/assets/source/kenney-pirate-kit-2.1.zip` with SHA-256
+`667ED2CAF92954DDB98F7B7CEDE831FE99AB75063C26B25E23D32715BEE9C943`.
+Its normalized runtime GLB models, previews, shared colormap and unchanged
+license are under `public/assets/pirate/`; the 72 GLBs are exact copies from
+the pack's `Models/GLB format/` directory. See `docs/pirate-assets.md` for the
+inventory and import notes. No runtime external dependency is introduced.

@@ -17,7 +17,7 @@
   box-sizing: border-box;
 }
 .dig-and-douse__shell {
-  width: min(100% - 32px, 500px);
+  width: min(100% - 32px, 1180px);
   margin: 0 auto;
   padding: 23px 0 max(20px, env(safe-area-inset-bottom));
 }
@@ -100,6 +100,9 @@
   background: #112527;
   border: 1px solid #44605b;
   box-shadow: 0 12px 45px #07161655;
+  width: 100%;
+  max-width: min(100%, var(--douse-board-max-width, 480px));
+  margin-inline: auto;
 }
 .dig-and-douse canvas {
   display: block;
@@ -254,6 +257,7 @@
 }
 @media (orientation: landscape) and (max-height: 600px) {
   .dig-and-douse__shell {
-    max-width: 380px;
+    width: min(100% - 20px, 1180px);
+    padding-top: 10px;
   }
 }

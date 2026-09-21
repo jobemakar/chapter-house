@@ -1,11 +1,12 @@
 import { record, count, finite, strings, parse } from "./validation";
 import { getFurniture, getPet } from "./catalog";
 import { loadWishboneProgress } from "@chapter-house/game-wishbone-fling/progress";
-import {
-  IntegratedGames,
-  type IntegratedGameId,
-} from "./integrated-games";
+import { IntegratedGames, type IntegratedGameId } from "./integrated-games";
 import { FISH, FINDS, type DiscoveryKind } from "../town/activities";
+import {
+  normalizeAvatarColor,
+  type AvatarColor,
+} from "./avatar-colors";
 export interface Point {
   x: number;
   z: number;
@@ -27,7 +28,7 @@ export interface Profile {
   currency: number;
   activeSeconds: number;
   creditedUnits: number;
-  avatar: { color: string; accessory: string };
+  avatar: { color: AvatarColor; accessory: string };
   pets: string[];
   activePets: string[];
   starterChosen: boolean;
@@ -150,11 +151,7 @@ export class ProfileRepository {
       initial.creditedUnits = count(data.creditedUnits);
       const avatar = record(data.avatar);
       initial.avatar = {
-        color: ["#cc8957", "#8e9eae", "#d3ad85", "#af96b3"].includes(
-          String(avatar.color),
-        )
-          ? String(avatar.color)
-          : initial.avatar.color,
+        color: normalizeAvatarColor(avatar.color),
         accessory: ["scarf", "bow", "none"].includes(String(avatar.accessory))
           ? String(avatar.accessory)
           : "scarf",
@@ -232,9 +229,7 @@ export class ProfileRepository {
     if (!initial.legacyImported) {
       try {
         const old = storage?.getItem("wishbone-floppy-fetch-v1");
-        const wishbone = loadWishboneProgress(
-          initial.games["wishbone-fling"],
-        );
+        const wishbone = loadWishboneProgress(initial.games["wishbone-fling"]);
         if (old && !wishbone.throws) {
           initial.legacySnapshot = parse(old);
           const imported = loadWishboneProgress(initial.legacySnapshot);

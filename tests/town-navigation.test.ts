@@ -122,6 +122,14 @@ test("the fountain action has a bounded interaction radius", () => {
   );
 });
 
+test("the spawn-adjacent compass patch is an open, reachable Pirate Island portal", () => {
+  const nav = new TownNavigation();
+  assert.equal(nav.walkable(TOWN.piratePortal), true);
+  assert.equal(nav.atPiratePortal(TOWN.entry), false);
+  assert.equal(nav.atPiratePortal(TOWN.piratePortal), true);
+  assertRoute(nav, TOWN.entry, TOWN.piratePortal);
+});
+
 test("fishing targets exist only at clear stream banks and never on the bridge", () => {
   const nav = new TownNavigation();
   assert.deepEqual(nav.streamTarget({ x: 10, z: 27 }), {

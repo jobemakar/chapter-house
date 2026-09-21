@@ -1,16 +1,38 @@
-import { clamp, type DuetRun, type RunEvent, type Side } from "./core";
+import { type DuetRun, type RunEvent, type Side } from "./core";
+import friendsUrl from "./assets/arctic-duet-option-a-sprites.png";
 
 interface Reaction { at: number; kind: "" | "catch" | "miss"; }
 interface Particle { side: Side; x: number; at: number; color: string; }
 
+interface SpriteFrame {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const FRIEND_FRAMES: Record<Side, { closed: SpriteFrame; open: SpriteFrame }> = {
+  0: {
+    closed: { x: 116, y: 80, width: 457, height: 541 },
+    open: { x: 685, y: 84, width: 459, height: 537 },
+  },
+  1: {
+    closed: { x: 94, y: 697, width: 503, height: 485 },
+    open: { x: 655, y: 683, width: 513, height: 499 },
+  },
+};
+
 export class DuetPainter {
   private readonly context: CanvasRenderingContext2D;
+  private readonly friends = new Image();
   private reactions: [Reaction, Reaction] = [{ at: -9, kind: "" }, { at: -9, kind: "" }];
   private particles: Particle[] = [];
   constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas is unavailable");
     this.context = context;
+    this.friends.decoding = "async";
+    this.friends.src = friendsUrl;
   }
   react(event: RunEvent, at: number): void {
     if (!event.note) return;
@@ -26,19 +48,36 @@ export class DuetPainter {
   private friend(side: Side, x: number, horizon: number, run: DuetRun, time: number, reduced: boolean): void {
     const context = this.context;
     const reaction = this.reactions[side];
-    const chew = reaction.kind === "catch" && time - reaction.at < 0.5;
+    const reactionAge = time - reaction.at;
+    const caught = reaction.kind === "catch" && reactionAge < 0.48;
+    const missed = reaction.kind === "miss" && reactionAge < 0.42;
     const bob = reduced ? 0 : Math.sin(time * 3 + side) * 3;
     const next = run.notes.filter((note) => note.side === side && note.state === "fall").sort((a, b) => a.beat - b.beat)[0];
-    const look = next ? clamp((next.x - run.positions[side]) * 15, -6, 6) : 0;
-    context.save(); context.translate(x, horizon + bob);
-    if (side === 0) {
-      this.oval(0, 62, 77, 78, "#fff5df"); this.oval(-55, 20, 24, 47, "#f8eed8"); this.oval(55, 20, 24, 47, "#f8eed8"); this.oval(-53, -45, 20, 25, "#fff4df"); this.oval(53, -45, 20, 25, "#fff4df"); context.fillStyle = "#6ab7a5"; context.fillRect(-66, 100, 132, 20); this.oval(0, 0, 48, 43, "#ece5d6");
-    } else {
-      this.oval(0, 61, 72, 83, "#243344"); this.oval(0, 76, 51, 62, "#f4e7d4"); this.oval(-62, 57, 19, 47, "#344857"); this.oval(62, 57, 19, 47, "#344857"); this.oval(-30, 136, 31, 12, "#eeaa70"); this.oval(30, 136, 31, 12, "#eeaa70"); this.oval(0, -7, 72, 65, "#233444");
+    const anticipating = Boolean(next && next.beat - run.beat >= -0.06 && next.beat - run.beat < 0.82);
+    const frame = FRIEND_FRAMES[side][caught || anticipating ? "open" : "closed"];
+    const baseHeight = side === 0 ? 194 : 184;
+    const pulse = !reduced && caught ? 1 + Math.sin(Math.min(1, reactionAge / 0.48) * Math.PI) * 0.09 : 1;
+    const width = baseHeight * frame.width / frame.height * pulse;
+    const height = baseHeight * pulse;
+    const settle = !reduced && caught ? -Math.sin(Math.min(1, reactionAge / 0.48) * Math.PI) * 13 : 0;
+    const flinch = !reduced && missed ? Math.sin(reactionAge * 42) * 4 : 0;
+
+    context.save();
+    context.translate(x + flinch, horizon + 151 + bob + settle);
+    if (missed && !reduced) context.rotate(Math.sin(reactionAge * 28) * 0.035);
+    if (this.friends.complete && this.friends.naturalWidth > 0) {
+      context.drawImage(
+        this.friends,
+        frame.x,
+        frame.y,
+        frame.width,
+        frame.height,
+        -width / 2,
+        -height,
+        width,
+        height,
+      );
     }
-    this.oval(-25 + look, -18, 5, 7, "#293643"); this.oval(25 + look, -18, 5, 7, "#293643");
-    if (side === 0) { this.oval(0, 2, 10, 7, "#293643"); this.oval(0, 20, chew ? 16 : 8, chew ? 10 : 5, "#543944"); }
-    else { context.fillStyle = "#f3ad65"; context.beginPath(); context.moveTo(-20, 0); context.lineTo(20, 0); context.lineTo(0, 29); context.closePath(); context.fill(); }
     context.restore();
   }
   draw(run: DuetRun, time: number, reduced: boolean, active: boolean): void {

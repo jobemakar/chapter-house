@@ -1,13 +1,7 @@
 import * as THREE from "three";
 import { RoomArt, AnimalRig } from "./art";
-import { getFurniture } from "../core/catalog";
+import { getFurniture, getPet } from "../core/catalog";
 import { assetUrl } from "../core/asset-url";
-
-const PET_PORTRAITS: Record<string, string> = {
-  cat: assetUrl("pets/previews/animal-cat.png"),
-  bunny: assetUrl("pets/previews/animal-bunny.png"),
-  fox: assetUrl("pets/previews/animal-fox.png"),
-};
 
 /** Furniture and avatar portraits are rendered locally; pet art is packaged. */
 export class CatalogPortraits {
@@ -25,7 +19,12 @@ export class CatalogPortraits {
     this.renderer.toneMappingExposure = 1.2;
   }
   image(id: string, pet = false): string {
-    if (pet) return PET_PORTRAITS[id] ?? PET_PORTRAITS.cat;
+    if (pet) {
+      const definition = getPet(id);
+      return definition
+        ? assetUrl(`pets/previews/animal-${definition.assetKey}.png`)
+        : assetUrl("pets/previews/animal-cat.png");
+    }
     return this.portrait((pet ? "pet-" : "") + id, () => {
       return RoomArt.furniture(getFurniture(id)!);
     });

@@ -122,7 +122,7 @@ export class TownAudio {
     this.note(1040, 0.055, 0.02, "triangle", 0.13, 1220);
   }
 
-  /** A catch gets a splash, then a rarity-colored little celebration. */
+  /** A catch gets a splash, then a rarity-colored happy fanfare. */
   catchFish(rarity: TownRarity): void {
     if (!this.canPlay()) return;
     this.note(230, 0.18, 0.042, "sine", 0, 110);
@@ -144,7 +144,7 @@ export class TownAudio {
     this.note(290, 0.14, 0.018, "sine", 0.21, 160);
   }
 
-  /** Finds use the same rarity language as fish after their soil flourish. */
+  /** Finds use the same happy rarity fanfare as fish. */
   discover(rarity: TownRarity): void {
     if (!this.canPlay()) return;
     this.rarityStinger(rarity);
@@ -363,28 +363,35 @@ export class TownAudio {
     const notes: Record<TownRarity, Array<[number, number]>> = {
       common: [
         [660, 0],
-        [880, 0.075],
+        [825, 0.07],
+        [990, 0.14],
+        [1320, 0.23],
       ],
       uncommon: [
-        [740, 0],
-        [988, 0.065],
-        [1245, 0.13],
+        [587, 0],
+        [740, 0.06],
+        [880, 0.12],
+        [1175, 0.19],
+        [1480, 0.28],
       ],
       rare: [
-        [784, 0],
-        [1047, 0.055],
-        [1319, 0.11],
-        [1568, 0.165],
+        [523, 0],
+        [659, 0.05],
+        [784, 0.1],
+        [1047, 0.16],
+        [1319, 0.23],
+        [1568, 0.31],
       ],
     };
+    this.note(330, 0.32, 0.014, "sine", delay, 440);
     notes[rarity].forEach(([frequency, offset], index) =>
       this.note(
         frequency,
-        0.13,
-        0.018 + index * 0.003,
-        "triangle",
+        index === notes[rarity].length - 1 ? 0.28 : 0.16,
+        0.019 + index * 0.002,
+        index === notes[rarity].length - 1 ? "sine" : "triangle",
         delay + offset,
-        frequency * 1.08,
+        index === notes[rarity].length - 1 ? frequency * 1.04 : undefined,
       ),
     );
   }

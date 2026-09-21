@@ -42,968 +42,968 @@
 }
 
 @scope (.stormglide) {
-:scope {
-  color-scheme: dark;
-  --cream: #fff3d5;
-  --mint: #b0f1dc;
-  --ink: #172445;
-  --glass: rgba(18, 29, 58, 0.73);
-}
-* {
-  box-sizing: border-box;
-}
-:scope {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: var(--ink);
-  color: var(--cream);
-  font-family: "DM Sans", system-ui, sans-serif;
-}
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-button:focus-visible,
-a:focus-visible {
-  outline: 3px solid #ffe2a2;
-  outline-offset: 5px;
-}
-button:disabled {
-  cursor: default;
-}
-button:hover {
-  filter: brightness(1.08);
-}
-button:active {
-  transform: translateY(1px);
-}
-[hidden] {
-  display: none !important;
-}
-#game {
-  position: fixed;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
-  outline: none;
-}
-#veil {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(12, 23, 47, 0.7), transparent 85%);
-  pointer-events: none;
-  transition: opacity 0.7s;
-}
-:scope.playing #veil {
-  opacity: 0;
-}
-.hud {
-  position: fixed;
-  inset: 24px 28px auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  pointer-events: none;
-}
-.hud > * {
-  pointer-events: auto;
-}
-.brand {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 600;
-  font-size: 25px;
-  letter-spacing: -1px;
-}
-.brand small {
-  font:
-    600 9px "DM Sans",
-    sans-serif;
-  display: block;
-  letter-spacing: 3px;
-  color: #b9c9dc;
-  margin-bottom: 5px;
-}
-.topRight {
-  display: flex;
-  gap: 8px;
-}
-.iconBtn {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid #ffffff27;
-  background: var(--glass);
-  border-radius: 50%;
-  backdrop-filter: blur(12px);
-}
-.iconBtn svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.stats {
-  display: flex;
-  gap: 27px;
-  padding: 12px 26px;
-  background: var(--glass);
-  border: 1px solid #ffffff20;
-  border-radius: 22px;
-  backdrop-filter: blur(14px);
-}
-.stat {
-  display: grid;
-  gap: 1px;
-}
-.stat b {
-  font-size: 22px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.stat span {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #c4cddd;
-}
-.stat i {
-  font-style: normal;
-  color: #ffe09c;
-}
-.stat .pink {
-  color: #ffbad4;
-}
-#start {
-  position: fixed;
-  left: 8%;
-  top: 50%;
-  transform: translateY(-46%);
-  max-width: 550px;
-  width: 78%;
-}
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--mint);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-.eyebrow:before {
-  content: "";
-  display: inline-block;
-  width: 30px;
-  height: 1px;
-  background: var(--mint);
-}
-h1 {
-  font:
-    600 clamp(68px, 9.5vw, 138px) / 0.91 Fraunces,
-    Georgia,
-    serif;
-  letter-spacing: -5px;
-  margin: 24px 0;
-  color: #ffe9b4;
-  text-shadow: 0 6px 35px #10182c40;
-}
-h1 .sub {
-  display: block;
-  font:
-    600 22px/1.4 Fraunces,
-    Georgia,
-    serif;
-  letter-spacing: 0.1px;
-  color: #fff3d5;
-  margin-bottom: 9px;
-}
-.intro {
-  font:
-    400 17px/1.7 "DM Sans",
-    sans-serif;
-  color: #e0e4e7;
-  max-width: 370px;
-  margin: 0 0 27px;
-}
-.primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  border: 0;
-  border-radius: 100px;
-  padding: 18px 29px;
-  background: var(--mint);
-  color: #1a3546;
-  font-weight: 700;
-  font-size: 17px;
-  box-shadow:
-    0 5px 0 #63aeaa,
-    0 12px 35px #0b172e50;
-}
-.primary span {
-  font-size: 23px;
-}
-.instructions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 22px;
-  font-size: 11px;
-  color: #c7d2e2;
-  line-height: 1.6;
-  margin-top: 31px;
-}
-.instructions b {
-  color: var(--cream);
-  font-weight: 600;
-}
-.key {
-  border: 1px solid #d9e6f64d;
-  padding: 2px 5px;
-  border-radius: 5px;
-  font-size: 10px;
-}
-.footnote {
-  position: fixed;
-  bottom: 21px;
-  left: 28px;
-  font-size: 10px;
-  color: #bcc9d4;
-  letter-spacing: 0.1px;
-}
-.footnote a {
-  color: inherit;
-  text-decoration-color: #ffffff40;
-}
-#demoLabel {
-  position: fixed;
-  right: 13%;
-  top: 68%;
-  font:
-    italic 18px Fraunces,
-    Georgia,
-    serif;
-  color: #fff3d5;
-  transform: rotate(-7deg);
-}
-#flightUI {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-}
-.bottomBar {
-  position: absolute;
-  bottom: 27px;
-  left: 28px;
-  right: 28px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-}
-.location {
-  font:
-    600 26px Fraunces,
-    Georgia,
-    serif;
-  text-shadow: 0 2px 12px #172445;
-}
-.location small {
-  display: block;
-  font:
-    500 9px "DM Sans",
-    sans-serif;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--mint);
-  margin-bottom: 5px;
-}
-.regionProgress {
-  height: 2px;
-  background: #ffffff2b;
-  width: 160px;
-  margin-top: 11px;
-  overflow: hidden;
-}
-.regionProgress i {
-  height: 100%;
-  display: block;
-  background: var(--mint);
-  width: 0;
-}
-.bottomTools {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  pointer-events: auto;
-}
-.chip {
-  border: 1px solid #ffffff2b;
-  border-radius: 30px;
-  background: var(--glass);
-  padding: 13px 17px;
-  font-size: 12px;
-  backdrop-filter: blur(12px);
-}
-#dash {
-  position: relative;
-  width: 155px;
-  height: 58px;
-  border: 1px solid #b0f1dc7a;
-  border-radius: 18px;
-  background: var(--glass);
-  overflow: hidden;
-  backdrop-filter: blur(12px);
-  display: grid;
-  align-content: center;
-  gap: 3px;
-}
-#dashCharge {
-  position: absolute;
-  inset: auto 0 0;
-  height: 100%;
-  background: #b0f1dc24;
-  transform-origin: left;
-  transform: scaleX(1);
-}
-#dash b,
-#dash small {
-  position: relative;
-}
-#dash b {
-  font-size: 14px;
-  color: #c2ffe8;
-}
-#dash small {
-  font-size: 9px;
-  letter-spacing: 1.2px;
-  color: #cbd8e6;
-}
-#toast {
-  position: absolute;
-  top: 114px;
-  left: 50%;
-  transform: translate(-50%, -12px);
-  background: #172445d9;
-  box-shadow: 0 10px 40px #10182c26;
-  border: 1px solid #fff3d536;
-  border-radius: 50px;
-  padding: 13px 26px;
-  text-align: center;
-  opacity: 0;
-  transition:
-    opacity 0.3s,
-    transform 0.3s;
-  max-width: 90%;
-  font-size: 15px;
-  backdrop-filter: blur(10px);
-}
-#toast.show {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-#event {
-  position: absolute;
-  top: 92px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: var(--mint);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-#flow {
-  position: absolute;
-  right: 30px;
-  top: 100px;
-  text-align: right;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: #ffdf98;
-}
-#flow b {
-  font:
-    600 28px Fraunces,
-    Georgia,
-    serif;
-  display: block;
-  letter-spacing: 0;
-}
-#firstHint {
-  position: absolute;
-  left: 50%;
-  bottom: 115px;
-  transform: translateX(-50%);
-  font-size: 13px;
-  color: #eef5ff;
-  background: #172445ad;
-  padding: 12px 23px;
-  border-radius: 30px;
-  text-align: center;
-  max-width: 88%;
-  width: max-content;
-}
-.overlay {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: #101c3dc4;
-  backdrop-filter: blur(12px);
-  z-index: 10;
-  padding: 20px;
-}
-.panel {
-  width: min(560px, 100%);
-  max-height: calc(100dvh - 40px);
-  overflow: auto;
-  padding: 32px;
-  border: 1px solid #ffffff2e;
-  border-radius: 30px;
-  background: linear-gradient(145deg, #2a3957, #1a2948);
-  box-shadow: 0 30px 100px #09102555;
-}
-.panel header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-.panel h2 {
-  font:
-    600 36px Fraunces,
-    Georgia,
-    serif;
-  letter-spacing: -1px;
-  margin: 0;
-}
-.panel p {
-  font-size: 13px;
-  color: #c4d1df;
-  line-height: 1.7;
-}
-.panel .primary {
-  width: 100%;
-  margin-top: 21px;
-}
-.pack {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 9px;
-  margin-top: 21px;
-}
-.pupCard {
-  background: #ffffff07;
-  border: 1px solid #ffffff12;
-  border-radius: 14px;
-  text-align: center;
-  padding: 10px 3px;
-  min-height: 89px;
-}
-.pupCard canvas {
-  display: block;
-  width: 56px;
-  height: 45px;
-  margin: 0 auto 3px;
-}
-.pupCard b {
-  font-size: 10px;
-  font-weight: 500;
-}
-.pupCard.locked {
-  opacity: 0.38;
-}
-.pupCard small {
-  display: block;
-  font-size: 9px;
-  color: #b8c7d9;
-  margin-top: 4px;
-}
-.settings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-.settings button {
-  flex: 1;
-  min-width: 140px;
-}
-.pauseStats {
-  color: #ffe3a1 !important;
-  font-weight: 600;
-}
-#packHint {
-  margin-bottom: 0;
-  font-size: 11px;
-}
-.sr {
-  position: absolute;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-@media (max-width: 700px) {
+  :scope {
+    color-scheme: dark;
+    --cream: #fff3d5;
+    --mint: #b0f1dc;
+    --ink: #172445;
+    --glass: rgba(18, 29, 58, 0.73);
+  }
+  * {
+    box-sizing: border-box;
+  }
+  :scope {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible,
+  a:focus-visible {
+    outline: 3px solid #ffe2a2;
+    outline-offset: 5px;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  button:hover {
+    filter: brightness(1.08);
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+  [hidden] {
+    display: none !important;
+  }
+  #game {
+    position: fixed;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    outline: none;
+  }
+  #veil {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(12, 23, 47, 0.7), transparent 85%);
+    pointer-events: none;
+    transition: opacity 0.7s;
+  }
+  :scope.playing #veil {
+    opacity: 0;
+  }
   .hud {
-    inset: 17px 16px auto;
+    position: fixed;
+    inset: 24px 28px auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .hud > * {
+    pointer-events: auto;
   }
   .brand {
-    font-size: 20px;
+    font-family: Fraunces, Georgia, serif;
+    font-weight: 600;
+    font-size: 25px;
+    letter-spacing: -1px;
   }
   .brand small {
-    font-size: 8px;
-    letter-spacing: 2px;
-  }
-  .stats {
-    position: absolute;
-    top: 57px;
-    left: 0;
-    gap: 20px;
-    padding: 9px 16px;
-    border-radius: 16px;
-  }
-  .stat b {
-    font-size: 18px;
-  }
-  .stat span {
-    font-size: 8px;
-  }
-  .iconBtn {
-    width: 39px;
-    height: 39px;
+    font:
+      600 9px "DM Sans",
+      sans-serif;
+    display: block;
+    letter-spacing: 3px;
+    color: #b9c9dc;
+    margin-bottom: 5px;
   }
   .topRight {
-    gap: 6px;
-  }
-  #start {
-    left: 8%;
-    top: 46%;
-    width: 86%;
-  }
-  h1 {
-    font-size: clamp(58px, 13vw, 95px);
-    letter-spacing: -3px;
-  }
-  .intro {
-    font-size: 15px;
-    max-width: 270px;
-  }
-  .eyebrow {
-    font-size: 9px;
-    letter-spacing: 2px;
-  }
-  .instructions {
-    font-size: 10px;
-    gap: 8px 15px;
-    max-width: 260px;
-  }
-  #demoLabel {
-    display: none;
-  }
-  .footnote {
-    left: 18px;
-    right: 18px;
-    bottom: 13px;
-    font-size: 8px;
-  }
-  .bottomBar {
-    left: 16px;
-    right: 16px;
-    bottom: max(20px, env(safe-area-inset-bottom));
+    display: flex;
     gap: 8px;
   }
-  .location {
-    font-size: 20px;
+  .iconBtn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #ffffff27;
+    background: var(--glass);
+    border-radius: 50%;
+    backdrop-filter: blur(12px);
   }
-  .location small {
-    font-size: 8px;
-    letter-spacing: 2px;
-  }
-  .regionProgress {
-    width: 105px;
-  }
-  .bottomTools {
-    gap: 8px;
-  }
-  #dash {
-    width: 112px;
-    height: 66px;
-  }
-  .chip {
-    padding: 11px;
-    font-size: 11px;
-  }
-  #trail {
-    display: none;
-  }
-  #toast {
-    top: 160px;
-    font-size: 12px;
-    padding: 11px 18px;
-    width: max-content;
-    max-width: 88%;
-  }
-  #event {
-    top: 136px;
-    font-size: 8px;
-    letter-spacing: 2px;
-  }
-  #flow {
-    right: 19px;
-    top: 87px;
-    font-size: 8px;
-  }
-  #flow b {
-    font-size: 24px;
-  }
-  #firstHint {
-    font-size: 11px;
-    bottom: 105px;
-  }
-  .panel {
-    padding: 24px;
-  }
-  .panel h2 {
-    font-size: 30px;
-  }
-  .pack {
-    gap: 6px;
-  }
-  .pupCard b {
-    font-size: 9px;
-  }
-}
-@media (max-height: 550px) {
-  #start {
-    top: 53%;
-    left: 7%;
-  }
-  h1 {
-    font-size: 70px;
-    margin: 12px 0;
-  }
-  h1 .sub {
-    font-size: 16px;
-  }
-  .eyebrow {
-    font-size: 9px;
-  }
-  .intro {
-    font-size: 13px;
-    line-height: 1.5;
-    margin-bottom: 16px;
-    max-width: 350px;
-  }
-  .primary {
-    padding: 12px 25px;
-  }
-  .instructions {
-    margin-top: 18px;
-  }
-  .footnote {
-    font-size: 8px;
-    bottom: 9px;
-  }
-  .hud {
-    inset: 15px 22px auto;
-  }
-  .bottomBar {
-    bottom: 18px;
+  .iconBtn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .stats {
-    position: static;
-    padding: 8px 20px;
+    display: flex;
+    gap: 27px;
+    padding: 12px 26px;
+    background: var(--glass);
+    border: 1px solid #ffffff20;
+    border-radius: 22px;
+    backdrop-filter: blur(14px);
+  }
+  .stat {
+    display: grid;
+    gap: 1px;
   }
   .stat b {
-    font-size: 18px;
+    font-size: 22px;
+    font-weight: 600;
+    white-space: nowrap;
   }
   .stat span {
-    font-size: 8px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #c4cddd;
+  }
+  .stat i {
+    font-style: normal;
+    color: #ffe09c;
+  }
+  .stat .pink {
+    color: #ffbad4;
+  }
+  #start {
+    position: fixed;
+    left: 8%;
+    top: 50%;
+    transform: translateY(-46%);
+    max-width: 550px;
+    width: 78%;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mint);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+  }
+  .eyebrow:before {
+    content: "";
+    display: inline-block;
+    width: 30px;
+    height: 1px;
+    background: var(--mint);
+  }
+  h1 {
+    font:
+      600 clamp(68px, 9.5vw, 138px) / 0.91 Fraunces,
+      Georgia,
+      serif;
+    letter-spacing: -5px;
+    margin: 24px 0;
+    color: #ffe9b4;
+    text-shadow: 0 6px 35px #10182c40;
+  }
+  h1 .sub {
+    display: block;
+    font:
+      600 22px/1.4 Fraunces,
+      Georgia,
+      serif;
+    letter-spacing: 0.1px;
+    color: #fff3d5;
+    margin-bottom: 9px;
+  }
+  .intro {
+    font:
+      400 17px/1.7 "DM Sans",
+      sans-serif;
+    color: #e0e4e7;
+    max-width: 370px;
+    margin: 0 0 27px;
+  }
+  :scope .primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    border: 0;
+    border-radius: 100px;
+    padding: 18px 29px;
+    background: var(--mint);
+    color: #1a3546;
+    font-weight: 700;
+    font-size: 17px;
+    box-shadow:
+      0 5px 0 #63aeaa,
+      0 12px 35px #0b172e50;
+  }
+  :scope .primary span {
+    font-size: 23px;
+  }
+  .instructions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 22px;
+    font-size: 11px;
+    color: #c7d2e2;
+    line-height: 1.6;
+    margin-top: 31px;
+  }
+  .instructions b {
+    color: var(--cream);
+    font-weight: 600;
+  }
+  .key {
+    border: 1px solid #d9e6f64d;
+    padding: 2px 5px;
+    border-radius: 5px;
+    font-size: 10px;
+  }
+  .footnote {
+    position: fixed;
+    bottom: 21px;
+    left: 28px;
+    font-size: 10px;
+    color: #bcc9d4;
+    letter-spacing: 0.1px;
+  }
+  .footnote a {
+    color: inherit;
+    text-decoration-color: #ffffff40;
+  }
+  #demoLabel {
+    position: fixed;
+    right: 13%;
+    top: 68%;
+    font:
+      italic 18px Fraunces,
+      Georgia,
+      serif;
+    color: #fff3d5;
+    transform: rotate(-7deg);
+  }
+  #flightUI {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+  .bottomBar {
+    position: absolute;
+    bottom: 27px;
+    left: 28px;
+    right: 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .location {
+    font:
+      600 26px Fraunces,
+      Georgia,
+      serif;
+    text-shadow: 0 2px 12px #172445;
+  }
+  .location small {
+    display: block;
+    font:
+      500 9px "DM Sans",
+      sans-serif;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-bottom: 5px;
+  }
+  .regionProgress {
+    height: 2px;
+    background: #ffffff2b;
+    width: 160px;
+    margin-top: 11px;
+    overflow: hidden;
+  }
+  .regionProgress i {
+    height: 100%;
+    display: block;
+    background: var(--mint);
+    width: 0;
+  }
+  .bottomTools {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    pointer-events: auto;
+  }
+  :scope .chip {
+    border: 1px solid #ffffff2b;
+    border-radius: 30px;
+    background: var(--glass);
+    padding: 13px 17px;
+    font-size: 12px;
+    backdrop-filter: blur(12px);
+  }
+  :scope #dash {
+    position: relative;
+    width: 155px;
+    height: 58px;
+    border: 1px solid #b0f1dc7a;
+    border-radius: 18px;
+    background: var(--glass);
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    display: grid;
+    align-content: center;
+    gap: 3px;
+  }
+  #dashCharge {
+    position: absolute;
+    inset: auto 0 0;
+    height: 100%;
+    background: #b0f1dc24;
+    transform-origin: left;
+    transform: scaleX(1);
+  }
+  :scope #dash b,
+  :scope #dash small {
+    position: relative;
+  }
+  :scope #dash b {
+    font-size: 14px;
+    color: #c2ffe8;
+  }
+  :scope #dash small {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    color: #cbd8e6;
   }
   #toast {
-    top: 83px;
+    position: absolute;
+    top: 114px;
+    left: 50%;
+    transform: translate(-50%, -12px);
+    background: #172445d9;
+    box-shadow: 0 10px 40px #10182c26;
+    border: 1px solid #fff3d536;
+    border-radius: 50px;
+    padding: 13px 26px;
+    text-align: center;
+    opacity: 0;
+    transition:
+      opacity 0.3s,
+      transform 0.3s;
+    max-width: 90%;
+    font-size: 15px;
+    backdrop-filter: blur(10px);
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
   #event {
-    top: 72px;
+    position: absolute;
+    top: 92px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--mint);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  #flow {
+    position: absolute;
+    right: 30px;
+    top: 100px;
+    text-align: right;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #ffdf98;
+  }
+  #flow b {
+    font:
+      600 28px Fraunces,
+      Georgia,
+      serif;
+    display: block;
+    letter-spacing: 0;
   }
   #firstHint {
-    bottom: 88px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  * {
-    scroll-behavior: auto !important;
-    transition: none !important;
-  }
-}
-
-/* Touch-first controls: input capability, not screen width, selects the layout. */
-:scope {
-  overscroll-behavior: none;
-}
-button {
-  touch-action: manipulation;
-  min-height: 48px;
-  min-width: 48px;
-}
-#game,
-#flightUI,
-.hud,
-#start {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-.touchInstructions,
-.touchCopy,
-#touchControls {
-  display: none;
-}
-.touch .touchInstructions {
-  display: flex;
-  font-size: 14px;
-  max-width: 370px;
-  gap: 8px 18px;
-}
-.touch .touchCopy {
-  display: inline;
-}
-.touch .desktopInstructions,
-.touch .desktopCopy {
-  display: none;
-}
-.touch #touchControls {
-  display: block;
-}
-#touchPad {
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
-  left: calc(env(safe-area-inset-left, 0px) + 26px);
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
-  border: 2px solid #c2f5e06e;
-  background: #17244599;
-  display: grid;
-  place-items: center;
-  pointer-events: auto;
-  touch-action: none;
-  -webkit-touch-callout: none;
-  box-shadow: inset 0 0 35px #abedda12;
-}
-#touchKnob {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: #b0f1dc;
-  border: 3px solid #e4fff0;
-  box-shadow: 0 4px 16px #09243655;
-  pointer-events: none;
-  will-change: transform;
-}
-#touchPad span {
-  position: absolute;
-  bottom: 10px;
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: #c6e6e2;
-  pointer-events: none;
-}
-#touchPad.held {
-  border-color: #d1ffe8;
-  background: #244b5dbb;
-}
-.touch .iconBtn {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  min-height: 52px;
-}
-.touch .hud {
-  top: calc(env(safe-area-inset-top, 0px) + 18px);
-  left: calc(env(safe-area-inset-left, 0px) + 20px);
-  right: calc(env(safe-area-inset-right, 0px) + 20px);
-}
-.touch .topRight {
-  gap: 12px;
-}
-.touch .location {
-  position: fixed;
-  left: calc(env(safe-area-inset-left, 0px) + 28px);
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 170px);
-  font-size: 20px;
-}
-.touch .location small {
-  font-size: 9px;
-  letter-spacing: 2px;
-}
-.touch .regionProgress {
-  width: 128px;
-}
-.touch .bottomBar {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
-  right: calc(env(safe-area-inset-right, 0px) + 26px);
-  left: auto;
-}
-.touch .bottomTools {
-  gap: 16px;
-  align-items: flex-end;
-}
-.touch #dash {
-  width: 124px;
-  height: 124px;
-  border-radius: 50%;
-  touch-action: none;
-  border: 2px solid #c3f5e0aa;
-  box-shadow: 0 8px 28px #0d203c66;
-}
-.touch #dash b {
-  font-size: 18px;
-}
-.touch #dash small {
-  font-size: 10px;
-  letter-spacing: 0.7px;
-}
-.touch #dash[aria-disabled="true"] b {
-  font-size: 13px;
-}
-.touch #packButton {
-  min-height: 52px;
-  font-size: 13px;
-  padding: 15px 18px;
-}
-.touch #trail {
-  display: none;
-}
-.touch .settings .chip {
-  min-height: 52px;
-  font-size: 14px;
-}
-.touch #firstHint {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 180px);
-  max-width: 52%;
-  font-size: 12px;
-}
-.touch .panel {
-  padding: 26px;
-  -webkit-overflow-scrolling: touch;
-}
-.touch .primary {
-  min-height: 58px;
-}
-@media (max-width: 900px) {
-  .touch #packButton {
     position: absolute;
-    right: 0;
-    bottom: 142px;
+    left: 50%;
+    bottom: 115px;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: #eef5ff;
+    background: #172445ad;
+    padding: 12px 23px;
+    border-radius: 30px;
+    text-align: center;
+    max-width: 88%;
+    width: max-content;
   }
-  .touch #firstHint {
-    bottom: 240px;
-    max-width: 86%;
+  .overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #101c3dc4;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+    padding: 20px;
   }
-}
-@media (max-width: 700px) {
-  .touch .brand {
-    font-size: 19px;
+  .panel {
+    width: min(560px, 100%);
+    max-height: calc(100dvh - 40px);
+    overflow: auto;
+    padding: 32px;
+    border: 1px solid #ffffff2e;
+    border-radius: 30px;
+    background: linear-gradient(145deg, #2a3957, #1a2948);
+    box-shadow: 0 30px 100px #09102555;
   }
-  .touch .topRight {
+  .panel header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .panel h2 {
+    font:
+      600 36px Fraunces,
+      Georgia,
+      serif;
+    letter-spacing: -1px;
+    margin: 0;
+  }
+  .panel p {
+    font-size: 13px;
+    color: #c4d1df;
+    line-height: 1.7;
+  }
+  .panel .primary {
+    width: 100%;
+    margin-top: 21px;
+  }
+  .pack {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 9px;
+    margin-top: 21px;
+  }
+  .pupCard {
+    background: #ffffff07;
+    border: 1px solid #ffffff12;
+    border-radius: 14px;
+    text-align: center;
+    padding: 10px 3px;
+    min-height: 89px;
+  }
+  .pupCard canvas {
+    display: block;
+    width: 56px;
+    height: 45px;
+    margin: 0 auto 3px;
+  }
+  .pupCard b {
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .pupCard.locked {
+    opacity: 0.38;
+  }
+  .pupCard small {
+    display: block;
+    font-size: 9px;
+    color: #b8c7d9;
+    margin-top: 4px;
+  }
+  .settings {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    margin-top: 18px;
   }
-  .touch .hud {
-    left: 16px;
-    right: 16px;
+  .settings button {
+    flex: 1;
+    min-width: 140px;
   }
-  .touch .stats {
-    top: 64px;
+  .pauseStats {
+    color: #ffe3a1 !important;
+    font-weight: 600;
   }
-  .touch #flow {
-    top: 98px;
+  #packHint {
+    margin-bottom: 0;
+    font-size: 11px;
   }
-  .touch #event {
-    top: 148px;
+  .sr {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
-  .touch #toast {
-    top: 174px;
+  @media (max-width: 700px) {
+    .hud {
+      inset: 17px 16px auto;
+    }
+    .brand {
+      font-size: 20px;
+    }
+    .brand small {
+      font-size: 8px;
+      letter-spacing: 2px;
+    }
+    .stats {
+      position: absolute;
+      top: 57px;
+      left: 0;
+      gap: 20px;
+      padding: 9px 16px;
+      border-radius: 16px;
+    }
+    .stat b {
+      font-size: 18px;
+    }
+    .stat span {
+      font-size: 8px;
+    }
+    .iconBtn {
+      width: 39px;
+      height: 39px;
+    }
+    .topRight {
+      gap: 6px;
+    }
+    #start {
+      left: 8%;
+      top: 46%;
+      width: 86%;
+    }
+    h1 {
+      font-size: clamp(58px, 13vw, 95px);
+      letter-spacing: -3px;
+    }
+    .intro {
+      font-size: 15px;
+      max-width: 270px;
+    }
+    .eyebrow {
+      font-size: 9px;
+      letter-spacing: 2px;
+    }
+    .instructions {
+      font-size: 10px;
+      gap: 8px 15px;
+      max-width: 260px;
+    }
+    #demoLabel {
+      display: none;
+    }
+    .footnote {
+      left: 18px;
+      right: 18px;
+      bottom: 13px;
+      font-size: 8px;
+    }
+    .bottomBar {
+      left: 16px;
+      right: 16px;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      gap: 8px;
+    }
+    .location {
+      font-size: 20px;
+    }
+    .location small {
+      font-size: 8px;
+      letter-spacing: 2px;
+    }
+    .regionProgress {
+      width: 105px;
+    }
+    .bottomTools {
+      gap: 8px;
+    }
+    #dash {
+      width: 112px;
+      height: 66px;
+    }
+    .chip {
+      padding: 11px;
+      font-size: 11px;
+    }
+    #trail {
+      display: none;
+    }
+    #toast {
+      top: 160px;
+      font-size: 12px;
+      padding: 11px 18px;
+      width: max-content;
+      max-width: 88%;
+    }
+    #event {
+      top: 136px;
+      font-size: 8px;
+      letter-spacing: 2px;
+    }
+    #flow {
+      right: 19px;
+      top: 87px;
+      font-size: 8px;
+    }
+    #flow b {
+      font-size: 24px;
+    }
+    #firstHint {
+      font-size: 11px;
+      bottom: 105px;
+    }
+    .panel {
+      padding: 24px;
+    }
+    .panel h2 {
+      font-size: 30px;
+    }
+    .pack {
+      gap: 6px;
+    }
+    .pupCard b {
+      font-size: 9px;
+    }
   }
-  .touch .touchInstructions {
-    font-size: 12px;
-    max-width: 280px;
-    margin-top: 24px;
+  @media (max-height: 550px) {
+    #start {
+      top: 53%;
+      left: 7%;
+    }
+    h1 {
+      font-size: 70px;
+      margin: 12px 0;
+    }
+    h1 .sub {
+      font-size: 16px;
+    }
+    .eyebrow {
+      font-size: 9px;
+    }
+    .intro {
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      max-width: 350px;
+    }
+    .primary {
+      padding: 12px 25px;
+    }
+    .instructions {
+      margin-top: 18px;
+    }
+    .footnote {
+      font-size: 8px;
+      bottom: 9px;
+    }
+    .hud {
+      inset: 15px 22px auto;
+    }
+    .bottomBar {
+      bottom: 18px;
+    }
+    .stats {
+      position: static;
+      padding: 8px 20px;
+    }
+    .stat b {
+      font-size: 18px;
+    }
+    .stat span {
+      font-size: 8px;
+    }
+    #toast {
+      top: 83px;
+    }
+    #event {
+      top: 72px;
+    }
+    #firstHint {
+      bottom: 88px;
+    }
   }
-  .touch #touchPad {
-    left: 20px;
-    width: 116px;
-    height: 116px;
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      scroll-behavior: auto !important;
+      transition: none !important;
+    }
   }
-  .touch #dash {
-    width: 110px;
-    height: 110px;
+
+  /* Touch-first controls: input capability, not screen width, selects the layout. */
+  :scope {
+    overscroll-behavior: none;
   }
-  .touch .bottomBar {
-    right: 20px;
+  button {
+    touch-action: manipulation;
+    min-height: 48px;
+    min-width: 48px;
   }
-  .touch .location {
-    left: 22px;
-    font-size: 17px;
-    bottom: 157px;
+  #game,
+  #flightUI,
+  .hud,
+  #start {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
-  .touch #packButton {
-    bottom: 129px;
-  }
-}
-@media (max-height: 550px) {
-  .touch #touchPad {
-    width: 92px;
-    height: 92px;
-    bottom: 16px;
-  }
-  .touch #touchKnob {
-    width: 42px;
-    height: 42px;
-  }
-  .touch #dash {
-    width: 90px;
-    height: 90px;
-  }
-  .touch .bottomBar {
-    bottom: 16px;
-  }
-  .touch #packButton {
-    bottom: 105px;
-  }
-  .touch .location {
-    bottom: 120px;
-    font-size: 15px;
-  }
-  .touch .regionProgress {
+  .touchInstructions,
+  .touchCopy,
+  #touchControls {
     display: none;
   }
-  .touch #firstHint {
-    bottom: 120px;
-    max-width: 48%;
-    font-size: 11px;
-  }
   .touch .touchInstructions {
-    margin-top: 14px;
-    font-size: 11px;
-    max-width: 330px;
+    display: flex;
+    font-size: 14px;
+    max-width: 370px;
+    gap: 8px 18px;
   }
-  .touch #start {
-    top: 52%;
+  .touch .touchCopy {
+    display: inline;
   }
-}
+  .touch .desktopInstructions,
+  .touch .desktopCopy {
+    display: none;
+  }
+  .touch #touchControls {
+    display: block;
+  }
+  #touchPad {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
+    left: calc(env(safe-area-inset-left, 0px) + 26px);
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    border: 2px solid #c2f5e06e;
+    background: #17244599;
+    display: grid;
+    place-items: center;
+    pointer-events: auto;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    box-shadow: inset 0 0 35px #abedda12;
+  }
+  #touchKnob {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #b0f1dc;
+    border: 3px solid #e4fff0;
+    box-shadow: 0 4px 16px #09243655;
+    pointer-events: none;
+    will-change: transform;
+  }
+  #touchPad span {
+    position: absolute;
+    bottom: 10px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #c6e6e2;
+    pointer-events: none;
+  }
+  #touchPad.held {
+    border-color: #d1ffe8;
+    background: #244b5dbb;
+  }
+  .touch .iconBtn {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+  }
+  .touch .hud {
+    top: calc(env(safe-area-inset-top, 0px) + 18px);
+    left: calc(env(safe-area-inset-left, 0px) + 20px);
+    right: calc(env(safe-area-inset-right, 0px) + 20px);
+  }
+  .touch .topRight {
+    gap: 12px;
+  }
+  .touch .location {
+    position: fixed;
+    left: calc(env(safe-area-inset-left, 0px) + 28px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 170px);
+    font-size: 20px;
+  }
+  .touch .location small {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+  .touch .regionProgress {
+    width: 128px;
+  }
+  .touch .bottomBar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 25px);
+    right: calc(env(safe-area-inset-right, 0px) + 26px);
+    left: auto;
+  }
+  .touch .bottomTools {
+    gap: 16px;
+    align-items: flex-end;
+  }
+  .touch #dash {
+    width: 124px;
+    height: 124px;
+    border-radius: 50%;
+    touch-action: none;
+    border: 2px solid #c3f5e0aa;
+    box-shadow: 0 8px 28px #0d203c66;
+  }
+  .touch #dash b {
+    font-size: 18px;
+  }
+  .touch #dash small {
+    font-size: 10px;
+    letter-spacing: 0.7px;
+  }
+  .touch #dash[aria-disabled="true"] b {
+    font-size: 13px;
+  }
+  .touch #packButton {
+    min-height: 52px;
+    font-size: 13px;
+    padding: 15px 18px;
+  }
+  .touch #trail {
+    display: none;
+  }
+  .touch .settings .chip {
+    min-height: 52px;
+    font-size: 14px;
+  }
+  .touch #firstHint {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 180px);
+    max-width: 52%;
+    font-size: 12px;
+  }
+  .touch .panel {
+    padding: 26px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .touch .primary {
+    min-height: 58px;
+  }
+  @media (max-width: 900px) {
+    .touch #packButton {
+      position: absolute;
+      right: 0;
+      bottom: 142px;
+    }
+    .touch #firstHint {
+      bottom: 240px;
+      max-width: 86%;
+    }
+  }
+  @media (max-width: 700px) {
+    .touch .brand {
+      font-size: 19px;
+    }
+    .touch .topRight {
+      gap: 8px;
+    }
+    .touch .hud {
+      left: 16px;
+      right: 16px;
+    }
+    .touch .stats {
+      top: 64px;
+    }
+    .touch #flow {
+      top: 98px;
+    }
+    .touch #event {
+      top: 148px;
+    }
+    .touch #toast {
+      top: 174px;
+    }
+    .touch .touchInstructions {
+      font-size: 12px;
+      max-width: 280px;
+      margin-top: 24px;
+    }
+    .touch #touchPad {
+      left: 20px;
+      width: 116px;
+      height: 116px;
+    }
+    .touch #dash {
+      width: 110px;
+      height: 110px;
+    }
+    .touch .bottomBar {
+      right: 20px;
+    }
+    .touch .location {
+      left: 22px;
+      font-size: 17px;
+      bottom: 157px;
+    }
+    .touch #packButton {
+      bottom: 129px;
+    }
+  }
+  @media (max-height: 550px) {
+    .touch #touchPad {
+      width: 92px;
+      height: 92px;
+      bottom: 16px;
+    }
+    .touch #touchKnob {
+      width: 42px;
+      height: 42px;
+    }
+    .touch #dash {
+      width: 90px;
+      height: 90px;
+    }
+    .touch .bottomBar {
+      bottom: 16px;
+    }
+    .touch #packButton {
+      bottom: 105px;
+    }
+    .touch .location {
+      bottom: 120px;
+      font-size: 15px;
+    }
+    .touch .regionProgress {
+      display: none;
+    }
+    .touch #firstHint {
+      bottom: 120px;
+      max-width: 48%;
+      font-size: 11px;
+    }
+    .touch .touchInstructions {
+      margin-top: 14px;
+      font-size: 11px;
+      max-width: 330px;
+    }
+    .touch #start {
+      top: 52%;
+    }
+  }
 }

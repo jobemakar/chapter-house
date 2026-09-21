@@ -24,6 +24,9 @@ export class TownNavigation {
       TOWN.fountain.interactionRadius + Number.EPSILON * 32
     );
   }
+  atPiratePortal(p: Point) {
+    return Math.hypot(p.x - TOWN.piratePortal.x, p.z - TOWN.piratePortal.z) <= TOWN.piratePortal.radius;
+  }
 
   walkable(p: Point) {
     const r = 0.3;

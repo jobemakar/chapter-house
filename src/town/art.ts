@@ -47,6 +47,7 @@ export class TownArt {
     this.makePaths();
     this.root.add(this.imported);
     this.makeFountain();
+    this.makePiratePortal();
   }
 
   async load(): Promise<void> {
@@ -709,6 +710,21 @@ export class TownArt {
       ripple.rotation.x = -Math.PI / 2;
       f.add(ripple);
       this.ripples.push(ripple);
+    }
+  }
+  private makePiratePortal() {
+    const portal = new THREE.Group();
+    portal.name = "Pirate Island passage";
+    portal.userData.kind = "pirate-portal";
+    portal.position.set(TOWN.piratePortal.x, 0, TOWN.piratePortal.z);
+    this.root.add(portal);
+    const ring = this.mesh(portal, new THREE.RingGeometry(0.68, 1.05, 32), 0x42adb7, 0, 0.008, 0, { shadow: false });
+    ring.rotation.x = -Math.PI / 2;
+    const compass = this.mesh(portal, new THREE.CircleGeometry(0.62, 6), 0xe9c46c, 0, 0.01, 0, { shadow: false });
+    compass.rotation.x = -Math.PI / 2;
+    for (let index = 0; index < 4; index++) {
+      const marker = this.mesh(portal, new THREE.CircleGeometry(0.09, 12), 0xf7ecbe, Math.cos(index * Math.PI / 2) * 0.5, 0.016, Math.sin(index * Math.PI / 2) * 0.5, { shadow: false });
+      marker.rotation.x = -Math.PI / 2;
     }
   }
 }

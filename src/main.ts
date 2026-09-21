@@ -20,14 +20,18 @@ import {
   type TownContextView,
   type TownDiscoveryView,
 } from "./town/world";
+import { PirateIslandWorld } from "./town/pirate-world";
 import { FISH, FINDS, type DiscoveryDefinition } from "./town/activities";
 import { assetUrl } from "./core/asset-url";
+import {
+  AVATAR_COLOR_CATALOG,
+  avatarColorName,
+  normalizeAvatarColor,
+} from "./core/avatar-colors";
 import { GamePreviews } from "./core/game-previews";
 import { furniture, pets, getFurniture } from "./core/catalog";
-import {
-  FirebaseSession,
-  type MemberSessionState,
-} from "./firebase/session";
+import { setCurrentNavigation } from "./core/navigation-ui";
+import { FirebaseSession, type MemberSessionState } from "./firebase/session";
 import { InvalidUsernameError } from "./firebase/username";
 import "./styles.css";
 import "./room/actions.css";
@@ -62,7 +66,7 @@ class ChapterHouse {
   private game: GameSession | null = null;
   private activeGameId: IntegratedGameId | null = null;
   private gameLoadToken = 0;
-  private town: TownWorld | null = null;
+  private town: TownWorld | PirateIslandWorld | null = null;
   private panel: string | null = null;
   private toastTimer = 0;
   private panelFocus: HTMLElement | null = null;
@@ -333,7 +337,8 @@ class ChapterHouse {
         void this.signOutMember();
         break;
       case "outside":
-        this.enterTown();
+        if (this.town instanceof PirateIslandWorld) this.returnToWillowbrook();
+        else this.enterTown();
         break;
       case "clubhouse":
         this.leaveTown();
@@ -343,13 +348,13 @@ class ChapterHouse {
         this.leaveTown();
         break;
       case "town-dig":
-        this.town?.dig();
+        if (this.town instanceof TownWorld) this.town.dig();
         break;
       case "town-fish":
-        this.town?.fish();
+        if (this.town instanceof TownWorld) this.town.fish();
         break;
       case "town-reel":
-        this.town?.reel();
+        if (this.town instanceof TownWorld) this.town.reel();
         break;
       case "react-choice":
         this.applyReaction(id as ReactionKind);
@@ -441,7 +446,7 @@ class ChapterHouse {
         this.renderPanel();
         break;
       case "color":
-        this.profile.state.avatar.color = id;
+        this.profile.state.avatar.color = normalizeAvatarColor(id);
         this.profile.save();
         this.renderPanel();
         break;
@@ -488,9 +493,8 @@ class ChapterHouse {
     void this.signInMember(form);
   };
   private openAccountDialog() {
-    const dialog = this.root.querySelector<HTMLDialogElement>(
-      ".account-dialog",
-    )!;
+    const dialog =
+      this.root.querySelector<HTMLDialogElement>(".account-dialog")!;
     this.renderAccountDialog();
     if (!dialog.open) dialog.showModal();
     if (this.memberState.status !== "member") {
@@ -498,16 +502,14 @@ class ChapterHouse {
     }
   }
   private closeAccountDialog() {
-    const dialog = this.root.querySelector<HTMLDialogElement>(
-      ".account-dialog",
-    )!;
+    const dialog =
+      this.root.querySelector<HTMLDialogElement>(".account-dialog")!;
     if (dialog.open) dialog.close();
     this.setAccountError("");
   }
   private renderAccountDialog() {
-    const dialog = this.root.querySelector<HTMLDialogElement>(
-      ".account-dialog",
-    );
+    const dialog =
+      this.root.querySelector<HTMLDialogElement>(".account-dialog");
     if (!dialog) return;
     const form = dialog.querySelector<HTMLFormElement>(
       '[data-form="member-login"]',
@@ -635,14 +637,10 @@ class ChapterHouse {
     };
     this.ui("panel-label").textContent = labels[name][0];
     this.ui("panel-title").textContent = labels[name][1];
-    this.root
-      .querySelectorAll(".app-nav button")
-      .forEach((b) =>
-        b.setAttribute(
-          "aria-current",
-          String((b as HTMLElement).dataset.action === name),
-        ),
-      );
+    setCurrentNavigation(
+      this.root.querySelectorAll<HTMLButtonElement>(".app-nav button"),
+      name,
+    );
     if (name === "games")
       content.innerHTML = `<div class="integrated-game-list">${IntegratedGames.entries
         .map((game) => {
@@ -651,7 +649,7 @@ class ChapterHouse {
           const progress = adapter.summarize(
             this.profile.gameProgress(game.id),
           );
-          return `<div class="integrated-game-entry"><button class="game-card" data-action="play-game" data-id="${game.id}"><div class="game-card-art">${art}<span>${game.book.toUpperCase()} · INTEGRATED</span></div><div><span class="eyebrow">${game.title.toUpperCase()}</span><h3>${game.heading}</h3><p>${game.description}</p><span class="primary faux-button">Let’s play →</span></div></button><div class="reward-note"><span>✦</span><div><b>A keepsake for your corner</b><p>${progress}</p></div></div></div>`;
+          return `<div class="integrated-game-entry"><button class="game-card" data-action="play-game" data-id="${game.id}"><div class="game-card-art">${art}<span>${game.book}</span></div><div><h3>${game.title}</h3><p>${game.heading}</p><span class="primary faux-button">Let’s play →</span></div></button><div class="reward-note"><span>✦</span><div><b>A keepsake for your corner</b><p>${progress}</p></div></div></div>`;
         })
         .join("")}</div>${GamePreviews.markup()}`;
     if (name === "decorate")
@@ -671,23 +669,8 @@ class ChapterHouse {
         .join(
           "",
         )}<button class="empty-pet" data-action="shop"><span>+</span><b>Room for a friend</b><small>Meet more pets in the shop</small></button><div class="empty-pet decorative" aria-hidden="true"><span>+</span></div></div>`;
-    if (name === "pets") {
-      content.innerHTML += `<h3>A little pet corner</h3><p>Fill an empty bowl, then tap it again to send an available pet over for a little nom nom.</p><div class="accessories">${this.profile.state.items
-        .filter(
-          (i) =>
-            i.placement &&
-            ["bowl", "aquarium", "trampoline"].includes(
-              getFurniture(i.definitionId)!.kind,
-            ),
-        )
-        .map(
-          (i) =>
-            `<button data-action="interact-furniture" data-id="${i.id}">${getFurniture(i.definitionId)!.kind === "bowl" ? (i.filled ? "Feed pet" : "Fill bowl") : getFurniture(i.definitionId)!.kind === "aquarium" ? "Watch fish dart" : "Trampoline time"}</button>`,
-        )
-        .join("")}</div>`;
-    }
     if (name === "style")
-      content.innerHTML = `<div class="style-preview"><img src="${this.portraits.avatar(this.profile.state.avatar.color, this.profile.state.avatar.accessory)}" alt="Fox avatar"></div><h3>A little color</h3><div class="swatches">${["#cc8957", "#8e9eae", "#d3ad85", "#af96b3"].map((c, i) => `<button style="--swatch:${c}" data-action="color" data-id="${c}" aria-label="${["Autumn", "Slate", "Honey", "Lilac"][i]} fur" aria-pressed="${this.profile.state.avatar.color === c}"></button>`).join("")}</div><h3>The finishing touch</h3><div class="accessories">${["scarf", "bow", "none"].map((a) => `<button data-action="accessory" data-id="${a}" aria-pressed="${this.profile.state.avatar.accessory === a}">${a === "none" ? "Just me" : a[0].toUpperCase() + a.slice(1)}</button>`).join("")}</div><p class="quiet">These starter looks are free. More animal species and outfits will come in later iterations.</p>`;
+      content.innerHTML = `<div class="style-preview"><img src="${this.portraits.avatar(this.profile.state.avatar.color, this.profile.state.avatar.accessory)}" alt="Fox avatar in ${avatarColorName(this.profile.state.avatar.color)} fur"></div><h3>A little color</h3><div class="swatches">${AVATAR_COLOR_CATALOG.map((color) => `<button style="--swatch:${color.value}" data-action="color" data-id="${color.value}" aria-label="${color.name} fur" aria-pressed="${this.profile.state.avatar.color === color.value}"></button>`).join("")}</div><h3>The finishing touch</h3><div class="accessories">${["scarf", "bow", "none"].map((a) => `<button data-action="accessory" data-id="${a}" aria-pressed="${this.profile.state.avatar.accessory === a}">${a === "none" ? "Just me" : a[0].toUpperCase() + a.slice(1)}</button>`).join("")}</div><p class="quiet">These starter looks are free and can be changed any time.</p>`;
     if (name === "shop")
       content.innerHTML = `<p>Little rewards for time spent playing. Your coins grow during active games.</p><h3>A new companion</h3><div class="catalog-grid">${pets
         .map((p) => {
@@ -723,7 +706,7 @@ class ChapterHouse {
         const art = definition.image
           ? `<img src="${assetUrl(definition.image)}" alt="">`
           : `<span class="collection-icon" aria-hidden="true">${definition.icon}</span>`;
-        return `<article class="collection-card rarity-${definition.rarity} ${count ? "discovered" : "locked"}"><div class="collection-art">${art}</div><b>${count ? definition.name : "Not found yet"}</b><small>${definition.rarity}${count ? ` · ×${count}` : " · silhouette"}</small></article>`;
+        return `<article class="collection-card rarity-${definition.rarity} ${count ? "discovered" : "locked"}"><div class="collection-art">${art}</div><b>${count ? definition.name : "Not found yet"}</b><small>${definition.rarity}${count ? ` · ×${count}` : ""}</small></article>`;
       })
       .join("")}</div>`;
   }
@@ -790,8 +773,7 @@ class ChapterHouse {
         notify: this.notify,
         saveProgress: (progress) => this.profile.saveGameProgress(id, progress),
         creditActivePlay: (total) => this.profile.creditActivity(total),
-        awardReward: (rewardId) =>
-          this.profile.awardGameReward(id, rewardId),
+        awardReward: (rewardId) => this.profile.awardGameReward(id, rewardId),
       });
     } catch (error) {
       if (loadToken !== this.gameLoadToken) return;
@@ -840,6 +822,7 @@ class ChapterHouse {
       this.townContextChanged,
       this.townDiscoveryChanged,
       this.petAssets,
+      () => this.enterPirateIsland(),
     );
     this.refreshNavigation();
   }
@@ -856,7 +839,29 @@ class ChapterHouse {
     this.showSpaceDescriptor("clubhouse");
     this.refreshNavigation();
   }
-  private showSpaceDescriptor(space: "clubhouse" | "willowbrook") {
+  private enterPirateIsland() {
+    if (!(this.town instanceof TownWorld)) return;
+    this.town.dispose();
+    this.town = null;
+    this.closeQuickReactions();
+    this.showSpaceDescriptor("pirate-island");
+    this.town = new PirateIslandWorld(
+      this.root.querySelector<HTMLElement>(".town-world")!,
+      this.profile,
+      this.notify,
+      this.petAssets,
+    );
+    this.refreshNavigation();
+  }
+  private returnToWillowbrook() {
+    if (!(this.town instanceof PirateIslandWorld)) return;
+    this.town.dispose();
+    this.town = null;
+    this.enterTown();
+  }
+  private showSpaceDescriptor(
+    space: "clubhouse" | "willowbrook" | "pirate-island",
+  ) {
     const copy = {
       clubhouse: [
         "MAKE YOURSELF AT HOME",
@@ -867,6 +872,11 @@ class ChapterHouse {
         "A LITTLE FURTHER AFIELD",
         "Willowbrook square",
         "Tap a path to walk · drag to explore · pinch to zoom",
+      ],
+      "pirate-island": [
+        "OVER THE HORIZON",
+        "Pirate Island",
+        "Explore the beach · your pet is right beside you · Outside sails back",
       ],
     } as const;
     const [label, title, detail] = copy[space];
@@ -886,12 +896,11 @@ class ChapterHouse {
   }
   private refreshNavigation() {
     const space = this.game ? "games" : this.town ? "outside" : "clubhouse";
-    for (const button of this.root.querySelectorAll<HTMLButtonElement>(
-      ".app-nav button",
-    )) {
+    const buttons =
+      this.root.querySelectorAll<HTMLButtonElement>(".app-nav button");
+    setCurrentNavigation(buttons, this.panel ?? space);
+    for (const button of buttons) {
       const action = button.dataset.action!;
-      if (action === space) button.setAttribute("aria-current", "page");
-      else if (action !== this.panel) button.removeAttribute("aria-current");
       const unavailable = action === "decorate" && !!this.town;
       button.disabled = unavailable;
       button.title = unavailable

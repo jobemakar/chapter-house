@@ -6,7 +6,7 @@ import { InteractiveFurnishing } from "./furnishings";
 import { ActorReaction, type ReactionKind } from "./reactions";
 import type { RoomSound } from "./audio";
 import { RoomNavigation, ROOM, footprint } from "./navigation";
-import { PetAssets, PetRig, type PetAssetKey } from "./pet-assets";
+import { PetAssets, PetRig } from "./pet-assets";
 import { getFurniture, getPet } from "../core/catalog";
 import { PointerGesture, type ScreenPoint } from "../core/pointer-gesture";
 import {
@@ -248,15 +248,13 @@ export class ClubhouseRoom {
   }
   private createPetRig(id: string): AnimalRig | PetRig {
     const def = getPet(id)!;
-    if (id === "cat" || id === "bunny" || id === "fox") {
-      try {
-        return this.petAssets.create(id as PetAssetKey);
-      } catch {
-        // The room is usable immediately while the local GLBs load, and this
-        // procedural stand-in remains available if they fail.
-      }
+    try {
+      return this.petAssets.create(def.assetKey);
+    } catch {
+      // The room is usable immediately while the local GLBs load, and this
+      // procedural stand-in remains available only if the asset fails.
     }
-    return new AnimalRig(def.color, def.shape, "none", true);
+    return new AnimalRig(def.color, "fox", "none", true);
   }
   private releasePetRig(rig: AnimalRig | PetRig) {
     rig.root.removeFromParent();
