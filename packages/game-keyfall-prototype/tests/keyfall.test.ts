@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import Matter from "matter-js";
-import { distance } from "../src/geometry";
+import { distance, segmentIntersectionPoint, shouldGentleReset, swipePathCutPoint } from "../src/geometry";
 import { normalizeProgress, recordCompletion, SAVE_KEY } from "../src/progress";
-import { segmentsIntersect, shouldGentleReset, swipeHitsCord } from "../src/geometry";
-import { makeWorld, puff, removeCord } from "../src/physics";
+import { segmentsIntersect, swipeHitsCord } from "../src/geometry";
+import { applyOpeningImpulse, makeWorld, puff, removeCord } from "../src/physics";
+import { CordRemnants, SlashTrail } from "../src/interaction";
 import { ROOMS } from "../src/rooms";
 
 test("swipe crossing a cord is detected, while a parallel swipe misses", () => {
@@ -43,6 +44,7 @@ test("prototype save is unique and misses trigger reset only outside the safe pl
 test("room 3 authored bellows-and-bumper sequence reaches its goal", () => {
   const room = ROOMS[2];
   const world = makeWorld(room);
+  applyOpeningImpulse(world, false);
   assert.equal(removeCord(world, room.cords[0].id), true);
   puff(world);
   let reached = false;
@@ -51,4 +53,18 @@ test("room 3 authored bellows-and-bumper sequence reaches its goal", () => {
     if (distance(world.key.position, room.goal) < 38) { reached = true; break; }
   }
   assert.equal(reached, true, `key ended at ${Math.round(world.key.position.x)},${Math.round(world.key.position.y)}`);
+});
+test("each room receives a deterministic opening sway, softened but retained for reduced motion", () => {
+  const normal = makeWorld(ROOMS[0]); const reduced = makeWorld(ROOMS[0]);
+  applyOpeningImpulse(normal, false); applyOpeningImpulse(reduced, true);
+  assert.ok(Math.abs(normal.key.velocity.x - 0.75) < 0.00001); assert.ok(Math.abs(reduced.key.velocity.x - 0.25) < 0.00001); assert.notEqual(reduced.key.velocity.x, 0);
+});
+test("slash trails distinguish taps, follow drag points, and fade after release", () => {
+  const tap = new SlashTrail(); tap.begin({ x: 20, y: 20 }); tap.release(); assert.equal(tap.isSlash, false); tap.update(120); assert.equal(tap.points.length, 1);
+  const slash = new SlashTrail(); slash.begin({ x: 0, y: 40 }); slash.append({ x: 50, y: 40 }); slash.append({ x: 100, y: 50 }); slash.release(); assert.equal(slash.isSlash, true); slash.update(100); assert.ok(slash.opacity > 0); slash.update(300); assert.equal(slash.points.length, 0);
+});
+test("cut geometry returns the actual cord intersection and remnants react then expire", () => {
+  const point = segmentIntersectionPoint({ x: 0, y: 50 }, { x: 100, y: 50 }, { x: 50, y: 0 }, { x: 50, y: 100 });
+  assert.deepEqual(point, { x: 50, y: 50 }); assert.deepEqual(swipePathCutPoint([{ x: 0, y: 50 }, { x: 100, y: 50 }], { x: 50, y: 0 }, { x: 50, y: 100 }), { x: 50, y: 50 });
+  const remnants = new CordRemnants(); remnants.spawn({ x: 0, y: 0 }, { x: 50, y: 50 }, { x: 60, y: 60 }, { x: 4, y: 0 }); remnants.update(100, { x: 80, y: 80 }, { x: 4, y: 0 }); assert.equal(remnants.segments.length, 2); assert.deepEqual(remnants.segments[1].from, { x: 80, y: 80 }); assert.notDeepEqual(remnants.segments[0].to, remnants.segments[1].to); remnants.update(900, { x: 80, y: 80 }, { x: 4, y: 0 }); assert.equal(remnants.segments.length, 0);
 });

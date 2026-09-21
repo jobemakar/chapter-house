@@ -1,22 +1,29 @@
 import type { KeyfallWorld } from "./physics";
 import type { RoomDefinition, RuntimeState, Vec } from "./types";
+import type { KeyfallEffects } from "./interaction";
 
 const W = 800, H = 560;
 export class KeyfallRenderer {
   private ctx: CanvasRenderingContext2D;
   constructor(private canvas: HTMLCanvasElement) { const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("Canvas unavailable"); this.ctx = ctx; }
   resize(): void { const ratio = Math.min(window.devicePixelRatio || 1, 2), rect = this.canvas.getBoundingClientRect(); this.canvas.width = Math.max(1, Math.floor(rect.width * ratio)); this.canvas.height = Math.max(1, Math.floor(rect.height * ratio)); }
-  render(room: RoomDefinition, world: KeyfallWorld, collected: Set<string>, state: RuntimeState, reducedMotion: boolean, selectedCord?: string): void {
+  render(room: RoomDefinition, world: KeyfallWorld, collected: Set<string>, state: RuntimeState, reducedMotion: boolean, effects: KeyfallEffects): void {
     const c = this.ctx; c.save(); c.scale(this.canvas.width / W, this.canvas.height / H);
     const gradient = c.createLinearGradient(0, 0, 0, H); gradient.addColorStop(0, "#171326"); gradient.addColorStop(0.55, "#28152e"); gradient.addColorStop(1, "#4a2035"); c.fillStyle = gradient; c.fillRect(0, 0, W, H);
     this.drawCurtains(c); this.drawStage(c);
     for (const prop of room.props) this.drawProp(c, prop.kind, prop.position, prop.radius);
-    for (const cord of room.cords) { if (!world.cords.has(cord.id)) continue; const end = world.key.position as Vec; this.line(c, cord.anchor, end, selectedCord === cord.id ? "#ffd77d" : "#d59a83", selectedCord === cord.id ? 7 : 4); this.line(c, { x: cord.anchor.x - 4, y: cord.anchor.y }, { x: cord.anchor.x + 4, y: cord.anchor.y }, "#f4c76b", 5); }
+    for (const cord of room.cords) { if (!world.cords.has(cord.id)) continue; const end = world.key.position as Vec; this.line(c, cord.anchor, end, "#d59a83", 4); this.line(c, { x: cord.anchor.x - 4, y: cord.anchor.y }, { x: cord.anchor.x + 4, y: cord.anchor.y }, "#f4c76b", 5); }
     for (const ticket of room.tickets) if (!collected.has(ticket.id)) this.drawTicket(c, ticket.position);
-    this.drawGoal(c, room.goal, reducedMotion); this.drawKey(c, world.key.position as Vec, world.key.angle, reducedMotion);
+    this.drawInteraction(c, effects, reducedMotion); this.drawGoal(c, room.goal, reducedMotion); this.drawKey(c, world.key.position as Vec, world.key.angle, reducedMotion);
     if (state === "paused") { c.fillStyle = "rgba(12,8,22,.68)"; c.fillRect(0, 0, W, H); this.text(c, "PAUSED", W / 2, 260, 30, "#fff0c6", "center"); this.text(c, "Tap resume to return to the rig", W / 2, 298, 16, "#dfbb9b", "center"); }
     if (state === "complete") { c.fillStyle = "rgba(12,8,22,.44)"; c.fillRect(0, 0, W, H); this.text(c, "PASSAGE UNLOCKED", W / 2, 260, 25, "#ffe4a4", "center"); }
     c.restore();
+  }
+  private drawInteraction(c: CanvasRenderingContext2D, effects: KeyfallEffects, reducedMotion: boolean): void {
+    for (const segment of effects.remnants.segments) this.line(c, segment.from, segment.to, `rgba(213,154,131,${segment.opacity})`, 4);
+    const trail = effects.trail;
+    if (!trail.isSlash) return;
+    const points = trail.points; c.save(); c.strokeStyle = `rgba(255,238,163,${trail.opacity})`; c.lineWidth = reducedMotion ? 4 : 7; c.lineCap = "round"; c.lineJoin = "round"; if (!reducedMotion) { c.shadowColor = "#ffe88f"; c.shadowBlur = 12; } c.beginPath(); points.forEach((point, index) => index === 0 ? c.moveTo(point.x, point.y) : c.lineTo(point.x, point.y)); c.stroke(); c.restore();
   }
   private drawCurtains(c: CanvasRenderingContext2D): void { c.fillStyle = "#5d1d3d"; c.beginPath(); c.moveTo(0, 0); c.lineTo(128, 0); c.quadraticCurveTo(92, 160, 148, 300); c.quadraticCurveTo(72, 250, 0, 328); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W, 0); c.lineTo(W - 128, 0); c.quadraticCurveTo(W - 92, 160, W - 148, 300); c.quadraticCurveTo(W - 72, 250, W, 328); c.closePath(); c.fill(); }
   private drawStage(c: CanvasRenderingContext2D): void { c.fillStyle = "#7c3850"; c.fillRect(80, 42, 640, 10); c.fillStyle = "#2e1837"; c.fillRect(84, 53, 632, 470); c.strokeStyle = "rgba(255,216,145,.2)"; c.lineWidth = 2; c.strokeRect(84, 53, 632, 470); for (let x = 120; x < 700; x += 80) { c.strokeStyle = "rgba(255,216,145,.07)"; c.beginPath(); c.moveTo(x, 54); c.lineTo(x, 522); c.stroke(); } }

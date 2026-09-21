@@ -25,6 +25,7 @@ export function makeWorld(room: RoomDefinition): KeyfallWorld {
   Matter.Composite.add(engine.world, [key, goal, ...walls, ...anchors.values(), ...cords.values(), ...tickets.values(), ...props.values()]);
   return { engine, key, goal, cords, anchors, tickets, props };
 }
+export function applyOpeningImpulse(world: KeyfallWorld, reducedMotion: boolean): void { Matter.Body.setVelocity(world.key, { x: reducedMotion ? 0.25 : 0.75, y: 0 }); }
 export function removeCord(world: KeyfallWorld, cordId: string): boolean { const cord = world.cords.get(cordId); if (!cord) return false; Matter.Composite.remove(world.engine.world, cord); world.cords.delete(cordId); return true; }
 export function puff(world: KeyfallWorld, direction: Vec = { x: 1, y: -0.2 }): void { Matter.Body.applyForce(world.key, world.key.position, { x: direction.x * 0.09, y: direction.y * 0.09 }); }
 export function resetVelocity(world: KeyfallWorld): void { Matter.Body.setVelocity(world.key, { x: 0, y: 0 }); Matter.Body.setAngularVelocity(world.key, 0); }
