@@ -19,3 +19,17 @@ The three rooms demonstrate a direct drop, a two-cord pendulum sequence, and a
 bumper plus tappable bellows. This is a canvas prototype: the generated concept
 image is art direction, while cords, key, tickets, props, and goal are live
 objects. Progress and settings are local-only. No rewards are granted.
+
+## Rope tuning
+
+The primary feel controls are `CORD_TUNING` near the top of `src/physics.ts`:
+
+- Lower `stiffness` allows more stretch; higher values pull toward the rest
+  length more aggressively.
+- Lower `damping` preserves more bounce; higher values settle the key sooner.
+- `PHYSICS_TUNING.constraintIterations` controls how many times Matter solves
+  constraints per step and therefore also affects the apparent stiffness.
+
+The current exaggerated trial uses stiffness `0.001`, damping `0.05`, and two
+constraint iterations. A constraint copies these values when its room world is
+created, so use the in-game room reset or reload the page after changing them.

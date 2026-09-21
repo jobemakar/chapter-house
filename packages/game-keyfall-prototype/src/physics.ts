@@ -2,12 +2,24 @@ import Matter from "matter-js";
 import type { PropDefinition, RoomDefinition, Vec } from "./types";
 
 export type KeyfallWorld = { engine: Matter.Engine; key: Matter.Body; goal: Matter.Body; cords: Map<string, Matter.Constraint>; anchors: Map<string, Matter.Body>; tickets: Map<string, Matter.Body>; props: Map<string, Matter.Body> };
-/** Gentle spring tuning: enough give to catch a glint of stretch, never a rubber band. */
-export const CORD_TUNING = Object.freeze({ stiffness: 0.01, damping: 0.35 });
+/**
+ * Central Matter tuning for the exploratory elasticity trial. Matter's
+ * constraint stiffness is normalized from 0 to 1: 0.001 deliberately allows a
+ * visible 25–35% spring extension while damping 0.05 keeps the rebound lively
+ * and finite. Lower stiffness stretches farther; lower damping bounces longer.
+ * Rest lengths are still authored anchor-to-key distances. Reset the room or
+ * reload the page after editing: each constraint copies these values at creation.
+ */
+export const CORD_TUNING = Object.freeze({ stiffness: 0.001, damping: 0.05 });
+/** Other physics knobs live here so changes to the cord trial stay legible. */
+export const PHYSICS_TUNING = Object.freeze({ gravityY: 0.82, keyRadius: 21, keyRestitution: 0.44, keyFrictionAir: 0.01, keyDensity: 0.002, bumperRestitution: 1.16, positionIterations: 6, velocityIterations: 4, constraintIterations: 2 });
 export function makeWorld(room: RoomDefinition): KeyfallWorld {
   const engine = Matter.Engine.create({ enableSleeping: false });
-  engine.gravity.y = 0.82;
-  const key = Matter.Bodies.circle(room.keyStart.x, room.keyStart.y, 21, { label: "key", restitution: 0.44, frictionAir: 0.01, density: 0.002 });
+  engine.gravity.y = PHYSICS_TUNING.gravityY;
+  engine.positionIterations = PHYSICS_TUNING.positionIterations;
+  engine.velocityIterations = PHYSICS_TUNING.velocityIterations;
+  engine.constraintIterations = PHYSICS_TUNING.constraintIterations;
+  const key = Matter.Bodies.circle(room.keyStart.x, room.keyStart.y, PHYSICS_TUNING.keyRadius, { label: "key", restitution: PHYSICS_TUNING.keyRestitution, frictionAir: PHYSICS_TUNING.keyFrictionAir, density: PHYSICS_TUNING.keyDensity });
   const goal = Matter.Bodies.circle(room.goal.x, room.goal.y, 34, { isStatic: true, isSensor: true, label: "goal" });
   // Keep only a ceiling; a missed key must be able to leave the playfield.
   const walls = [Matter.Bodies.rectangle(400, -18, 800, 36, { isStatic: true })];
@@ -23,7 +35,7 @@ export function makeWorld(room: RoomDefinition): KeyfallWorld {
   const tickets = new Map<string, Matter.Body>();
   for (const ticket of room.tickets) tickets.set(ticket.id, Matter.Bodies.circle(ticket.position.x, ticket.position.y, 15, { isStatic: true, isSensor: true, label: `ticket:${ticket.id}` }));
   const props = new Map<string, Matter.Body>();
-  room.props.forEach((prop, index) => props.set(`${prop.kind}-${index}`, prop.kind === "bumper" ? Matter.Bodies.circle(prop.position.x, prop.position.y, prop.radius, { isStatic: true, restitution: 1.16, label: "bumper" }) : Matter.Bodies.rectangle(prop.position.x, prop.position.y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true, label: "bellows" })));
+  room.props.forEach((prop, index) => props.set(`${prop.kind}-${index}`, prop.kind === "bumper" ? Matter.Bodies.circle(prop.position.x, prop.position.y, prop.radius, { isStatic: true, restitution: PHYSICS_TUNING.bumperRestitution, label: "bumper" }) : Matter.Bodies.rectangle(prop.position.x, prop.position.y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true, label: "bellows" })));
   Matter.Composite.add(engine.world, [key, goal, ...walls, ...anchors.values(), ...cords.values(), ...tickets.values(), ...props.values()]);
   return { engine, key, goal, cords, anchors, tickets, props };
 }

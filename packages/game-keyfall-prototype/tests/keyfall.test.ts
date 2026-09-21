@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { describe, test } from "node:test";
 import Matter from "matter-js";
 import { distance, segmentIntersectionPoint, shouldGentleReset, swipePathCutPoint } from "../src/geometry";
 import { normalizeProgress, recordCompletion, SAVE_KEY } from "../src/progress";
@@ -8,6 +8,7 @@ import { applyOpeningImpulse, CORD_TUNING, makeWorld, puff, removeCord } from ".
 import { CordRemnants, SlashTrail } from "../src/interaction";
 import { ROOMS } from "../src/rooms";
 
+describe("Keyfall deterministic physics", { concurrency: false }, () => {
 test("swipe crossing a cord is detected, while a parallel swipe misses", () => {
   assert.equal(swipeHitsCord({ x: 0, y: 40 }, { x: 100, y: 40 }, { x: 50, y: 0 }, { x: 50, y: 80 }), true);
   assert.equal(swipeHitsCord({ x: 0, y: 10 }, { x: 35, y: 10 }, { x: 50, y: 0 }, { x: 50, y: 80 }), false);
@@ -54,16 +55,23 @@ test("room 3 authored bellows-and-bumper sequence reaches its goal", () => {
   }
   assert.equal(reached, true, `key ended at ${Math.round(world.key.position.x)},${Math.round(world.key.position.y)}`);
 });
+test("rooms 1 and 2 retain deterministic release solutions under extreme elasticity", () => {
+  const dropRoom = ROOMS[0]; const drop = makeWorld(dropRoom); applyOpeningImpulse(drop, false); removeCord(drop, "cord-a"); let dropReached = false;
+  for (let frame = 0; frame < 180; frame += 1) { Matter.Engine.update(drop.engine, 16); if (distance(drop.key.position, dropRoom.goal) < 38) { dropReached = true; break; } }
+  const pendulumRoom = ROOMS[1]; const pendulum = makeWorld(pendulumRoom); applyOpeningImpulse(pendulum, false); removeCord(pendulum, "cord-left"); for (let frame = 0; frame < 20; frame += 1) Matter.Engine.update(pendulum.engine, 16); removeCord(pendulum, "cord-right"); let pendulumReached = false;
+  for (let frame = 0; frame < 240; frame += 1) { Matter.Engine.update(pendulum.engine, 16); if (distance(pendulum.key.position, pendulumRoom.goal) < 38) { pendulumReached = true; break; } }
+  assert.equal(dropReached, true); assert.equal(pendulumReached, true);
+});
 test("each room receives a deterministic opening sway, softened but retained for reduced motion", () => {
   const normal = makeWorld(ROOMS[0]); const reduced = makeWorld(ROOMS[0]);
   applyOpeningImpulse(normal, false); applyOpeningImpulse(reduced, true);
   assert.ok(Math.abs(normal.key.velocity.x - 0.75) < 0.00001); assert.ok(Math.abs(reduced.key.velocity.x - 0.25) < 0.00001); assert.notEqual(reduced.key.velocity.x, 0);
 });
-test("intact cords stretch slightly, rebound, and remain bounded", () => {
+test("intact cords stretch dramatically, rebound, and remain bounded", () => {
   const room = ROOMS[0]; const world = makeWorld(room); const cord = room.cords[0]; const rest = Math.hypot(cord.anchor.x - room.keyStart.x, cord.anchor.y - room.keyStart.y); applyOpeningImpulse(world, false);
   let maximum = rest; let rebound = false; let previousVelocity = world.key.velocity.x;
   for (let frame = 0; frame < 240; frame += 1) { Matter.Engine.update(world.engine, 16); const length = Math.hypot(world.key.position.x - cord.anchor.x, world.key.position.y - cord.anchor.y); maximum = Math.max(maximum, length); if (frame > 4 && previousVelocity * world.key.velocity.x < 0) rebound = true; previousVelocity = world.key.velocity.x; }
-  assert.equal(world.cords.get(cord.id)?.stiffness, CORD_TUNING.stiffness); assert.equal(world.cords.get(cord.id)?.damping, CORD_TUNING.damping); assert.ok(maximum > rest * 1.02, `extension ${(maximum / rest - 1) * 100}%`); assert.ok(maximum < rest * 1.1, `extension ${(maximum / rest - 1) * 100}%`); assert.equal(rebound, true);
+  assert.equal(world.cords.get(cord.id)?.stiffness, CORD_TUNING.stiffness); assert.equal(world.cords.get(cord.id)?.damping, CORD_TUNING.damping); assert.ok(maximum > rest * 1.25, `extension ${(maximum / rest - 1) * 100}%`); assert.ok(maximum < rest * 1.35, `extension ${(maximum / rest - 1) * 100}%`); assert.equal(rebound, true);
 });
 test("slash trails distinguish taps, follow drag points, and fade after release", () => {
   const tap = new SlashTrail(); tap.begin({ x: 20, y: 20 }); tap.release(); assert.equal(tap.isSlash, false); tap.update(120); assert.equal(tap.points.length, 1);
@@ -73,4 +81,5 @@ test("cut geometry returns the actual cord intersection and remnants react then 
   const point = segmentIntersectionPoint({ x: 0, y: 50 }, { x: 100, y: 50 }, { x: 50, y: 0 }, { x: 50, y: 100 });
   assert.deepEqual(point, { x: 50, y: 50 }); assert.deepEqual(swipePathCutPoint([{ x: 0, y: 50 }, { x: 100, y: 50 }], { x: 50, y: 0 }, { x: 50, y: 100 }), { x: 50, y: 50 });
   const remnants = new CordRemnants(); remnants.spawn({ x: 0, y: 0 }, { x: 50, y: 50 }, { x: 60, y: 60 }, { x: 4, y: 0 }); remnants.update(100, { x: 80, y: 80 }, { x: 4, y: 0 }); assert.equal(remnants.segments.length, 2); assert.deepEqual(remnants.segments[1].from, { x: 80, y: 80 }); assert.notDeepEqual(remnants.segments[0].to, remnants.segments[1].to); remnants.update(900, { x: 80, y: 80 }, { x: 4, y: 0 }); assert.equal(remnants.segments.length, 0);
+});
 });
