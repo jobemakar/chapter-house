@@ -1,0 +1,20 @@
+:root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #100d1c; color: #f8e7c0; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at 50% -10%, #3e2542, #100d1c 70%); }
+button { border: 1px solid #80555e; color: #f9e5bc; background: #25172f; border-radius: 999px; padding: .6rem .95rem; font: inherit; cursor: pointer; touch-action: manipulation; }
+button:hover, button:focus-visible { background: #4f2847; border-color: #e3a15f; outline: none; }
+.keyfall-app { width: min(100%, 980px); margin: 0 auto; padding: clamp(14px, 3vw, 30px); }
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.eyebrow { color: #d49573; font-size: .7rem; letter-spacing: .17em; margin: 0 0 .35rem; }
+h1 { font: 600 clamp(1.65rem, 5vw, 2.6rem) Georgia, serif; letter-spacing: .015em; margin: 0; }
+#keyfall-subtitle { color: #d8b496; margin: .4rem 0 0; }
+.top-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
+.room-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .65rem; }
+.room-tabs button { border-radius: .65rem; font-size: .86rem; padding: .5rem .75rem; }
+.room-tabs button.active { background: #7c3850; border-color: #f0be6a; color: #fff0c7; }
+.board-wrap { position: relative; width: 100%; aspect-ratio: 10 / 7; min-height: 300px; overflow: hidden; border: 2px solid #86505d; border-radius: 1rem; box-shadow: 0 18px 50px rgba(0, 0, 0, .4); }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.hint { position: absolute; left: 50%; bottom: .75rem; transform: translateX(-50%); width: max-content; max-width: calc(100% - 1rem); padding: .42rem .75rem; border-radius: 999px; color: #efcf9f; background: rgba(20, 12, 31, .72); font-size: .76rem; pointer-events: none; text-align: center; }
+footer { display: flex; justify-content: space-between; align-items: center; padding-top: .8rem; color: #d5ae92; }
+footer strong { color: #f6dfb1; font-family: Georgia, serif; } footer span { margin-left: .5rem; }
+@media (max-width: 620px) { header { align-items: flex-start; flex-direction: column; } .top-actions { justify-content: flex-start; } .board-wrap { aspect-ratio: 4 / 5; } .hint { font-size: .68rem; } }
