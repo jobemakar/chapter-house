@@ -30,6 +30,15 @@ The primary feel controls are `CORD_TUNING` near the top of `src/physics.ts`:
 - `PHYSICS_TUNING.constraintIterations` controls how many times Matter solves
   constraints per step and therefore also affects the apparent stiffness.
 
-The current exaggerated trial uses stiffness `0.001`, damping `0.05`, and two
-constraint iterations. A constraint copies these values when its room world is
+The current user-selected feel uses stiffness `0.002`, damping `0.001`, and two
+constraint iterations. A cord copies these values when its room world is
 created, so use the in-game room reset or reload the page after changing them.
+
+Each rope is an actual articulated Matter chain, not a drawn curve. Point count
+comes from `PHYSICS_TUNING.cordPointSpacing` (currently about one point per nine
+canvas pixels), and each point's mass comes from `cordMassPerPixel`. This keeps
+short and long ropes at the same simulation resolution and linear mass density.
+Gravity and momentum create sag from those masses; the renderer merely traces
+their live positions. Per-link stiffness is derived from `CORD_TUNING.stiffness`
+and the connection count so changing rope length does not silently change the
+material's whole-rope stretch by putting more springs in series.

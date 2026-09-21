@@ -8,4 +8,12 @@ export function swipeHitsCord(swipeStart: Vec, swipeEnd: Vec, anchor: Vec, keyPo
 export function segmentIntersectionPoint(a: Vec, b: Vec, c: Vec, d: Vec): Vec | undefined { const denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x); if (Math.abs(denominator) < 0.00001) return undefined; const t = ((a.x - c.x) * (c.y - d.y) - (a.y - c.y) * (c.x - d.x)) / denominator; const u = -((a.x - b.x) * (a.y - c.y) - (a.y - b.y) * (a.x - c.x)) / denominator; return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) } : undefined; }
 export function closestPointOnSegment(point: Vec, start: Vec, end: Vec): Vec { const dx = end.x - start.x, dy = end.y - start.y, denom = dx * dx + dy * dy; const t = denom === 0 ? 0 : Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / denom)); return { x: start.x + t * dx, y: start.y + t * dy }; }
 export function swipePathCutPoint(path: readonly Vec[], cordStart: Vec, cordEnd: Vec, tolerance = 14): Vec | undefined { for (let i = 1; i < path.length; i += 1) { const intersection = segmentIntersectionPoint(path[i - 1], path[i], cordStart, cordEnd); if (intersection) return intersection; } for (let i = 1; i < path.length; i += 1) if (segmentsIntersect(path[i - 1], path[i], cordStart, cordEnd, tolerance)) return closestPointOnSegment(path[i - 1], cordStart, cordEnd); return undefined; }
+export type PolylineCut = { point: Vec; segmentIndex: number };
+export function swipePathCutPolyline(path: readonly Vec[], rope: readonly Vec[], tolerance = 14): PolylineCut | undefined {
+  for (let segmentIndex = 0; segmentIndex < rope.length - 1; segmentIndex += 1) {
+    const point = swipePathCutPoint(path, rope[segmentIndex], rope[segmentIndex + 1], tolerance);
+    if (point) return { point, segmentIndex };
+  }
+  return undefined;
+}
 export function shouldGentleReset(position: Vec, goal: Vec, width = 800, height = 560): boolean { const outside = position.x < -40 || position.x > width + 40 || position.y < -50 || position.y > height + 60; return outside && distance(position, goal) > 48; }
