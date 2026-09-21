@@ -4,7 +4,7 @@ import Matter from "matter-js";
 import { distance, segmentIntersectionPoint, shouldGentleReset, swipePathCutPoint } from "../src/geometry";
 import { normalizeProgress, recordCompletion, SAVE_KEY } from "../src/progress";
 import { segmentsIntersect, swipeHitsCord } from "../src/geometry";
-import { applyOpeningImpulse, makeWorld, puff, removeCord } from "../src/physics";
+import { applyOpeningImpulse, CORD_TUNING, makeWorld, puff, removeCord } from "../src/physics";
 import { CordRemnants, SlashTrail } from "../src/interaction";
 import { ROOMS } from "../src/rooms";
 
@@ -58,6 +58,12 @@ test("each room receives a deterministic opening sway, softened but retained for
   const normal = makeWorld(ROOMS[0]); const reduced = makeWorld(ROOMS[0]);
   applyOpeningImpulse(normal, false); applyOpeningImpulse(reduced, true);
   assert.ok(Math.abs(normal.key.velocity.x - 0.75) < 0.00001); assert.ok(Math.abs(reduced.key.velocity.x - 0.25) < 0.00001); assert.notEqual(reduced.key.velocity.x, 0);
+});
+test("intact cords stretch slightly, rebound, and remain bounded", () => {
+  const room = ROOMS[0]; const world = makeWorld(room); const cord = room.cords[0]; const rest = Math.hypot(cord.anchor.x - room.keyStart.x, cord.anchor.y - room.keyStart.y); applyOpeningImpulse(world, false);
+  let maximum = rest; let rebound = false; let previousVelocity = world.key.velocity.x;
+  for (let frame = 0; frame < 240; frame += 1) { Matter.Engine.update(world.engine, 16); const length = Math.hypot(world.key.position.x - cord.anchor.x, world.key.position.y - cord.anchor.y); maximum = Math.max(maximum, length); if (frame > 4 && previousVelocity * world.key.velocity.x < 0) rebound = true; previousVelocity = world.key.velocity.x; }
+  assert.equal(world.cords.get(cord.id)?.stiffness, CORD_TUNING.stiffness); assert.equal(world.cords.get(cord.id)?.damping, CORD_TUNING.damping); assert.ok(maximum > rest * 1.02, `extension ${(maximum / rest - 1) * 100}%`); assert.ok(maximum < rest * 1.1, `extension ${(maximum / rest - 1) * 100}%`); assert.equal(rebound, true);
 });
 test("slash trails distinguish taps, follow drag points, and fade after release", () => {
   const tap = new SlashTrail(); tap.begin({ x: 20, y: 20 }); tap.release(); assert.equal(tap.isSlash, false); tap.update(120); assert.equal(tap.points.length, 1);

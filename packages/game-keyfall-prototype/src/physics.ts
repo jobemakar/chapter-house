@@ -2,6 +2,8 @@ import Matter from "matter-js";
 import type { PropDefinition, RoomDefinition, Vec } from "./types";
 
 export type KeyfallWorld = { engine: Matter.Engine; key: Matter.Body; goal: Matter.Body; cords: Map<string, Matter.Constraint>; anchors: Map<string, Matter.Body>; tickets: Map<string, Matter.Body>; props: Map<string, Matter.Body> };
+/** Gentle spring tuning: enough give to catch a glint of stretch, never a rubber band. */
+export const CORD_TUNING = Object.freeze({ stiffness: 0.01, damping: 0.35 });
 export function makeWorld(room: RoomDefinition): KeyfallWorld {
   const engine = Matter.Engine.create({ enableSleeping: false });
   engine.gravity.y = 0.82;
@@ -15,7 +17,7 @@ export function makeWorld(room: RoomDefinition): KeyfallWorld {
     // Constraint length is the actual distance between the authored anchor and
     // initial key position; the cord angle/length only describes its artwork.
     const length = Math.max(8, Math.hypot(cord.anchor.x - room.keyStart.x, cord.anchor.y - room.keyStart.y));
-    const constraint = Matter.Constraint.create({ bodyA: anchor, bodyB: key, length, stiffness: 1, damping: 0.07, label: `cord:${cord.id}` });
+    const constraint = Matter.Constraint.create({ bodyA: anchor, bodyB: key, length, stiffness: CORD_TUNING.stiffness, damping: CORD_TUNING.damping, label: `cord:${cord.id}` });
     anchors.set(cord.id, anchor); cords.set(cord.id, constraint);
   }
   const tickets = new Map<string, Matter.Body>();
