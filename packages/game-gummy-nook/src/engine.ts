@@ -24,6 +24,12 @@ export class GummyBoard {
   static readonly colors = ["#57cbb3", "#fa8e9e", "#82c4ee", "#ffc561", "#ba9ae7", "#f6b8cf", "#f0b744"];
   static readonly powerNames = ["", "Row Ribbon", "Column Ribbon", "Sugar Burst", "Frost Flake"];
 
+  /** Converts real and above-board virtual indices into stable grid coordinates. */
+  static coordinates(index: number): { row: number; col: number } {
+    const col = ((index % this.size) + this.size) % this.size;
+    return { row: (index - col) / this.size, col };
+  }
+
   static base(value: Candy | null): Candy | null { return value === null ? null : value % 5; }
   static power(value: Candy): PowerKind { return value >= 10 ? (Math.floor(value / 5) - 1) as PowerKind : 0; }
   static valid(value: unknown): value is Candy { return Number.isInteger(value) && ((value as number >= 0 && value as number < 5) || (value as number >= 10 && value as number < 30)); }

@@ -1,5 +1,12 @@
 # Change log
 
+## 2026-09-21 — integrated phone-landscape layout
+
+Chapter House's canonical Arctic Duet package now uses a compact right rail for
+status and the three secondary options in short phone landscape, leaving a
+445×282 stage at 844×390. Portrait/desktop composition, mechanics, scoring,
+saves, audio and reduced-motion behavior are unchanged. Local only; no publish.
+
 ## 0.1.0 — 2026-09-11
 User asked Codex to choose an unbuilt game and create a playable. Selected BOB-004-R2, Midnight Snow Jam. Wrote numbered requirements, verified the publisher premise, and implemented three original synthesized tunes, forgiving timed pads/free jam, four expressive friends, Aurora flourish and five persistent placeable keepsakes. Authored modular dependency-free source, original canvas art, local licensed fonts, offline HTML and local HTTP preview. All 15 tests pass; browser startup, saved settings/reload and visual inspection performed. Actual iPad/audio listening remain unverified. No publication or additional game work.
 

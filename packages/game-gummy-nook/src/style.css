@@ -329,3 +329,95 @@
     grid-column: 1/-1;
   }
 }
+@media (orientation: landscape) and (max-height: 500px) {
+  .gummy-nook .gn-shell {
+    padding: 0.35rem 0.55rem;
+  }
+  .gummy-nook .gn-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .gummy-nook .gn-header > div:first-child {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+  }
+  .gummy-nook .gn-kicker,
+  .gummy-nook #gn-status,
+  .gummy-nook .gn-help {
+    display: none;
+  }
+  .gummy-nook .gn-header h1 {
+    margin: 0;
+    font-size: 1.45rem;
+    white-space: nowrap;
+  }
+  .gummy-nook button {
+    border-width: 1px;
+    padding: 0.32rem 0.55rem;
+    box-shadow: 0 1px 0 #c89283;
+  }
+  .gummy-nook .gn-header-actions {
+    flex-wrap: nowrap;
+    margin: 0 0 0 auto;
+  }
+  .gummy-nook .gn-stats {
+    gap: 0.35rem;
+    margin: 0.22rem 0 0.35rem;
+    font-size: 0.72rem;
+  }
+  .gummy-nook .gn-stats span {
+    padding: 0.16rem 0.42rem;
+  }
+  .gummy-nook .gn-play {
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.72fr);
+    gap: 0.6rem;
+  }
+  .gummy-nook .gn-board-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, calc(100svh - 8.5rem)) max-content;
+    gap: 0.45rem;
+    align-items: start;
+  }
+  .gummy-nook .gn-board {
+    width: 100%;
+    gap: 3px;
+    padding: 6px;
+    border-width: 5px;
+    border-radius: 18px;
+  }
+  .gummy-nook .gn-tools {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    margin-top: 0;
+  }
+  .gummy-nook .gn-nook {
+    max-height: calc(100svh - 8.5rem);
+    overflow: auto;
+    padding: 0.55rem;
+    border-radius: 0.9rem;
+    font-size: 0.75rem;
+  }
+  .gummy-nook .gn-nook h2,
+  .gummy-nook .gn-nook h3,
+  .gummy-nook .gn-nook p {
+    margin: 0.15rem 0 0.3rem;
+  }
+  .gummy-nook .gn-discoveries {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin: 0.4rem 0;
+  }
+  .gummy-nook .gn-discoveries span {
+    min-height: 2.2rem;
+    font-size: 1rem;
+  }
+  .gummy-nook .gn-discoveries svg {
+    height: 1.65rem;
+  }
+  .gummy-nook .gn-discoveries small {
+    display: none;
+  }
+}

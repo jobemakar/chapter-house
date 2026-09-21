@@ -1,5 +1,13 @@
 # Change log
 
+## 2026-09-21 — refill origin and integrated landscape fit
+
+Fresh gummies now render from true virtual rows above their own columns instead
+of wrapping negative indices onto visible middle/bottom cells. Incoming falls
+use a readable 480ms ease while ordinary gravity remains 210ms. The integrated
+844×390 layout fits the complete board, essential tools and a scroll-contained
+nook. Rules, powers, saves, rewards and audio are unchanged. Local only.
+
 ## 0.5.0 — 2026-09-19
 
 Ported the active Gummy Nook runtime to strict, object-oriented TypeScript.

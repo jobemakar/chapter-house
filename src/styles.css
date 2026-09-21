@@ -2811,6 +2811,54 @@ button:focus-visible {
   }
 }
 
+/* Phone landscape: keep the Games sheet directly beneath the compact app bar. */
+@media (orientation: landscape) and (max-height: 570px) and (min-width: 600px) {
+  #app.playing > .topbar {
+    height: 54px;
+  }
+  #app.playing .game-host {
+    padding-top: 54px;
+  }
+  .panel[data-panel="games"] {
+    top: 62px;
+    bottom: 8px;
+  }
+  .panel[data-panel="games"] > header {
+    align-items: center;
+    padding: 10px 18px 8px;
+  }
+  .panel[data-panel="games"] > header .eyebrow {
+    display: none;
+  }
+  .panel[data-panel="games"] > header h2 {
+    font-size: 23px;
+  }
+  .panel[data-panel="games"] > header button {
+    margin-block: 0;
+  }
+  .panel[data-panel="games"] > .panel-content {
+    padding: 10px 16px 16px;
+  }
+  .integrated-game-list {
+    gap: 12px;
+  }
+  .game-card-art {
+    height: 96px;
+  }
+  .game-card > div:last-child {
+    padding: 12px 14px 14px;
+  }
+  .game-card h3 {
+    font-size: 23px;
+  }
+  .game-card p {
+    margin: 5px 0 8px;
+  }
+  .reward-note {
+    padding: 12px 0;
+  }
+}
+
 /* Firebase member doorway. Guests remain local until they deliberately sign in. */
 .topbar .identity {
   min-height: 40px;

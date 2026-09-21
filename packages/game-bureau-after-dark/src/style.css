@@ -952,3 +952,137 @@
   .bureau-after-dark__slot { width: 70px; height: 70px; }
   .bureau-after-dark .bureau-after-dark__seal-options { gap: 7px; }
 }
+
+/* The room objects are transparent hit targets over artwork. Keep their visual
+   reset stronger than the Chapter House's global button treatment without
+   shrinking the accessible touch/focus area. */
+.bureau-after-dark [data-bureau="spots"] > button.bureau-after-dark__spot {
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  appearance: none;
+  background: transparent;
+  box-shadow: none;
+}
+.bureau-after-dark [data-bureau="spots"] > button.bureau-after-dark__spot:hover,
+.bureau-after-dark [data-bureau="spots"] > button.bureau-after-dark__spot:focus-visible {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.bureau-after-dark [data-bureau="modal"] [data-bureau="close"] {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 760px) {
+  .bureau-after-dark [data-bureau="spots"] > button.bureau-after-dark__spot {
+    width: 54px;
+    min-height: 54px;
+  }
+  .bureau-after-dark button.bureau-after-dark__archive {
+    top: 29%;
+  }
+}
+
+/* Short phone landscape: spend the available height on the room. The mission
+   remains below it, while every modal is bounded to the viewport and scrolls
+   internally when its riddle or record needs more space. */
+@media (orientation: landscape) and (max-height: 550px) and (min-width: 600px) {
+  .bureau-after-dark__shell {
+    padding: 6px 10px 10px;
+  }
+  .bureau-after-dark header.bureau-after-dark__brand,
+  .bureau-after-dark__eyebrow,
+  .bureau-after-dark__subtitle {
+    display: none;
+  }
+  .bureau-after-dark__heading {
+    min-height: 44px;
+    margin: 0 0 4px;
+    flex-wrap: nowrap;
+  }
+  .bureau-after-dark__heading h1 {
+    margin: 0;
+    font-size: 25px;
+    line-height: 1;
+  }
+  .bureau-after-dark__levels {
+    width: auto;
+    min-width: min(54vw, 390px);
+  }
+  .bureau-after-dark__levels button {
+    min-height: 44px;
+    padding: 5px 10px;
+    font-size: 10px;
+    line-height: 1.15;
+  }
+  .bureau-after-dark main {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .bureau-after-dark main > section:first-child {
+    min-width: 0;
+  }
+  .bureau-after-dark .bureau-after-dark__board {
+    width: min(100%, calc(141.176dvh - 194.82px));
+    margin-inline: auto;
+  }
+  .bureau-after-dark__actions {
+    width: min(100%, calc(141.176dvh - 194.82px));
+    margin: 5px auto 0;
+    gap: 5px;
+  }
+  .bureau-after-dark__actions button {
+    min-height: 44px;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+  .bureau-after-dark__message {
+    width: min(100%, calc(141.176dvh - 194.82px));
+    min-height: 0;
+    margin-inline: auto;
+    padding: 4px 2px;
+    font-size: 10px;
+  }
+  .bureau-after-dark aside.bureau-after-dark__sidebar {
+    display: none;
+  }
+  .bureau-after-dark button.bureau-after-dark__archive {
+    top: 29%;
+  }
+  .bureau-after-dark [data-bureau="overlay"] {
+    padding: 6px;
+  }
+  .bureau-after-dark [data-bureau="modal"],
+  .bureau-after-dark [data-bureau="modal"].is-parchment,
+  .bureau-after-dark [data-bureau="modal"].is-seal {
+    width: min(680px, 100%);
+    max-height: calc(100dvh - 12px);
+    padding: 14px 20px;
+    overscroll-behavior: contain;
+  }
+  .bureau-after-dark [data-bureau="modal"] h2,
+  .bureau-after-dark .is-parchment h2 {
+    margin: 2px 44px 7px;
+    font-size: 25px;
+  }
+  .bureau-after-dark button.bureau-after-dark__writing {
+    min-height: 96px;
+    margin: 8px 0 5px;
+    padding: 10px 16px;
+  }
+  .bureau-after-dark__riddle {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+  .bureau-after-dark__sigil-stage {
+    width: min(150px, 32dvh);
+    margin: 2px auto 5px;
+  }
+  .bureau-after-dark .bureau-record {
+    width: min(360px, 88%);
+    margin: 8px auto;
+  }
+}

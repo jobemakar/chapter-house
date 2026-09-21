@@ -1,5 +1,15 @@
 # Bureau After Dark — parchment mysteries, revision 2
 
+## Physical-phone layout repair — 2026-09-21
+
+Jobe's portrait screenshot showed the transparent object hotspots inheriting
+large rounded Chapter House button chrome and Archive colliding with the status
+line. The integrated package now force-resets those six hotspots while retaining
+54px touch targets and visible keyboard focus, separates Archive from the
+topbar, fits the complete board in short landscape, and bounds all dialog types
+to the viewport with internal scrolling. Puzzles, navigation, saves, rewards and
+art remain unchanged. Local only; do not publish this pass.
+
 ## Authorized visual refinement — 2026-09-17
 
 See parent [plan 45](../../plans/45-bureau-illustrated-collectibles-and-rooms.md).

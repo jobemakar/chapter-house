@@ -148,16 +148,25 @@ class GummyMotion {
   }
 
   private cell(index: number): HTMLButtonElement {
-    const normalized = index < 0 ? index + GummyBoard.count : index;
     const cell = this.root.querySelector<HTMLButtonElement>(
-      `#gn-board > [data-cell="${normalized}"]`,
+      `#gn-board > [data-cell="${index}"]`,
     );
-    if (!cell) throw new Error(`Missing gummy cell ${normalized}`);
+    if (!cell) throw new Error(`Missing gummy cell ${index}`);
     return cell;
   }
 
   private box(index: number): DOMRect {
-    return this.cell(index).getBoundingClientRect();
+    if (index >= 0) return this.cell(index).getBoundingClientRect();
+    const { row, col } = GummyBoard.coordinates(index),
+      first = this.cell(col).getBoundingClientRect(),
+      second = this.cell(col + GummyBoard.size).getBoundingClientRect(),
+      rowStep = second.y - first.y;
+    return new DOMRect(
+      first.x,
+      first.y + row * rowStep,
+      first.width,
+      first.height,
+    );
   }
 
   private async animate(
@@ -205,7 +214,7 @@ class GummyMotion {
         },
         { transform: `translate(${dx}px,${dy}px) scale(1)` },
       ],
-      from < 0 ? 280 : 210,
+      from < 0 ? 480 : 210,
     );
   }
 

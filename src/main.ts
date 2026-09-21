@@ -610,7 +610,9 @@ class ChapterHouse {
   }
   private closePanel(stopEdit = true) {
     this.panel = null;
-    this.root.querySelector<HTMLElement>(".panel")!.hidden = true;
+    const panel = this.root.querySelector<HTMLElement>(".panel")!;
+    panel.hidden = true;
+    delete panel.dataset.panel;
     this.root.classList.remove("panel-open");
     this.root
       .querySelectorAll(".app-nav button")
@@ -624,6 +626,7 @@ class ChapterHouse {
   private renderPanel() {
     const name = this.panel;
     if (!name) return;
+    this.root.querySelector<HTMLElement>(".panel")!.dataset.panel = name;
     const content = this.root.querySelector(".panel-content")!;
     const labels: Record<string, [string, string]> = {
       games: ["A NEW CHAPTER", "A little adventure?"],
