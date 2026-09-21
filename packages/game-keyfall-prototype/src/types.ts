@@ -1,4 +1,5 @@
 export type Vec = { x: number; y: number };
+export type Viewport = { width: number; height: number };
 export type RoomKind = "drop" | "pendulum" | "bellows";
 export type PropDefinition = { kind: "bumper" | "bellows"; position: Vec; radius: number };
 export type CordDefinition = { id: string; anchor: Vec; length: number; angle: number };

@@ -1,5 +1,6 @@
 import Matter from "matter-js";
-import type { CordDefinition, PropDefinition, RoomDefinition, Vec } from "./types";
+import type { CordDefinition, PropDefinition, RoomDefinition, Vec, Viewport } from "./types";
+import { LANDSCAPE_VIEWPORT } from "./rooms";
 
 /**
  * Jobe's current feel baseline. Lower stiffness stretches farther; lower damping
@@ -89,10 +90,10 @@ export class ArticulatedCord {
 export type KeyfallWorld = {
   engine: Matter.Engine; key: Matter.Body; goal: Matter.Body;
   cords: Map<string, ArticulatedCord>; anchors: Map<string, Matter.Body>;
-  tickets: Map<string, Matter.Body>; props: Map<string, Matter.Body>;
+  tickets: Map<string, Matter.Body>; props: Map<string, Matter.Body>; viewport: Viewport;
 };
 
-export function makeWorld(room: RoomDefinition): KeyfallWorld {
+export function makeWorld(room: RoomDefinition, viewport: Viewport = LANDSCAPE_VIEWPORT): KeyfallWorld {
   const engine = Matter.Engine.create({ enableSleeping: false });
   engine.gravity.y = PHYSICS_TUNING.gravityY;
   engine.positionIterations = PHYSICS_TUNING.positionIterations;
@@ -100,7 +101,7 @@ export function makeWorld(room: RoomDefinition): KeyfallWorld {
   engine.constraintIterations = PHYSICS_TUNING.constraintIterations;
   const key = Matter.Bodies.circle(room.keyStart.x, room.keyStart.y, PHYSICS_TUNING.keyRadius, { label: "key", restitution: PHYSICS_TUNING.keyRestitution, frictionAir: PHYSICS_TUNING.keyFrictionAir, density: PHYSICS_TUNING.keyDensity });
   const goal = Matter.Bodies.circle(room.goal.x, room.goal.y, 34, { isStatic: true, isSensor: true, label: "goal" });
-  const walls = [Matter.Bodies.rectangle(400, -18, 800, 36, { isStatic: true })];
+  const walls = [Matter.Bodies.rectangle(viewport.width / 2, -18, viewport.width, 36, { isStatic: true })];
   const cords = new Map<string, ArticulatedCord>(), anchors = new Map<string, Matter.Body>();
   for (const definition of room.cords) {
     const anchor = Matter.Bodies.circle(definition.anchor.x, definition.anchor.y, 5, { isStatic: true, label: `anchor:${definition.id}` });
@@ -113,7 +114,7 @@ export function makeWorld(room: RoomDefinition): KeyfallWorld {
   room.props.forEach((prop, index) => props.set(`${prop.kind}-${index}`, prop.kind === "bumper" ? Matter.Bodies.circle(prop.position.x, prop.position.y, prop.radius, { isStatic: true, restitution: PHYSICS_TUNING.bumperRestitution, label: "bumper" }) : Matter.Bodies.rectangle(prop.position.x, prop.position.y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true, label: "bellows" })));
   Matter.Composite.add(engine.world, [key, goal, ...walls, ...anchors.values(), ...tickets.values(), ...props.values()]);
   for (const cord of cords.values()) cord.addTo(engine.world);
-  return { engine, key, goal, cords, anchors, tickets, props };
+  return { engine, key, goal, cords, anchors, tickets, props, viewport };
 }
 
 export function applyOpeningImpulse(world: KeyfallWorld, reducedMotion: boolean): void { Matter.Body.setVelocity(world.key, { x: reducedMotion ? 0.25 : 0.75, y: 0 }); }

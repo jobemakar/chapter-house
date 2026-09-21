@@ -18,3 +18,4 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 footer { display: flex; justify-content: space-between; align-items: center; padding-top: .8rem; color: #d5ae92; }
 footer strong { color: #f6dfb1; font-family: Georgia, serif; } footer span { margin-left: .5rem; }
 @media (max-width: 620px) { .keyfall-app { padding: 8px; } header { align-items: flex-start; flex-direction: column; gap: .55rem; margin-bottom: .65rem; } .top-actions { justify-content: flex-start; } .hint { font-size: .68rem; } }
+@media (max-width: 620px) and (orientation: portrait) { .keyfall-app.portrait .board-wrap { aspect-ratio: 7 / 10; } .keyfall-app.portrait h1 { font-size: 1.55rem; } .keyfall-app.portrait #keyfall-subtitle { margin-top: .2rem; font-size: .88rem; } .keyfall-app.portrait button { padding: .48rem .72rem; } }
