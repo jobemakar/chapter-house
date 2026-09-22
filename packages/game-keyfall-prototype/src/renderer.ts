@@ -8,7 +8,7 @@ export class KeyfallRenderer {
   private viewport: Viewport = LANDSCAPE_VIEWPORT;
   constructor(private canvas: HTMLCanvasElement) { const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("Canvas unavailable"); this.ctx = ctx; }
   setViewport(viewport: Viewport): void { this.viewport = viewport; this.resize(); }
-  resize(): void { const ratio = Math.min(window.devicePixelRatio || 1, 2), rect = this.canvas.getBoundingClientRect(); this.canvas.width = Math.max(1, Math.floor(rect.width * ratio)); this.canvas.height = Math.max(1, Math.floor(rect.height * ratio)); }
+  resize(): void { const ratio = Math.min(window.devicePixelRatio || 1, 3), rect = this.canvas.getBoundingClientRect(); this.canvas.width = Math.max(1, Math.floor(rect.width * ratio)); this.canvas.height = Math.max(1, Math.floor(rect.height * ratio)); }
   render(room: RoomDefinition, world: KeyfallWorld, collected: Set<string>, state: RuntimeState, reducedMotion: boolean, effects: KeyfallEffects): void {
     const { width: W, height: H } = this.viewport;
     const c = this.ctx; c.save(); c.scale(this.canvas.width / W, this.canvas.height / H);
