@@ -699,21 +699,38 @@ class SceneRenderer {
       this.context.fill();
       this.context.restore();
     }
-    const hoseX = this.config.hose.x * SCALE;
-    const hoseY = this.config.hose.y * SCALE;
+    // The nozzle opening is part of the target artwork (1536 × 1024).
+    // Anchor to that image so moving/resizing the target keeps spray attached.
+    const hoseX = (target.x + target.w * (984 / 1536)) * SCALE;
+    const hoseY = (target.y + target.h * (407 / 1024)) * SCALE;
     if (level.steps - level.lastDelivery < 50) {
-      this.context.strokeStyle = "#35b8d8c7";
-      this.context.lineWidth = 12;
-      this.context.beginPath();
-      this.context.moveTo(hoseX, hoseY);
-      this.context.quadraticCurveTo(hoseX - 24, hoseY + 28, fireX, fireY);
-      this.context.stroke();
-      this.context.strokeStyle = "#b8f8f3dd";
-      this.context.lineWidth = 4;
-      this.context.beginPath();
-      this.context.moveTo(hoseX, hoseY);
-      this.context.quadraticCurveTo(hoseX - 24, hoseY + 24, fireX, fireY - 2);
-      this.context.stroke();
+      this.context.save();
+      this.context.lineCap = "round";
+      const size = target.w * SCALE / 237.5;
+      const controlX = hoseX - 24 * size;
+      const controlY = hoseY + 11 * size;
+      for (let strand = -2; strand <= 2; strand++) {
+        const endX = fireX + strand * 5 * size;
+        const endY = fireY - 3 * size + Math.abs(strand) * 2 * size;
+        this.context.strokeStyle = strand === 0 ? "#b8f8f3b8" : "#54d5e96b";
+        this.context.lineWidth = (strand === 0 ? 2.4 : 1.6) * size;
+        this.context.beginPath();
+        this.context.moveTo(hoseX, hoseY);
+        this.context.quadraticCurveTo(controlX + strand * size, controlY, endX, endY);
+        this.context.stroke();
+        // Small moving droplets separate as the jet fans toward the fire.
+        for (let drop = 0; drop < 6; drop++) {
+          const t = ((time / 650 + drop / 6 + strand * 0.071) % 1 + 1) % 1;
+          const u = 1 - t;
+          const x = u * u * hoseX + 2 * u * t * (controlX + strand * size) + t * t * endX;
+          const y = u * u * hoseY + 2 * u * t * controlY + t * t * endY;
+          this.context.fillStyle = "#dcffffc7";
+          this.context.beginPath();
+          this.context.ellipse(x, y, (0.55 + t * 0.6) * size, (0.9 + t) * size, 0.5, 0, Math.PI * 2);
+          this.context.fill();
+        }
+      }
+      this.context.restore();
     }
     if (level.won) this.text("FIRE OUT!", fireX, fireY - 32, 12, "#e9facb");
   }

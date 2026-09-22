@@ -783,8 +783,9 @@ class DigAndDouseEditor {
       if (event.key === "Escape") this.stopPlaytest();
       return;
     }
-    if (isTyping(event.target)) return;
     const modifier = event.ctrlKey || event.metaKey;
+    const rotateShortcut = modifier && event.key.toLowerCase() === "r" && this.selection?.kind === "pipe";
+    if (isTyping(event.target) && !rotateShortcut) return;
     if (modifier && event.key.toLowerCase() === "s") {
       event.preventDefault();
       void this.saveLevel();
@@ -835,7 +836,7 @@ class DigAndDouseEditor {
           ];
         if (pipe)
           pipe.rotation = ((pipe.rotation + 90) % 360) as 0 | 90 | 180 | 270;
-      }, "Rotated pipe 90 degrees.");
+      }, "Rotated pipe 90 degrees. Ctrl+R rotates; Ctrl+Z undoes.");
     }
   }
 

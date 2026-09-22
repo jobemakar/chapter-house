@@ -139,37 +139,122 @@ export class AuthoredObstacleRenderer {
     scale: number,
   ): void {
     if (!rects.length) return;
-    const bounds = this.bounds(rects);
     const shape = this.unionPath(rects, scale);
-    const metal = context.createLinearGradient(
-      bounds.x * scale,
-      bounds.y * scale,
-      bounds.x * scale,
-      (bounds.y + bounds.h) * scale,
-    );
-    metal.addColorStop(0, "#667b80");
-    metal.addColorStop(0.42, "#42585e");
-    metal.addColorStop(1, "#263d43");
-    context.fillStyle = metal;
+    context.fillStyle = "#294b4d";
     context.fill(shape);
 
     context.save();
     context.clip(shape);
-    context.fillStyle = "rgba(210,229,224,0.12)";
-    context.fillRect(
-      bounds.x * scale,
-      bounds.y * scale,
-      bounds.w * scale,
-      Math.min(3.5, bounds.h * scale * 0.2),
-    );
+    rects.forEach((rect, index) => {
+      const x = rect.x * scale;
+      const y = rect.y * scale;
+      const w = rect.w * scale;
+      const h = rect.h * scale;
+      const horizontal = rect.w >= rect.h;
+      const metal = horizontal
+        ? context.createLinearGradient(x, y, x, y + h)
+        : context.createLinearGradient(x, y, x + w, y);
+      metal.addColorStop(0, "#173f42");
+      metal.addColorStop(0.16, "#5f8e88");
+      metal.addColorStop(0.38, "#376b69");
+      metal.addColorStop(0.68, "#285759");
+      metal.addColorStop(0.88, "#1c4145");
+      metal.addColorStop(1, "#102f34");
+      context.fillStyle = metal;
+      context.fillRect(x, y, w, h);
+
+      // Brass collars make the rectangular collision pieces read as joined pipe.
+      const thickness = horizontal ? h : w;
+      const collarDepth = Math.max(3, Math.min(8, thickness * 0.18));
+      const inset = Math.max(collarDepth * 1.8, thickness * 0.65);
+      const run = horizontal ? w : h;
+      const collarPositions =
+        run > thickness * 3.25
+          ? [inset, run - inset - collarDepth]
+          : [run * 0.5 - collarDepth * 0.5];
+      collarPositions.forEach((position) => {
+        const brass = horizontal
+          ? context.createLinearGradient(0, y, 0, y + h)
+          : context.createLinearGradient(x, 0, x + w, 0);
+        brass.addColorStop(0, "#6b5430");
+        brass.addColorStop(0.2, "#c0a469");
+        brass.addColorStop(0.5, "#8f7547");
+        brass.addColorStop(0.82, "#5c492d");
+        brass.addColorStop(1, "#342b20");
+        context.fillStyle = brass;
+        if (horizontal)
+          context.fillRect(x + position, y, collarDepth, h);
+        else context.fillRect(x, y + position, w, collarDepth);
+        context.strokeStyle = "rgba(35,31,24,0.7)";
+        context.lineWidth = 1;
+        context.strokeRect(
+          horizontal ? x + position + 0.5 : x + 0.5,
+          horizontal ? y + 0.5 : y + position + 0.5,
+          Math.max(0, (horizontal ? collarDepth : w) - 1),
+          Math.max(0, (horizontal ? h : collarDepth) - 1),
+        );
+      });
+
+      // A fine longitudinal seam and sparse stamped service mark add scale.
+      context.strokeStyle = "rgba(10,37,39,0.5)";
+      context.lineWidth = 1;
+      context.setLineDash([Math.max(3, scale * 0.08), Math.max(2, scale * 0.045)]);
+      context.beginPath();
+      if (horizontal) {
+        context.moveTo(x, y + h * 0.76);
+        context.lineTo(x + w, y + h * 0.76);
+      } else {
+        context.moveTo(x + w * 0.76, y);
+        context.lineTo(x + w * 0.76, y + h);
+      }
+      context.stroke();
+      context.setLineDash([]);
+
+      if (run > Math.max(22, thickness * 1.45)) {
+        context.save();
+        context.translate(
+          horizontal ? x + run * 0.5 : x + w * 0.54,
+          horizontal ? y + h * 0.58 : y + run * 0.5,
+        );
+        if (!horizontal) context.rotate(Math.PI / 2);
+        context.font = `${Math.max(5, Math.min(9, thickness * 0.18))}px monospace`;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillStyle = "rgba(207,190,130,0.5)";
+        context.fillText(index % 2 === 0 ? "DD" : "Ⅱ", 0, 0);
+        context.restore();
+      }
+    });
+
+    // Restrained moss and oxidized blooms soften the manufactured silhouette.
+    let seed = this.seed(rects) ^ 0x70697065;
+    const random = (): number => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    const area = rects.reduce((sum, rect) => sum + rect.w * rect.h, 0);
+    const blooms = Math.max(5, Math.min(36, Math.ceil(area * 0.75)));
+    for (let index = 0; index < blooms; index++) {
+      const rect = rects[Math.floor(random() * rects.length)];
+      const x = (rect.x + random() * rect.w) * scale;
+      const y = (rect.y + random() * rect.h) * scale;
+      const radius = Math.max(1.2, Math.min(5, scale * (0.03 + random() * 0.06)));
+      context.fillStyle =
+        index % 3 === 0
+          ? "rgba(132,153,82,0.22)"
+          : "rgba(83,176,153,0.16)";
+      context.beginPath();
+      context.ellipse(x, y, radius * (1.2 + random()), radius, random(), 0, Math.PI * 2);
+      context.fill();
+    }
     context.restore();
 
-    this.strokeUnion(context, rects, scale, "#1e3035", 3);
+    this.strokeUnion(context, rects, scale, "#102d31", 3);
     this.strokeUnion(
       context,
       rects,
       scale,
-      "rgba(201,221,215,0.48)",
+      "rgba(185,220,205,0.48)",
       1.2,
       new Set(["top", "left"]),
     );

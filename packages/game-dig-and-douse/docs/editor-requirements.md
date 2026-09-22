@@ -19,3 +19,5 @@ User decisions are recorded in shared plan 59. This local implementation adds au
 
 ## 2026-09-22 playtest usability revision
 Play draft occupies a viewport overlay with persistent Stop/Restart controls and a tall board. Escape returns to authoring. Working and capped intake fixtures follow the visible pipe bodies, including rotation, rather than transparent artwork bounds. Saved initial drafts reopen on startup without being masked by the blank placeholder. Manual saving and separate campaign membership remain unchanged.
+
+Ctrl+R rotates a selected obstacle pipe clockwise by 90 degrees, including when its properties have focus. Ctrl+Z undoes rotation. Obstacle pipe artwork has dimensional shading, joints, weathering and markings. Delivery spray is anchored to the nozzle artwork and gently fans toward the fire.

@@ -47,3 +47,6 @@ Source files are in the existing application repository, independent original bo
 - Saved the user’s current custom draft before source refresh. Fresh editor restored the saved drawn paths. Dug a route from its reservoir to the corrected intake; reached Fire out / 100%. Restart reset to 0%; Escape returned to Saved authoring state.
 - Regression assertions cover open space above working pipe in all four rotations, solid barrel, open mouth, solid capped dome and original campaign fixtures matching shared geometry. Original winning-route physics still passes.
 - User-authored `levels/new-level.json` remains local and outside the campaign/source commit. No publication.
+
+## Hose / pipe finish follow-up
+Package check passed all seven test entrypoints, typecheck and build; final pipe-marking revision rechecked with typecheck/build. Browser verified Ctrl+R while Rotation select focused changes 180 to 270 without reload; Ctrl+Z restores Saved state. Playtest of saved custom pipe layout reaches Fire out; visible spray originates at nozzle and fans down toward fire. Pipe detail reviewed in play. User draft saved before HMR; no campaign changes or publication.

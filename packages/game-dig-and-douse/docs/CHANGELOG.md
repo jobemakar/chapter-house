@@ -13,3 +13,8 @@ Implementation UI/file workflow/static obstacle artwork were delegated to GPT-5.
 - Removed invisible ledges around working/capped pipe artwork in original and authored levels, retaining the working mouth sensor and sealed decoys.
 - Restored saved startup drafts when their ID matches the initial placeholder.
 - Verified typecheck, all seven test entrypoints, production build, four-facing collider regressions, browser playthrough, Restart and Escape.
+
+## 2026-09-22 — Hose spray and pipe finish
+- Anchored spray to the illustrated nozzle opening relative to target bounds, with a gentle five-strand fan and moving droplets.
+- Added cylindrical teal shading, brass couplings, seams, compact markings and seeded patina to fixed obstacle pipes, clipped to their collision silhouette.
+- Ctrl+R rotates a selected pipe even with a property control focused; R remains supported and rotation is undoable.
