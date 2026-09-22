@@ -16,4 +16,4 @@ export function swipePathCutPolyline(path: readonly Vec[], rope: readonly Vec[],
   }
   return undefined;
 }
-export function shouldGentleReset(position: Vec, goal: Vec, width = 800, height = 560): boolean { const outside = position.x < -40 || position.x > width + 40 || position.y < -50 || position.y > height + 60; return outside && distance(position, goal) > 48; }
+export function shouldGentleReset(position: Vec, goal: Vec, width = 560, height = 800): boolean { const outside = position.x < -40 || position.x > width + 40 || position.y < -50 || position.y > height + 60; return outside && distance(position, goal) > 48; }

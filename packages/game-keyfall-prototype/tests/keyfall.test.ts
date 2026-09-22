@@ -6,7 +6,7 @@ import { normalizeProgress, recordCompletion, SAVE_KEY } from "../src/progress";
 import { segmentsIntersect, swipeHitsCord } from "../src/geometry";
 import { applyOpeningImpulse, CORD_TUNING, makeWorld, PHYSICS_TUNING, puff, removeCord, updateCordFragments } from "../src/physics";
 import { CordRemnants, SlashTrail } from "../src/interaction";
-import { PORTRAIT_ROOMS, PORTRAIT_VIEWPORT, ROOMS } from "../src/rooms";
+import { GAME_VIEWPORT, ROOMS } from "../src/rooms";
 
 describe("Keyfall deterministic physics", { concurrency: false }, () => {
 test("swipe crossing a cord is detected, while a parallel swipe misses", () => {
@@ -25,7 +25,7 @@ test("completion is idempotent and preserves the best optional-ticket count", ()
   assert.deepEqual(second.completed, ["moonlit-swing"]); assert.equal(second.bestTickets["moonlit-swing"], 2); assert.equal(third.bestTickets["moonlit-swing"], 3);
 });
 test("every authored room has exactly three optional tickets and matching cord constraints", () => {
-  for (const room of [...ROOMS, ...PORTRAIT_ROOMS]) {
+  for (const room of ROOMS) {
     assert.equal(room.tickets.length, 3, room.id);
     const world = makeWorld(room);
     assert.equal(world.cords.size, room.cords.length, room.id);
@@ -37,37 +37,36 @@ test("every authored room has exactly three optional tickets and matching cord c
     }
   }
 });
-test("portrait rooms fill a tall viewport without changing game identities", () => {
-  assert.equal(PORTRAIT_VIEWPORT.width / PORTRAIT_VIEWPORT.height, 0.7);
-  for (let index = 0; index < ROOMS.length; index += 1) {
-    const room = PORTRAIT_ROOMS[index];
-    assert.equal(room.id, ROOMS[index].id);
+test("every room is authored inside the fixed portrait playfield", () => {
+  assert.equal(GAME_VIEWPORT.width / GAME_VIEWPORT.height, 0.7);
+  for (const room of ROOMS) {
     for (const point of [room.keyStart, room.goal, ...room.cords.map((cord) => cord.anchor), ...room.tickets.map((ticket) => ticket.position), ...room.props.map((prop) => prop.position)]) {
       assert.ok(point.x >= 40 && point.x <= 520, `${room.id} x=${point.x}`);
       assert.ok(point.y >= 40 && point.y <= 760, `${room.id} y=${point.y}`);
     }
   }
 });
-test("portrait rooms retain deterministic release and bellows solutions", () => {
-  const dropRoom = PORTRAIT_ROOMS[0], drop = makeWorld(dropRoom, PORTRAIT_VIEWPORT); applyOpeningImpulse(drop, false); removeCord(drop, "cord-a"); let dropReached = false;
+test("fixed portrait rooms retain deterministic release and bellows solutions", () => {
+  const dropRoom = ROOMS[0], drop = makeWorld(dropRoom, GAME_VIEWPORT); applyOpeningImpulse(drop, false); removeCord(drop, "cord-a"); let dropReached = false;
   for (let frame = 0; frame < 240; frame += 1) { Matter.Engine.update(drop.engine, 16); if (distance(drop.key.position, dropRoom.goal) < 38) { dropReached = true; break; } }
-  const swingRoom = PORTRAIT_ROOMS[1], swing = makeWorld(swingRoom, PORTRAIT_VIEWPORT); applyOpeningImpulse(swing, false); removeCord(swing, "cord-left"); for (let frame = 0; frame < 24; frame += 1) Matter.Engine.update(swing.engine, 16); removeCord(swing, "cord-right"); let swingReached = false;
+  const swingRoom = ROOMS[1], swing = makeWorld(swingRoom, GAME_VIEWPORT); applyOpeningImpulse(swing, false); removeCord(swing, "cord-left"); for (let frame = 0; frame < 24; frame += 1) Matter.Engine.update(swing.engine, 16); removeCord(swing, "cord-right"); let swingReached = false;
   for (let frame = 0; frame < 300; frame += 1) { Matter.Engine.update(swing.engine, 16); if (distance(swing.key.position, swingRoom.goal) < 38) { swingReached = true; break; } }
-  const bellowsRoom = PORTRAIT_ROOMS[2], bellows = makeWorld(bellowsRoom, PORTRAIT_VIEWPORT); applyOpeningImpulse(bellows, false); removeCord(bellows, "cord-stage"); for (let frame = 0; frame < 52; frame += 1) Matter.Engine.update(bellows.engine, 16); puff(bellows); let bellowsReached = false;
+  const bellowsRoom = ROOMS[2], bellows = makeWorld(bellowsRoom, GAME_VIEWPORT); applyOpeningImpulse(bellows, false); removeCord(bellows, "cord-stage"); for (let frame = 0; frame < 52; frame += 1) Matter.Engine.update(bellows.engine, 16); puff(bellows); let bellowsReached = false;
   for (let frame = 0; frame < 300; frame += 1) { Matter.Engine.update(bellows.engine, 16); if (distance(bellows.key.position, bellowsRoom.goal) < 38) { bellowsReached = true; break; } }
   assert.equal(dropReached, true); assert.equal(swingReached, true); assert.equal(bellowsReached, true);
 });
 test("prototype save is unique and misses trigger reset only outside the safe playfield", () => {
   assert.equal(SAVE_KEY, "chapter-house:keyfall-prototype:v1");
-  assert.equal(shouldGentleReset({ x: 400, y: 500 }, { x: 400, y: 470 }), false);
-  assert.equal(shouldGentleReset({ x: 400, y: 625 }, { x: 400, y: 470 }), true);
-  assert.equal(shouldGentleReset({ x: 645, y: 470 }, { x: 645, y: 435 }), false);
+  assert.equal(shouldGentleReset({ x: 280, y: 700 }, { x: 280, y: 657 }), false);
+  assert.equal(shouldGentleReset({ x: 280, y: 865 }, { x: 280, y: 657 }), true);
+  assert.equal(shouldGentleReset({ x: 605, y: 603 }, { x: 570, y: 603 }), false);
 });
 test("room 3 authored bellows-and-bumper sequence reaches its goal", () => {
   const room = ROOMS[2];
   const world = makeWorld(room);
   applyOpeningImpulse(world, false);
   assert.equal(removeCord(world, room.cords[0].id), true);
+  for (let frame = 0; frame < 52; frame += 1) Matter.Engine.update(world.engine, 16);
   puff(world);
   let reached = false;
   for (let frame = 0; frame < 180; frame += 1) {
@@ -79,7 +78,7 @@ test("room 3 authored bellows-and-bumper sequence reaches its goal", () => {
 test("rooms 1 and 2 retain deterministic release solutions under extreme elasticity", () => {
   const dropRoom = ROOMS[0]; const drop = makeWorld(dropRoom); applyOpeningImpulse(drop, false); removeCord(drop, "cord-a"); let dropReached = false;
   for (let frame = 0; frame < 180; frame += 1) { Matter.Engine.update(drop.engine, 16); if (distance(drop.key.position, dropRoom.goal) < 38) { dropReached = true; break; } }
-  const pendulumRoom = ROOMS[1]; const pendulum = makeWorld(pendulumRoom); applyOpeningImpulse(pendulum, false); removeCord(pendulum, "cord-left"); for (let frame = 0; frame < 38; frame += 1) Matter.Engine.update(pendulum.engine, 16); removeCord(pendulum, "cord-right"); let pendulumReached = false;
+  const pendulumRoom = ROOMS[1]; const pendulum = makeWorld(pendulumRoom); applyOpeningImpulse(pendulum, false); removeCord(pendulum, "cord-left"); for (let frame = 0; frame < 24; frame += 1) Matter.Engine.update(pendulum.engine, 16); removeCord(pendulum, "cord-right"); let pendulumReached = false;
   for (let frame = 0; frame < 240; frame += 1) { Matter.Engine.update(pendulum.engine, 16); if (distance(pendulum.key.position, pendulumRoom.goal) < 38) { pendulumReached = true; break; } }
   assert.equal(dropReached, true); assert.equal(pendulumReached, true);
 });

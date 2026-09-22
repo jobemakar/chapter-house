@@ -1,6 +1,6 @@
 import Matter from "matter-js";
 import type { CordDefinition, PropDefinition, RoomDefinition, Vec, Viewport } from "./types";
-import { LANDSCAPE_VIEWPORT } from "./rooms";
+import { GAME_VIEWPORT } from "./rooms";
 
 /**
  * Jobe's current feel baseline. Lower stiffness stretches farther; lower damping
@@ -93,7 +93,7 @@ export type KeyfallWorld = {
   tickets: Map<string, Matter.Body>; props: Map<string, Matter.Body>; viewport: Viewport;
 };
 
-export function makeWorld(room: RoomDefinition, viewport: Viewport = LANDSCAPE_VIEWPORT): KeyfallWorld {
+export function makeWorld(room: RoomDefinition, viewport: Viewport = GAME_VIEWPORT): KeyfallWorld {
   const engine = Matter.Engine.create({ enableSleeping: false });
   engine.gravity.y = PHYSICS_TUNING.gravityY;
   engine.positionIterations = PHYSICS_TUNING.positionIterations;

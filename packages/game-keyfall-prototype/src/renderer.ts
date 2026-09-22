@@ -1,11 +1,11 @@
 import type { KeyfallWorld } from "./physics";
 import type { RoomDefinition, RuntimeState, Vec, Viewport } from "./types";
 import type { KeyfallEffects } from "./interaction";
-import { LANDSCAPE_VIEWPORT } from "./rooms";
+import { GAME_VIEWPORT } from "./rooms";
 
 export class KeyfallRenderer {
   private ctx: CanvasRenderingContext2D;
-  private viewport: Viewport = LANDSCAPE_VIEWPORT;
+  private viewport: Viewport = GAME_VIEWPORT;
   constructor(private canvas: HTMLCanvasElement) { const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("Canvas unavailable"); this.ctx = ctx; }
   setViewport(viewport: Viewport): void { this.viewport = viewport; this.resize(); }
   resize(): void { const ratio = Math.min(window.devicePixelRatio || 1, 3), rect = this.canvas.getBoundingClientRect(); this.canvas.width = Math.max(1, Math.floor(rect.width * ratio)); this.canvas.height = Math.max(1, Math.floor(rect.height * ratio)); }
