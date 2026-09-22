@@ -12,8 +12,11 @@
     "dev": "vite --host 127.0.0.1 --port 5192 --strictPort",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "tsx tests/physics.ts && tsx tests/water-renderer.ts && tsx tests/progress.ts",
-    "check": "npm run typecheck && npm test && npm run build"
+    "test": "tsx tests/physics.ts && tsx tests/water-renderer.ts && tsx tests/progress.ts && tsx tests/content.ts && tsx tests/editor-server.ts && tsx tests/authored-physics.ts && tsx tests/editor-model.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "dev:editor": "vite --host 127.0.0.1 --port 5192 --strictPort --open /editor.html",
+    "catalog": "tsx -e \"import('./editor-server.ts').then(m => m.generateLevelCatalog())\"",
+    "pretest": "npm run catalog"
   },
   "dependencies": {
     "@chapter-house/game-host": "*",

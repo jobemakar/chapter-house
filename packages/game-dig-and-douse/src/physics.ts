@@ -85,8 +85,12 @@ export class WaterSimulation {
       { x: WORLD_WIDTH, y: -0.3, w: 0.3, h: WORLD_HEIGHT + 0.3 },
       { x: -0.3, y: -0.3, w: WORLD_WIDTH + 0.6, h: 0.3 },
       { x: 0, y: this.config.floor, w: WORLD_WIDTH, h: 0.3 },
-      { x: reservoir.left, y: 0, w: 0.2, h: reservoir.height },
-      { x: reservoir.right, y: 0, w: 0.2, h: reservoir.height },
+      ...(this.config.tankWalls ?? [
+        { x: reservoir.left, y: 0, w: 0.2, h: reservoir.height },
+        { x: reservoir.right, y: 0, w: 0.2, h: reservoir.height },
+      ]),
+      ...(this.config.pipeRects ?? []),
+      ...(this.config.paintedRocks ?? []),
       ...this.rockColliders,
       ...this.protected,
       ...this.config.fixtures,
@@ -101,13 +105,14 @@ export class WaterSimulation {
           x: (col + 0.5) * CELL_SIZE,
           y: (row + 0.5) * CELL_SIZE,
         };
-        this.grid[row * COLS + col] =
-          this.config.soil.some((polygon) =>
-            WaterSimulation.inPolygon(point, polygon),
-          ) &&
-          !this.config.pockets.some((pocket) =>
-            WaterSimulation.inRect(point, pocket),
-          )
+        this.grid[row * COLS + col] = this.config.terrainGrid
+          ? Number(this.config.terrainGrid[row * COLS + col] === 1)
+          : this.config.soil.some((polygon) =>
+                WaterSimulation.inPolygon(point, polygon),
+              ) &&
+              !this.config.pockets.some((pocket) =>
+                WaterSimulation.inRect(point, pocket),
+              )
             ? 1
             : 0;
       }
@@ -120,9 +125,17 @@ export class WaterSimulation {
     definition.set_strictContactCheck(true);
     this.water = this.world.CreateParticleSystem(definition);
     B.destroy(definition);
-    this.createReservoir(reservoir);
+    for (const source of this.config.reservoirs ?? [reservoir]) {
+      if (source.halfW > 0 && source.halfH > 0) this.createReservoir(source);
+    }
     this.initialCount = this.water.GetParticleCount();
-    this.required = this.config.required;
+    this.required =
+      this.config.requiredPercent === undefined
+        ? this.config.required
+        : Math.max(
+            1,
+            Math.ceil((this.initialCount * this.config.requiredPercent) / 100),
+          );
   }
 
   /** Releases LiquidFun allocations when an embedded game is unmounted. */
@@ -243,7 +256,13 @@ export class WaterSimulation {
           this.rockColliders.some((rock) =>
             WaterSimulation.inRect(point, rock),
           ) ||
-          this.protected.some((strip) => WaterSimulation.inRect(point, strip))
+          this.protected.some((strip) =>
+            WaterSimulation.inRect(point, strip),
+          ) ||
+          (this.config.terrainGrid !== undefined &&
+            this.colliders.some((collider) =>
+              WaterSimulation.inRect(point, collider),
+            ))
         )
           continue;
         const progress = length2
@@ -320,8 +339,14 @@ export class WaterSimulation {
         this.config.intakes.some(
           (intake) =>
             intake.sealed &&
-            Math.abs(point.x - intake.x) < 0.75 &&
-            Math.abs(point.y - intake.y) < 1.35,
+            Math.abs(point.x - intake.x) <
+              (intake.facing === "left" || intake.facing === "right"
+                ? 1.35
+                : 0.75) &&
+            Math.abs(point.y - intake.y) <
+              (intake.facing === "left" || intake.facing === "right"
+                ? 0.75
+                : 1.35),
         )
       )
         this.lastBlocked = this.steps;

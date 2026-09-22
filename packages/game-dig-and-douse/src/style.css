@@ -81,6 +81,25 @@
   gap: 10px;
   align-items: center;
   margin: 19px 0 11px;
+  flex-wrap: wrap;
+}
+.dig-and-douse .douse-level-picker {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 180px;
+  color: #edf1dd;
+  background: #213d3d;
+  border: 1px solid #60746b;
+  border-radius: 7px;
+  padding: 8px;
+  font: inherit;
+  font-size: 12px;
+}
+.dig-and-douse .douse-level-picker:focus-visible {
+  outline: 3px solid #b0eddf;
+}
+.dig-and-douse [hidden] {
+  display: none !important;
 }
 .dig-and-douse .brief p {
   font-size: 12px;
@@ -142,7 +161,7 @@
   margin-top: 15px;
 }
 .dig-and-douse .victory {
-  inset: 8% 30% auto;
+  inset: 8% 8% auto;
   padding: 14px;
   border: 1px solid #a9b877;
   border-radius: 16px;
@@ -258,6 +277,43 @@
 @media (orientation: landscape) and (max-height: 600px) {
   .dig-and-douse__shell {
     width: min(100% - 20px, 1180px);
-    padding-top: 10px;
+    padding: 8px 0;
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) minmax(0, 0.85fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    column-gap: 18px;
+    height: calc(100dvh - 16px);
+  }
+  .dig-and-douse .board {
+    grid-column: 2;
+    grid-row: 1 / 6;
+    align-self: start;
+  }
+  .dig-and-douse header,
+  .dig-and-douse .brief,
+  .dig-and-douse .readout,
+  .dig-and-douse footer,
+  .dig-and-douse .prototype-note {
+    grid-column: 1;
+  }
+  .dig-and-douse .brief {
+    margin-block: 9px;
+  }
+  .dig-and-douse h1 {
+    font-size: 24px;
+  }
+  .dig-and-douse .eyebrow {
+    letter-spacing: 0.7px;
+  }
+  .dig-and-douse .prototype-note {
+    align-self: start;
+    margin: 4px 0;
+  }
+  .dig-and-douse .victory {
+    padding: 8px;
+  }
+  .dig-and-douse .victory h2 {
+    font-size: 21px;
+    margin: 3px 0;
   }
 }

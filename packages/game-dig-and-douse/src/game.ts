@@ -1,10 +1,12 @@
-import { getLevel } from "./levels";
+import { getLevel, LEVELS, getNextLevel, loadCampaignLevels } from "./levels";
+import { AuthoredObstacleRenderer } from "./authored-art";
 import { COLS, ROWS, WaterSimulation } from "./physics";
 import type { Canteen, Intake, LevelDefinition, Point } from "./types";
 import { WaterSurfaceRenderer } from "./water-renderer";
 import type { GameHostServices, GameSession } from "@chapter-house/game-host";
 import {
   DIG_AND_DOUSE_REWARD_ID,
+  CampaignProgress,
   loadDigAndDouseProgress,
   type DigAndDouseProgress,
 } from "./progress";
@@ -238,7 +240,7 @@ class InputController {
     if (event.key === "ArrowUp") this.keyPosition.y -= 0.25;
     if (event.key === "ArrowDown") this.keyPosition.y += 0.25;
     this.keyPosition.x = Math.max(0.4, Math.min(11.6, this.keyPosition.x));
-    this.keyPosition.y = Math.max(0.4, Math.min(11.3, this.keyPosition.y));
+    this.keyPosition.y = Math.max(0.4, Math.min(14.6, this.keyPosition.y));
     this.pointer = { ...this.keyPosition };
     if (
       this.keyboardDig &&
@@ -250,6 +252,7 @@ class InputController {
 
 /** Owns cached terrain and exact scene draw order for the painted hillside. */
 class SceneRenderer {
+  private readonly authoredArt = new AuthoredObstacleRenderer();
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
   private readonly terrain = layer();
@@ -326,7 +329,9 @@ class SceneRenderer {
     this.drawWaterGlints(time);
     this.waterSurfaceContext.globalCompositeOperation = "source-over";
     this.context.drawImage(this.waterSurface, 0, 0);
-    this.context.drawImage(this.assets.reservoir, 170, 0, 260, 190);
+    if (!this.config.tanks)
+      this.context.drawImage(this.assets.reservoir, 170, 0, 260, 190);
+    this.authoredArt.draw(this.context, this.config, SCALE);
     level.canteens.forEach((canteen) => this.drawCanteen(canteen, level, time));
     this.config.intakes.forEach((intake) => this.drawPipe(intake, level, time));
     this.drawCamp(level, time);
@@ -589,10 +594,16 @@ class SceneRenderer {
     const y = intake.y * SCALE;
     if (intake.dummy) {
       this.context.save();
+      this.context.translate(x, y);
+      this.context.rotate(
+        { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 }[
+          intake.facing
+        ],
+      );
       this.context.shadowColor = "#17120baa";
       this.context.shadowBlur = 7;
       this.context.shadowOffsetY = 4;
-      this.context.drawImage(this.assets.dummy, x - 32, y - 48, 64, 96);
+      this.context.drawImage(this.assets.dummy, -32, -48, 64, 96);
       this.context.restore();
       if (level.steps - level.lastWaste < 120)
         this.text("LEAK — NO HOSE", x, y - 47, 10, "#eed59f");
@@ -600,25 +611,32 @@ class SceneRenderer {
     }
     this.context.save();
     this.context.translate(x, y);
-    if (intake.facing === "right") this.context.scale(-1, 1);
+    const angle = {
+      left: 0,
+      up: Math.PI / 2,
+      right: Math.PI,
+      down: -Math.PI / 2,
+    }[intake.facing];
+    this.context.rotate(angle);
     this.context.shadowColor = "#17120baa";
     this.context.shadowBlur = 7;
     this.context.shadowOffsetY = 4;
     this.context.drawImage(this.assets.working, -55, -36, 110, 73);
     this.context.restore();
-    const mouthX = x + (intake.facing === "right" ? 45 : -45);
+    const mouthX = x - 45 * Math.cos(angle);
+    const mouthY = y - 45 * Math.sin(angle);
     if (level.steps - level.lastDelivery < 35) {
       const pulse = 0.35 + 0.3 * Math.sin(time / 130);
       this.context.strokeStyle = `rgba(107,235,242,${pulse})`;
       this.context.lineWidth = 3;
       this.context.beginPath();
-      this.context.arc(mouthX, y, 24, 0, Math.PI * 2);
+      this.context.arc(mouthX, mouthY, 24, 0, Math.PI * 2);
       this.context.stroke();
       this.context.fillStyle = `rgba(76,215,238,${0.55 + pulse * 0.35})`;
       this.context.beginPath();
       this.context.ellipse(
         mouthX + 2,
-        y,
+        mouthY,
         12 + 3 * Math.sin(time / 90),
         16,
         0,
@@ -717,7 +735,16 @@ class SceneRenderer {
 }
 
 /** Composes the fixed-step simulation, renderer and host lifecycle without global DOM state. */
+export interface DigAndDouseOptions {
+  level?: LevelDefinition;
+  testMode?: boolean;
+}
 export class DigAndDouseGame implements GameSession {
+  private assets?: GameAssets;
+  private physicsModule?: any;
+  private campaign!: CampaignProgress;
+  private readonly levelPicker: HTMLSelectElement;
+  private readonly nextButton: HTMLButtonElement;
   private readonly root: HTMLElement;
   private readonly canvas: HTMLCanvasElement;
   private readonly hud: HudController;
@@ -752,6 +779,7 @@ export class DigAndDouseGame implements GameSession {
   constructor(
     target: HTMLElement,
     private readonly services: GameHostServices<DigAndDouseProgress>,
+    private readonly options: DigAndDouseOptions = {},
   ) {
     this.root = document.createElement("section");
     this.root.className = "dig-and-douse";
@@ -765,11 +793,33 @@ export class DigAndDouseGame implements GameSession {
     this.hud = new HudController(this.root);
     this.input = new InputController(
       this.canvas,
-      () => this.level,
+      () => (this.paused ? undefined : this.level),
       () => this.noteMeaningfulDig(),
     );
     this.muted = services.muted;
     this.progress = loadDigAndDouseProgress(services.progress);
+    this.campaign = new CampaignProgress(
+      this.progress,
+      LEVELS.map((level) => level.id),
+    );
+    this.levelPicker = document.createElement("select");
+    this.levelPicker.setAttribute("aria-label", "Campaign level");
+    this.levelPicker.className = "douse-level-picker";
+    this.levelPicker.hidden = !!options.testMode || !!options.level;
+    required(this.root, ".brief").append(this.levelPicker);
+    this.levelPicker.addEventListener("change", () => {
+      if (this.campaign.canPlay(this.levelPicker.value))
+        this.changeLevel(getLevel(this.levelPicker.value));
+    });
+    this.nextButton = document.createElement("button");
+    this.nextButton.type = "button";
+    this.nextButton.textContent = "Next level →";
+    this.nextButton.hidden = true;
+    required(this.root, '[data-douse="win"] > div').append(this.nextButton);
+    this.nextButton.addEventListener("click", () => {
+      const next = this.level && getNextLevel(this.level.config.id);
+      if (next && this.campaign.canPlay(next.id)) this.changeLevel(next);
+    });
     this.activePlayTotal = services.activePlaySeconds;
     this.creditedActivePlayTotal = Math.floor(services.activePlaySeconds);
     this.hud.bind(
@@ -800,16 +850,21 @@ export class DigAndDouseGame implements GameSession {
       progress: {
         ...this.progress,
         ownedRewardIds: [...this.progress.ownedRewardIds],
+        completedLevelIds: [...this.progress.completedLevelIds],
+        unlockedLevelIds: [...this.progress.unlockedLevelIds],
       },
       level: this.level?.snapshot() ?? null,
     };
   }
   flushProgress(): void {
+    if (this.options.testMode) return;
     this.creditActivePlay();
     if (this.progressDirty) {
       this.services.saveProgress({
         ...this.progress,
         ownedRewardIds: [...this.progress.ownedRewardIds],
+        completedLevelIds: [...this.progress.completedLevelIds],
+        unlockedLevelIds: [...this.progress.unlockedLevelIds],
       });
       this.progressDirty = false;
     }
@@ -847,7 +902,10 @@ export class DigAndDouseGame implements GameSession {
     const nonBoardHeight = shell.scrollHeight - board.offsetHeight;
     const availableBoardHeight = Math.max(0, viewportHeight - nonBoardHeight);
     const aspectRatio = this.canvas.width / this.canvas.height;
-    const maxWidth = Math.min(shell.clientWidth, availableBoardHeight * aspectRatio);
+    const maxWidth = Math.min(
+      shell.clientWidth,
+      availableBoardHeight * aspectRatio,
+    );
     this.root.style.setProperty(
       "--douse-board-max-width",
       `${Math.max(1, Math.floor(maxWidth))}px`,
@@ -856,28 +914,100 @@ export class DigAndDouseGame implements GameSession {
 
   private async start(): Promise<void> {
     try {
-      const config = getLevel();
+      if (!this.options.level) {
+        await loadCampaignLevels();
+        if (this.disposed) return;
+        this.campaign = new CampaignProgress(
+          this.progress,
+          LEVELS.map((level) => level.id),
+        );
+      }
+      const initialId = this.campaign.initial();
+      if (!this.options.level && !initialId)
+        throw new Error(
+          "The campaign has no levels. Add a draft in the editor.",
+        );
+      const config = this.options.level ?? getLevel(initialId);
       const assets = await new AssetLoader().load();
       const factory = Box2DFactory as unknown as (options: {
         locateFile: (name: string) => string;
       }) => Promise<any>;
       const Box2D = await factory({ locateFile: () => box2dWasmUrl });
       if (this.disposed) return;
-      this.level = new WaterSimulation(Box2D, config);
-      this.renderer = new SceneRenderer(this.canvas, assets, config);
-      this.renderer.setOriginalGrid(this.level.grid);
+      this.assets = assets;
+      this.physicsModule = Box2D;
+      this.changeLevel(config);
       this.hud.setReady();
-      this.hud.update(this.level);
+      this.hud.update(this.level!);
       this.animationFrame = requestAnimationFrame((time) => this.frame(time));
     } catch (error) {
       if (!this.disposed) {
         this.hud.setFailure();
         this.services.notify("Dig & Douse could not load its water physics.");
         console.error(error);
+        required(this.root, '[data-douse="loading"] p').textContent =
+          error instanceof Error ? error.message : "Unable to load this level.";
       }
     }
   }
-  private restart(): void {
+  private changeLevel(config: LevelDefinition): void {
+    if (!this.assets || !this.physicsModule || this.disposed) return;
+    this.persistRun();
+    this.creditActivePlay();
+    this.level?.dispose();
+    this.level = new WaterSimulation(this.physicsModule, config);
+    this.renderer = new SceneRenderer(this.canvas, this.assets, config);
+    this.renderer.setOriginalGrid(this.level.grid);
+    this.resetRunState();
+    this.showHint = false;
+    this.hud.setHint(false);
+    required<HTMLElement>(this.root, '[data-douse="hint"]').hidden =
+      !config.hint.length;
+    required(this.root, ".brief p").textContent = config.name;
+    required(this.root, ".brief span").textContent = this.options.testMode
+      ? "EDITOR TEST"
+      : "";
+    this.canvas.setAttribute(
+      "aria-label",
+      "Drag to dig soil and guide water to the open intake. Canteens are optional. Use arrow keys and hold Space to dig with the keyboard.",
+    );
+    if (!this.options.testMode) {
+      this.progress.currentLevelId = config.id;
+      this.progressDirty = true;
+      this.flushProgress();
+    }
+    this.updateCampaignControls();
+    this.scheduleResize();
+  }
+  private updateCampaignControls(): void {
+    this.levelPicker.replaceChildren();
+    for (const [index, level] of LEVELS.entries()) {
+      const option = document.createElement("option");
+      option.value = level.id;
+      option.textContent = `${index + 1}. ${level.name}${this.progress.completedLevelIds.includes(level.id) ? " ✓" : this.campaign.canPlay(level.id) ? "" : " · Locked"}`;
+      option.disabled = !this.campaign.canPlay(level.id);
+      this.levelPicker.append(option);
+    }
+    this.levelPicker.value = this.level?.config.id ?? "";
+    const next = this.level && getNextLevel(this.level.config.id);
+    this.nextButton.hidden =
+      !!this.options.testMode ||
+      !!this.options.level ||
+      !next ||
+      !this.campaign.canPlay(next.id);
+  }
+  private resetRunState(): void {
+    this.input.reset();
+    this.accumulator = 0;
+    this.last = 0;
+    this.completedThisRun = false;
+    this.persistedCanteensThisRun = 0;
+    this.activityStepsRemaining = 0;
+    this.runDirty = false;
+    this.hud.resetReport();
+    if (this.level) this.hud.update(this.level);
+  }
+  restart(): void {
     if (!this.level || !this.renderer) return;
     this.persistRun();
     this.level.reset();
@@ -893,6 +1023,7 @@ export class DigAndDouseGame implements GameSession {
     this.runDirty = false;
   }
   private persistRun(): void {
+    if (this.options.testMode) return;
     if (!this.level || !this.runDirty) return;
     const filled = this.level.canteens.filter(
       (canteen) => canteen.filled,
@@ -904,12 +1035,14 @@ export class DigAndDouseGame implements GameSession {
     if (this.level.won && !this.completedThisRun) {
       this.completedThisRun = true;
       this.progress.firesExtinguished++;
+      this.campaign.complete(this.level.config.id);
       if (
-        this.services.awardReward(DIG_AND_DOUSE_REWARD_ID) &&
-        !this.progress.ownedRewardIds.includes(DIG_AND_DOUSE_REWARD_ID)
+        !this.progress.ownedRewardIds.includes(DIG_AND_DOUSE_REWARD_ID) &&
+        this.services.awardReward(DIG_AND_DOUSE_REWARD_ID)
       )
         this.progress.ownedRewardIds.push(DIG_AND_DOUSE_REWARD_ID);
       this.services.notify("Fire out! The camp lantern reward is ready.");
+      this.updateCampaignControls();
     }
     this.progressDirty = true;
     this.runDirty = false;
@@ -920,6 +1053,10 @@ export class DigAndDouseGame implements GameSession {
     this.runDirty = true;
   }
   private creditActivePlay(): void {
+    if (this.options.testMode) {
+      this.activeStepsSinceCredit = 0;
+      return;
+    }
     if (!this.activeStepsSinceCredit) return;
     this.activePlayTotal += this.activeStepsSinceCredit / 60;
     this.activeStepsSinceCredit = 0;
@@ -945,7 +1082,10 @@ export class DigAndDouseGame implements GameSession {
             this.activityStepsRemaining--;
             this.activeStepsSinceCredit++;
           }
-          if (!wasWon && this.level.won) this.persistRun();
+          if (!wasWon && this.level.won) {
+            this.runDirty = true;
+            this.persistRun();
+          }
         }
         if (this.activeStepsSinceCredit >= 60) this.creditActivePlay();
       }

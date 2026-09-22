@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Local desktop level editor for Dig &amp; Douse."
+    />
+    <title>Dig &amp; Douse — Level Workshop</title>
+  </head>
+  <body>
+    <main id="douse-editor" class="editor-app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Chapter House · Local authoring tool</p>
+          <h1>Dig &amp; Douse <span>Level Workshop</span></h1>
+        </div>
+        <div class="document-heading" aria-live="polite">
+          <strong id="document-name">Untitled clearing</strong>
+          <code id="document-id">new-level</code>
+          <span id="dirty-pill" class="state-pill" data-dirty="false"
+            >Saved</span
+          >
+        </div>
+      </header>
+
+      <section class="library-bar" aria-label="Level files">
+        <div>
+          <label for="level-select">Saved drafts</label>
+          <select id="level-select">
+            <option value="">Loading local levels…</option>
+          </select>
+        </div>
+        <div class="library-actions">
+          <button id="new-button" type="button">New filled level</button>
+          <button id="duplicate-level-button" type="button">Duplicate</button>
+          <button id="save-button" class="primary-action" type="button">
+            Save draft
+          </button>
+        </div>
+        <p
+          id="library-status"
+          class="status-line"
+          data-kind="working"
+          role="status"
+        >
+          Connecting to the local level store…
+        </p>
+      </section>
+
+      <div class="editor-workspace">
+        <aside class="left-rail">
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Terrain</h2>
+              <span class="step-number">01</span>
+            </div>
+            <p class="hint">
+              Paint the 80 × 100 grid, draw a rectangle, or click a polygon
+              outline. Later operations win.
+            </p>
+            <div class="tool-grid" role="group" aria-label="Terrain tools">
+              <button type="button" data-tool="select" aria-pressed="true">
+                <span>↖</span>Select
+              </button>
+              <button type="button" data-tool="brush-dirt" aria-pressed="false">
+                <span>●</span>Dirt
+              </button>
+              <button
+                type="button"
+                data-tool="brush-empty"
+                aria-pressed="false"
+              >
+                <span>○</span>Erase
+              </button>
+              <button type="button" data-tool="brush-rock" aria-pressed="false">
+                <span>◆</span>Rock
+              </button>
+              <button type="button" data-tool="rectangle" aria-pressed="false">
+                <span>▭</span>Rectangle
+              </button>
+              <button type="button" data-tool="polygon" aria-pressed="false">
+                <span>⬡</span>Polygon
+              </button>
+            </div>
+            <label for="shape-material">Shape material</label>
+            <select id="shape-material">
+              <option value="empty">Empty</option>
+              <option value="dirt">Dirt</option>
+              <option value="rock">Solid rock</option>
+            </select>
+            <label for="brush-radius"
+              >Brush diameter <output id="brush-output">0.75</output></label
+            >
+            <input
+              id="brush-radius"
+              type="range"
+              min="0.15"
+              max="2.4"
+              step="0.15"
+              value="0.75"
+            />
+            <p class="hint key-hint">
+              <kbd>Enter</kbd> closes a polygon · <kbd>Esc</kbd> cancels it
+            </p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Place objects</h2>
+              <span class="step-number">02</span>
+            </div>
+            <div class="palette-grid">
+              <button type="button" data-add="reservoir">
+                <span>▰</span>Reservoir
+              </button>
+              <button type="button" data-add="rock"><span>⬟</span>Rock</button>
+              <button type="button" data-add="pipe-straight">
+                <span>━</span>Straight
+              </button>
+              <button type="button" data-add="pipe-elbow">
+                <span>┗</span>Elbow
+              </button>
+              <button type="button" data-add="pipe-tee">
+                <span>┳</span>T-junction
+              </button>
+              <button type="button" data-add="pipe-cross">
+                <span>╋</span>Four-way
+              </button>
+              <button type="button" data-add="canteen">
+                <span>◒</span>Canteen
+              </button>
+              <button type="button" data-add="decoy">
+                <span>⊘</span>Decoy intake
+              </button>
+              <button type="button" data-add="intake">
+                <span>◉</span>Working intake
+              </button>
+              <button type="button" data-add="target">
+                <span>♨</span>Fire target
+              </button>
+            </div>
+            <p class="hint">
+              Pipes snap to the 1.2-unit lattice and stay solid during play. The
+              intake and fire target move separately.
+            </p>
+          </section>
+        </aside>
+
+        <section class="stage-column" aria-label="Level board">
+          <div class="stage-toolbar">
+            <div class="toolbar-group">
+              <button id="undo-button" type="button" title="Undo (Ctrl+Z)">
+                ↶ Undo
+              </button>
+              <button
+                id="redo-button"
+                type="button"
+                title="Redo (Ctrl+Shift+Z)"
+              >
+                ↷ Redo
+              </button>
+            </div>
+            <label class="toggle"
+              ><input id="grid-toggle" type="checkbox" checked /> Grid</label
+            >
+            <button id="play-button" class="primary-action" type="button">
+              ▶ Play draft
+            </button>
+          </div>
+          <div id="edit-stage" class="canvas-frame">
+            <canvas
+              id="editor-canvas"
+              width="600"
+              height="750"
+              tabindex="0"
+              aria-label="Editable 12 by 15 Dig and Douse board. Use the palette, then click or drag on the board."
+            ></canvas>
+          </div>
+          <div id="play-stage" class="play-frame" hidden>
+            <div id="play-host"></div>
+            <div class="play-controls">
+              <span id="play-status">Testing this draft snapshot</span>
+              <button id="restart-button" type="button">↻ Restart</button>
+              <button id="stop-button" class="stop-button" type="button">
+                ■ Stop
+              </button>
+            </div>
+          </div>
+          <p id="legacy-banner" class="legacy-banner" hidden>
+            <strong>Original layout preserved.</strong> Editing converts it to
+            the new reservoir/object format; duplicate it to keep the original.
+          </p>
+          <p
+            id="editor-status"
+            class="status-line stage-status"
+            data-kind="ok"
+            role="status"
+          >
+            Select a tool or object to begin.
+          </p>
+        </section>
+
+        <aside class="right-rail">
+          <section class="panel inspector-panel">
+            <div class="panel-heading">
+              <h2>Properties</h2>
+              <span class="step-number">03</span>
+            </div>
+            <div id="properties"></div>
+            <div class="button-row">
+              <button id="duplicate-selection-button" type="button" disabled>
+                Duplicate
+              </button>
+              <button
+                id="delete-selection-button"
+                class="danger-quiet"
+                type="button"
+                disabled
+              >
+                Delete
+              </button>
+            </div>
+          </section>
+
+          <section class="panel validation-panel">
+            <div class="panel-heading">
+              <h2>Level checks</h2>
+              <span
+                id="validation-summary"
+                class="validation-summary"
+                data-valid="true"
+                >Ready</span
+              >
+            </div>
+            <ul id="issue-list" class="issue-list"></ul>
+          </section>
+
+          <section class="panel campaign-panel">
+            <div class="panel-heading">
+              <h2>Campaign order</h2>
+              <span class="step-number">04</span>
+            </div>
+            <p class="hint">
+              Draft saves stay outside the campaign until you add them here.
+              Playtesting is never required.
+            </p>
+            <ol id="campaign-list" class="campaign-list"></ol>
+            <div class="campaign-actions">
+              <button id="campaign-add-button" type="button">
+                Add this draft
+              </button>
+              <button
+                id="campaign-save-button"
+                class="primary-action"
+                type="button"
+              >
+                Save campaign
+              </button>
+            </div>
+            <p
+              id="campaign-status"
+              class="status-line"
+              data-kind="ok"
+              role="status"
+            >
+              Campaign order has not changed.
+            </p>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="editor-footer">
+        <p>
+          Desktop authoring only · 12 × 15 world · 0.15 terrain cells · manual
+          saves
+        </p>
+        <div class="save-cluster">
+          <span><kbd>Ctrl</kbd> + <kbd>S</kbd></span
+          ><button id="footer-save-button" class="save-button" type="button">
+            Save draft
+          </button>
+        </div>
+      </footer>
+    </main>
+    <script type="module" src="/src/editor.ts"></script>
+  </body>
+</html>

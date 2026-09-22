@@ -62,6 +62,20 @@ export interface LevelDefinition {
   target: Rect;
   fire: Point;
   hose: Point;
+  /** Compiled authoring data. Absent for the preserved original level. */
+  terrainGrid?: number[];
+  reservoirs?: Reservoir[];
+  tankWalls?: Rect[];
+  tanks?: Array<
+    Rect & {
+      id: string;
+      fillPercent: number;
+      outlet: "left" | "right" | "bottom";
+    }
+  >;
+  pipeRects?: Rect[];
+  paintedRocks?: Rect[];
+  requiredPercent?: number;
 }
 
 export interface LevelSnapshot {

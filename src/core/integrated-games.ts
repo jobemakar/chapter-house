@@ -192,7 +192,7 @@ const douse: IntegratedGameAdapter = {
   summarize(raw) {
     const progress = loadDigAndDouseProgress(raw);
     return progress.firesExtinguished
-      ? `${progress.firesExtinguished} fire${progress.firesExtinguished === 1 ? "" : "s"} out · best ${progress.bestCanteens} / 3 canteens.`
+      ? `${progress.firesExtinguished} fire${progress.firesExtinguished === 1 ? "" : "s"} out · best ${progress.bestCanteens} canteens.`
       : "Put out your first fire to bring home a Camp Lantern.";
   },
   ownedRewardIds(raw) {

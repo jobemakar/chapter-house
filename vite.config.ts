@@ -1,9 +1,11 @@
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import { GamePreviewBridge } from "./tools/game-previews.ts";
+import { createLevelCatalogPlugin } from "./packages/game-dig-and-douse/editor-server";
 export default defineConfig({
   base: "./",
   plugins: [
+    createLevelCatalogPlugin(),
     new GamePreviewBridge(
       fileURLToPath(new URL("./", import.meta.url)),
     ).plugin(),

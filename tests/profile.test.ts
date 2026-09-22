@@ -54,11 +54,13 @@ test("Dig & Douse progress migrates additively and awards one placeable camp lan
   const store = new MemoryStore();
   let profile = new ProfileRepository(store);
   assert.deepEqual(profile.gameProgress("dig-and-douse"), {
-    version: 1,
+    version: 2,
     firesExtinguished: 0,
     bestCanteens: 0,
     totalCanteens: 0,
     ownedRewardIds: [],
+    completedLevelIds: [],
+    unlockedLevelIds: [],
   });
   assert.equal(
     profile.awardGameReward("dig-and-douse", "wildfire:camp-lantern"),
