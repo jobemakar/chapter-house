@@ -1,6 +1,7 @@
 import Matter from "matter-js";
 import type { CordDefinition, PropDefinition, RoomDefinition, Vec, Viewport } from "./types";
 import { GAME_VIEWPORT } from "./rooms";
+import { collisionId, tagCollision, WorldElementFactory, type WorldElement, type WorldElementSnapshot } from "./elements";
 
 /**
  * Jobe's current feel baseline. Lower stiffness stretches farther; lower damping
@@ -34,12 +35,12 @@ export class ArticulatedCord {
     const connectionLength = this.length / connectionCount;
     const dx = key.position.x - definition.anchor.x, dy = key.position.y - definition.anchor.y;
     for (let index = 1; index < connectionCount; index += 1) {
-      const node = Matter.Bodies.circle(
+      const node = tagCollision(Matter.Bodies.circle(
         definition.anchor.x + dx * index / connectionCount,
         definition.anchor.y + dy * index / connectionCount,
         PHYSICS_TUNING.cordPointRadius,
-        { label: `cord-node:${this.id}:${index}`, frictionAir: 0.012, collisionFilter: { mask: 0 } },
-      );
+        { frictionAir: 0.012, collisionFilter: { mask: 0 } },
+      ), "cord-link");
       Matter.Body.setMass(node, PHYSICS_TUNING.cordMassPerPixel * connectionLength);
       this.nodes.push(node);
     }
@@ -87,35 +88,65 @@ export class ArticulatedCord {
   }
 }
 
-export type KeyfallWorld = {
-  engine: Matter.Engine; key: Matter.Body; goal: Matter.Body;
-  cords: Map<string, ArticulatedCord>; anchors: Map<string, Matter.Body>;
-  tickets: Map<string, Matter.Body>; props: Map<string, Matter.Body>; viewport: Viewport;
-};
+export class PhysicsRoom {
+  readonly engine: Matter.Engine;
+  readonly key: Matter.Body;
+  readonly goal: Matter.Body;
+  readonly cords = new Map<string, ArticulatedCord>();
+  readonly anchors = new Map<string, Matter.Body>();
+  readonly tickets = new Map<string, Matter.Body>();
+  readonly props = new Map<string, Matter.Body>();
+  readonly elements: readonly WorldElement[];
+  private readonly collisionHandler: (event: Matter.IEventCollision<Matter.Engine>) => void;
+  private readonly hazardReasons: string[] = [];
+  private disposed = false;
 
-export function makeWorld(room: RoomDefinition, viewport: Viewport = GAME_VIEWPORT): KeyfallWorld {
-  const engine = Matter.Engine.create({ enableSleeping: false });
+  constructor(readonly room: RoomDefinition, readonly viewport: Viewport = GAME_VIEWPORT, factory = new WorldElementFactory()) {
+  const engine = this.engine = Matter.Engine.create({ enableSleeping: false });
   engine.gravity.y = PHYSICS_TUNING.gravityY;
   engine.positionIterations = PHYSICS_TUNING.positionIterations;
   engine.velocityIterations = PHYSICS_TUNING.velocityIterations;
   engine.constraintIterations = PHYSICS_TUNING.constraintIterations;
-  const key = Matter.Bodies.circle(room.keyStart.x, room.keyStart.y, PHYSICS_TUNING.keyRadius, { label: "key", restitution: PHYSICS_TUNING.keyRestitution, frictionAir: PHYSICS_TUNING.keyFrictionAir, density: PHYSICS_TUNING.keyDensity });
-  const goal = Matter.Bodies.circle(room.goal.x, room.goal.y, 34, { isStatic: true, isSensor: true, label: "goal" });
-  const walls = [Matter.Bodies.rectangle(viewport.width / 2, -18, viewport.width, 36, { isStatic: true })];
-  const cords = new Map<string, ArticulatedCord>(), anchors = new Map<string, Matter.Body>();
+  const key = this.key = tagCollision(Matter.Bodies.circle(room.keyStart.x, room.keyStart.y, PHYSICS_TUNING.keyRadius, { restitution: PHYSICS_TUNING.keyRestitution, frictionAir: PHYSICS_TUNING.keyFrictionAir, density: PHYSICS_TUNING.keyDensity }), "key");
+  const goal = this.goal = tagCollision(Matter.Bodies.circle(room.goal.x, room.goal.y, 34, { isStatic: true, isSensor: true }), "goal");
+  const walls = [tagCollision(Matter.Bodies.rectangle(viewport.width / 2, -18, viewport.width, 36, { isStatic: true }), "bumper")];
   for (const definition of room.cords) {
-    const anchor = Matter.Bodies.circle(definition.anchor.x, definition.anchor.y, 5, { isStatic: true, label: `anchor:${definition.id}` });
+    const anchor = tagCollision(Matter.Bodies.circle(definition.anchor.x, definition.anchor.y, 5, { isStatic: true, collisionFilter: { mask: 0 } }), "cord-link");
     const cord = new ArticulatedCord(anchor, key, definition);
-    anchors.set(definition.id, anchor); cords.set(definition.id, cord);
+    this.anchors.set(definition.id, anchor); this.cords.set(definition.id, cord);
   }
-  const tickets = new Map<string, Matter.Body>();
-  for (const ticket of room.tickets) tickets.set(ticket.id, Matter.Bodies.circle(ticket.position.x, ticket.position.y, 15, { isStatic: true, isSensor: true, label: `ticket:${ticket.id}` }));
-  const props = new Map<string, Matter.Body>();
-  room.props.forEach((prop, index) => props.set(`${prop.kind}-${index}`, prop.kind === "bumper" ? Matter.Bodies.circle(prop.position.x, prop.position.y, prop.radius, { isStatic: true, restitution: PHYSICS_TUNING.bumperRestitution, label: "bumper" }) : Matter.Bodies.rectangle(prop.position.x, prop.position.y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true, label: "bellows" })));
-  Matter.Composite.add(engine.world, [key, goal, ...walls, ...anchors.values(), ...tickets.values(), ...props.values()]);
-  for (const cord of cords.values()) cord.addTo(engine.world);
-  return { engine, key, goal, cords, anchors, tickets, props, viewport };
+  for (const ticket of room.tickets) this.tickets.set(ticket.id, tagCollision(Matter.Bodies.circle(ticket.position.x, ticket.position.y, 15, { isStatic: true, isSensor: true }), "ticket"));
+  room.props.forEach((prop, index) => this.props.set(`${prop.kind}-${index}`, prop.kind === "bumper" ? tagCollision(Matter.Bodies.circle(prop.position.x, prop.position.y, prop.radius, { isStatic: true, restitution: PHYSICS_TUNING.bumperRestitution }), "bumper") : tagCollision(Matter.Bodies.rectangle(prop.position.x, prop.position.y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true }), "air-zone")));
+  Matter.Composite.add(engine.world, [key, goal, ...walls, ...this.anchors.values(), ...this.tickets.values(), ...this.props.values()]);
+  for (const cord of this.cords.values()) cord.addTo(engine.world);
+  this.elements = Object.freeze((room.elements ?? []).map((definition) => factory.create(definition)));
+  for (const element of this.elements) element.create({ engine, key, onHazard: (reason) => this.hazardReasons.push(reason) });
+  this.collisionHandler = (event) => { for (const element of this.elements) element.handleCollision(event); };
+  Matter.Events.on(engine, "collisionStart", this.collisionHandler);
+  }
+
+  fixedUpdate(stepMs: number): void {
+    if (this.disposed) return;
+    for (const element of this.elements) element.fixedUpdate(stepMs);
+    Matter.Engine.update(this.engine, stepMs);
+    updateCordFragments(this, stepMs);
+  }
+  handleTap(point: Vec): boolean { for (const element of this.elements) if (element.handleTap(point)) return true; return false; }
+  elementSnapshots(): readonly WorldElementSnapshot[] { return Object.freeze(this.elements.map((element) => element.snapshot())); }
+  consumeHazardReset(): string | undefined { return this.hazardReasons.shift(); }
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    Matter.Events.off(this.engine, "collisionStart", this.collisionHandler);
+    for (const element of this.elements) element.dispose();
+    Matter.Composite.clear(this.engine.world, false, true);
+    Matter.Engine.clear(this.engine);
+    this.hazardReasons.length = 0;
+  }
 }
+
+export type KeyfallWorld = PhysicsRoom;
+export function makeWorld(room: RoomDefinition, viewport: Viewport = GAME_VIEWPORT): KeyfallWorld { return new PhysicsRoom(room, viewport); }
 
 export function applyOpeningImpulse(world: KeyfallWorld, reducedMotion: boolean): void { Matter.Body.setVelocity(world.key, { x: reducedMotion ? 0.25 : 0.75, y: 0 }); }
 export function removeCord(world: KeyfallWorld, cordId: string, segmentIndex?: number): boolean {
@@ -126,3 +157,4 @@ export function updateCordFragments(world: KeyfallWorld, deltaMs: number): void 
 export function puff(world: KeyfallWorld, direction: Vec = { x: 1, y: -0.2 }): void { Matter.Body.applyForce(world.key, world.key.position, { x: direction.x * 0.09, y: direction.y * 0.09 }); }
 export function resetVelocity(world: KeyfallWorld): void { Matter.Body.setVelocity(world.key, { x: 0, y: 0 }); Matter.Body.setAngularVelocity(world.key, 0); }
 export function propFor(world: KeyfallWorld, prop: PropDefinition, index: number): Matter.Body | undefined { return world.props.get(`${prop.kind}-${index}`); }
+export { collisionId };

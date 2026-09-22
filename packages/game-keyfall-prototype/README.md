@@ -15,10 +15,38 @@ npm run build -w @chapter-house/game-keyfall-prototype
 npm run dev -w @chapter-house/game-keyfall-prototype
 ```
 
-The three rooms demonstrate a direct drop, a two-cord pendulum sequence, and a
-bumper plus tappable bellows. This is a canvas prototype: the generated concept
+The room picker separates the complete 20-room Campaign wing from the three
+preserved Prototype rooms. Campaign contains exactly two transformed MIT
+adaptations and eighteen original rooms authored from coordinate-free briefs.
+Rooms 03-08 introduce one concept at a time, 09-14 pair mechanics, and 15-20
+use readable multi-step combinations. See
+[docs/original-campaign.md](docs/original-campaign.md) for the briefs, room list,
+clean-room boundary, recovery grammar, and batch verification. The
+prototype rooms still demonstrate a direct drop, a two-cord pendulum sequence,
+and a bumper plus tappable bellows. This is a canvas prototype: the generated concept
 image is art direction, while cords, key, tickets, props, and goal are live
 objects. Progress and settings are local-only. No rewards are granted.
+
+The campaign's two licensed adaptations are pinned to
+`emersion/mlgrope` commit `1c398f18dfb5977fb1f7fcb8a671584a102f406a`, paths
+`levels/0.csv` and `levels/1.csv`. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+or the in-game **Credits & licenses** link for the complete MIT notice. The
+source CSVs are not shipped or loaded at runtime. Human-readable transformation
+notes are in [docs/mlgrope-transformations.md](docs/mlgrope-transformations.md).
+
+`src/completion-traces.ts` checks in typed, fixed-step zero-ticket and
+three-ticket pointer traces for all twenty campaign rooms. `src/trace-replay.ts` applies
+them through production cord hit-testing and world-element taps at 16 ms per
+tick. Tests prove all twenty rooms reach the lock with zero tickets, every one
+of the sixty tickets is reachable and bankable, and Draft Gallery's taught bubble-first
+route remains successful across 256–1,504 ms of ordinary cut reaction delay.
+
+The reusable Phase 2 runtime is present without adding campaign rooms. Typed
+world-element definitions create bubbles, continuous or tappable air jets,
+movable counterweights, and gentle-reset hazards through `PhysicsRoom` and
+`WorldElementFactory`. Each exposes an immutable render snapshot and a complete
+create/update/collision/tap/dispose lifecycle. Pointer input is arbitrated into
+one tap or one slash, so operating a device cannot also sever a cord.
 
 ## Rope tuning
 

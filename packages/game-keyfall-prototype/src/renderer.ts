@@ -2,6 +2,7 @@ import type { KeyfallWorld } from "./physics";
 import type { RoomDefinition, RuntimeState, Vec, Viewport } from "./types";
 import type { KeyfallEffects } from "./interaction";
 import { GAME_VIEWPORT } from "./rooms";
+import type { WorldElementSnapshot } from "./elements";
 
 export class KeyfallRenderer {
   private ctx: CanvasRenderingContext2D;
@@ -15,6 +16,7 @@ export class KeyfallRenderer {
     const gradient = c.createLinearGradient(0, 0, 0, H); gradient.addColorStop(0, "#171326"); gradient.addColorStop(0.55, "#28152e"); gradient.addColorStop(1, "#4a2035"); c.fillStyle = gradient; c.fillRect(0, 0, W, H);
     this.drawCurtains(c, W, H); this.drawStage(c, W, H);
     for (const prop of room.props) this.drawProp(c, prop.kind, prop.position, prop.radius);
+    for (const element of world.elementSnapshots()) this.drawElement(c, element, reducedMotion);
     for (const definition of room.cords) { const cord = world.cords.get(definition.id); if (!cord || cord.expired) continue; for (const path of cord.paths) this.drawCordPath(c, path, cord.opacity); this.line(c, { x: definition.anchor.x - 4, y: definition.anchor.y }, { x: definition.anchor.x + 4, y: definition.anchor.y }, `rgba(244,199,107,${cord.opacity})`, 5); }
     for (const ticket of room.tickets) if (!collected.has(ticket.id)) this.drawTicket(c, ticket.position);
     this.drawInteraction(c, effects, reducedMotion); this.drawGoal(c, room.goal, reducedMotion); this.drawKey(c, world.key.position as Vec, world.key.angle, reducedMotion);
@@ -34,6 +36,27 @@ export class KeyfallRenderer {
   private drawKey(c: CanvasRenderingContext2D, p: Vec, angle: number, reducedMotion: boolean): void { c.save(); c.translate(p.x, p.y); c.rotate(angle); if (!reducedMotion) { c.shadowColor = "#ffc45d"; c.shadowBlur = 14; } c.strokeStyle = "#f5c469"; c.lineWidth = 10; c.lineCap = "round"; c.beginPath(); c.arc(-8, 0, 10, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(2, 0); c.lineTo(29, 0); c.lineTo(29, 8); c.moveTo(18, 0); c.lineTo(18, -7); c.stroke(); c.shadowBlur = 0; c.restore(); }
   private drawTicket(c: CanvasRenderingContext2D, p: Vec): void { c.save(); c.translate(p.x, p.y); c.rotate(-0.12); c.fillStyle = "#e9c780"; c.fillRect(-14, -10, 28, 20); c.strokeStyle = "#8b4e55"; c.lineWidth = 2; c.strokeRect(-14, -10, 28, 20); c.fillStyle = "#743c54"; c.fillRect(-8, -3, 16, 2); c.fillRect(-5, 3, 10, 2); c.restore(); }
   private drawProp(c: CanvasRenderingContext2D, kind: string, p: Vec, radius: number): void { c.save(); c.translate(p.x, p.y); if (kind === "bumper") { c.fillStyle = "#a96b51"; c.beginPath(); c.arc(0, 0, radius, 0, Math.PI * 2); c.fill(); c.fillStyle = "#e0a25d"; c.beginPath(); c.arc(0, 0, radius * .7, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#fff0b0"; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, radius * .4, 0, Math.PI * 2); c.stroke(); } else { c.fillStyle = "#ae724f"; c.fillRect(-radius * .72, -radius * .4, radius * 1.44, radius * .8); c.fillStyle = "#efc877"; c.fillRect(-radius * .54, -radius * .25, radius * 1.08, radius * .14); c.fillRect(-radius * .54, radius * .11, radius * 1.08, radius * .14); } c.restore(); }
+  private drawElement(c: CanvasRenderingContext2D, element: WorldElementSnapshot, reducedMotion: boolean): void {
+    c.save();
+    if (element.kind === "bubble" && !element.popped) {
+      c.strokeStyle = element.captured ? "#d9f7ff" : "#88cde0"; c.lineWidth = 4; c.fillStyle = "rgba(124,211,232,.14)";
+      if (!reducedMotion) { c.shadowColor = "#8ee8ff"; c.shadowBlur = 10; }
+      c.beginPath(); c.arc(element.position.x, element.position.y, element.radius, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.fillStyle = "rgba(255,255,255,.75)"; c.beginPath(); c.arc(element.position.x - element.radius * .3, element.position.y - element.radius * .3, Math.max(3, element.radius * .12), 0, Math.PI * 2); c.fill();
+    } else if (element.kind === "air-jet") {
+      c.fillStyle = element.active ? "rgba(163,241,245,.3)" : element.mode === "continuous" ? "rgba(112,210,215,.12)" : "rgba(239,200,119,.1)"; c.fillRect(element.zone.x, element.zone.y, element.zone.width, element.zone.height);
+      c.translate(element.position.x, element.position.y); c.rotate(Math.atan2(element.direction.y, element.direction.x));
+      if (element.active) { c.shadowColor = element.mode === "continuous" ? "#8ef4ff" : "#ffd27d"; c.shadowBlur = reducedMotion ? 5 : 16; }
+      c.fillStyle = element.active ? "#ffe09a" : element.mode === "continuous" ? "#68c6cf" : "#d99858"; c.fillRect(-22, -18, 34, 36); c.beginPath(); c.moveTo(12, -12); c.lineTo(34, 0); c.lineTo(12, 12); c.fill();
+      if (element.active) { c.shadowBlur = 0; c.strokeStyle = "#fff4c8"; c.lineWidth = 4; for (const x of [42, 56]) { c.beginPath(); c.moveTo(x - 8, -8); c.lineTo(x, 0); c.lineTo(x - 8, 8); c.stroke(); } }
+    } else if (element.kind === "counterweight") {
+      c.translate(element.position.x, element.position.y); c.rotate(element.angle); c.fillStyle = "#77566d"; c.beginPath(); c.arc(0, 0, element.radius, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#e0a25d"; c.lineWidth = 4; c.stroke(); c.fillStyle = "#e9c780"; c.fillRect(-element.radius * .45, -3, element.radius * .9, 6);
+    } else if (element.kind === "reset-hazard") {
+      const b = element.bounds; c.fillStyle = element.triggered ? "rgba(226,104,91,.45)" : "rgba(157,69,74,.32)"; c.fillRect(b.x, b.y, b.width, b.height); c.strokeStyle = "#e9a36d"; c.lineWidth = 3;
+      for (let x = b.x - b.height; x < b.x + b.width; x += 18) { c.beginPath(); c.moveTo(x, b.y + b.height); c.lineTo(x + b.height, b.y); c.stroke(); }
+    }
+    c.restore();
+  }
   private drawCordPath(c: CanvasRenderingContext2D, points: readonly Vec[], opacity: number): void { if (points.length < 2) return; c.save(); c.strokeStyle = `rgba(213,154,131,${opacity})`; c.lineWidth = 4; c.lineCap = "round"; c.lineJoin = "round"; c.beginPath(); c.moveTo(points[0].x, points[0].y); for (let index = 1; index < points.length - 1; index += 1) { const next = points[index + 1]; c.quadraticCurveTo(points[index].x, points[index].y, (points[index].x + next.x) / 2, (points[index].y + next.y) / 2); } const last = points[points.length - 1]; c.lineTo(last.x, last.y); c.stroke(); c.restore(); }
   private line(c: CanvasRenderingContext2D, a: Vec, b: Vec, color: string, width: number): void { c.strokeStyle = color; c.lineWidth = width; c.lineCap = "round"; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke(); }
   private text(c: CanvasRenderingContext2D, value: string, x: number, y: number, size: number, color: string, align: CanvasTextAlign): void { c.fillStyle = color; c.font = `600 ${size}px Georgia, serif`; c.textAlign = align; c.fillText(value, x, y); }

@@ -2,6 +2,10 @@ import type { Vec } from "./types";
 
 export type SlashTrailPoint = { position: Vec; ageMs: number };
 export type RemnantSegment = { from: Vec; to: Vec; opacity: number };
+export type InteractionGesture =
+  | Readonly<{ kind: "tap"; point: Vec }>
+  | Readonly<{ kind: "slash"; path: readonly Vec[] }>
+  | Readonly<{ kind: "none" }>;
 
 /** A short-lived path, intentionally requiring travel before it draws. */
 export class SlashTrail {
@@ -20,6 +24,26 @@ export class SlashTrail {
   get isSlash(): boolean { return this.points.length > 1 && this.travelDistance() >= 16; }
   get opacity(): number { return this.dragging ? 1 : Math.max(0, 1 - this.releasedAgeMs / this.lifetimeMs); }
   private travelDistance(): number { let total = 0; const points = this.points; for (let i = 1; i < points.length; i += 1) total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y); return total; }
+}
+
+/** Converts one pointer sequence into exactly one semantic gesture. */
+export class InteractionController {
+  readonly trail = new SlashTrail();
+  private active = false;
+  constructor(private readonly slashDistance = 16) {}
+  begin(point: Vec): void { this.active = true; this.trail.begin(point); }
+  move(point: Vec): void { if (this.active) this.trail.append(point); }
+  release(point: Vec): InteractionGesture {
+    if (!this.active) return { kind: "none" };
+    this.trail.append(point);
+    const path = this.trail.points.map((candidate) => ({ ...candidate }));
+    const travel = path.slice(1).reduce((total, candidate, index) => total + Math.hypot(candidate.x - path[index].x, candidate.y - path[index].y), 0);
+    this.active = false;
+    this.trail.release();
+    return travel >= this.slashDistance ? { kind: "slash", path } : { kind: "tap", point: { ...point } };
+  }
+  cancel(): void { this.active = false; this.trail.cancel(); }
+  get isActive(): boolean { return this.active; }
 }
 
 export class CordRemnant {
@@ -52,8 +76,9 @@ export class CordRemnants {
 }
 
 export class KeyfallEffects {
-  readonly trail = new SlashTrail();
+  readonly interaction = new InteractionController();
+  readonly trail = this.interaction.trail;
   readonly remnants = new CordRemnants();
   update(deltaMs: number, keyPosition: Vec, keyVelocity: Vec): void { this.trail.update(deltaMs); this.remnants.update(deltaMs, keyPosition, keyVelocity); }
-  clear(): void { this.trail.cancel(); this.remnants.clear(); }
+  clear(): void { this.interaction.cancel(); this.remnants.clear(); }
 }
