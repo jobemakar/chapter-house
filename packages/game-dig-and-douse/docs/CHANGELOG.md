@@ -7,3 +7,9 @@ Implemented the editor specified in shared plan 59: ordered JSON campaign, manua
 The gameplay runtime now supports authored geometry, percentage water quotas, dynamic level/canteen presentation and sequential campaign progression. Version-two player saves preserve legacy totals, earned rewards and the original level identity. The original shipped level remains exact until its authoring geometry is edited. New levels have no hint route. Short-landscape gameplay places controls beside the board to retain a useful playfield.
 
 Implementation UI/file workflow/static obstacle artwork were delegated to GPT-5.6 Sol. Primary agent owned physics, campaign/save integration, code review and final verification. See editor-verification.md for evidence and limits. Local only; no publication.
+
+## 2026-09-22 — Larger tests and pipe contact
+- Enlarged desktop playtesting into a viewport overlay with compact side HUD.
+- Removed invisible ledges around working/capped pipe artwork in original and authored levels, retaining the working mouth sensor and sealed decoys.
+- Restored saved startup drafts when their ID matches the initial placeholder.
+- Verified typecheck, all seven test entrypoints, production build, four-facing collider regressions, browser playthrough, Restart and Escape.

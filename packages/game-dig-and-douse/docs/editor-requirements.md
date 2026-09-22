@@ -16,3 +16,6 @@ User decisions are recorded in shared plan 59. This local implementation adds au
 12. Campaign levels unlock sequentially and completed levels can be replayed. Version-two saves retain prior totals/rewards and migrate original victories to the original stable level identity; previously earned access survives reordering.
 13. Preserve the original level's exact unedited runtime via its legacy geometry. Original geometry edits convert to the new authoring model, with a visible notice and Duplicate available to preserve the original. Metadata and duplicate IDs remain coherent.
 14. No publication, original-book repository edits, new currency, multiplayer, new game mechanics or changed reward IDs.
+
+## 2026-09-22 playtest usability revision
+Play draft occupies a viewport overlay with persistent Stop/Restart controls and a tall board. Escape returns to authoring. Working and capped intake fixtures follow the visible pipe bodies, including rotation, rather than transparent artwork bounds. Saved initial drafts reopen on startup without being masked by the blank placeholder. Manual saving and separate campaign membership remain unchanged.

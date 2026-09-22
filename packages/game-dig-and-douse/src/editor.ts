@@ -192,6 +192,7 @@ class DigAndDouseEditor {
   }
 
   private async loadLibrary(): Promise<void> {
+    const initialDocument = JSON.stringify(this.document);
     this.setStatus(
       "library",
       "Loading level files from the local editor server…",
@@ -213,6 +214,15 @@ class DigAndDouseEditor {
           "The campaign endpoint returned an unexpected response.",
         );
       this.levels = new Map(list.levels.map((level) => [level.id, level]));
+      // A saved first draft has the same ID as the startup placeholder. Restore
+      // it only if the user has not started editing while the request was pending.
+      const savedInitial = this.levels.get(this.document.id);
+      if (savedInitial && JSON.stringify(this.document) === initialDocument) {
+        this.document = cloneDocument(savedInitial);
+        this.savedDocument = JSON.stringify(this.document);
+        this.history.clear();
+        this.renderAll();
+      }
       this.campaign = [...campaign.levels];
       this.savedCampaign = JSON.stringify(this.campaign);
       this.knownSaved = true;

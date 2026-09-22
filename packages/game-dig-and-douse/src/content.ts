@@ -1,3 +1,4 @@
+import { IntakeGeometry } from "./intake-geometry";
 import type { LevelDefinition, Point, Rect, Reservoir } from "./types";
 import {
   CELL_SIZE,
@@ -147,8 +148,8 @@ export class ContentCompiler {
       const solids = [
         ...document.rocks,
         document.target,
-        intakeBody(document.intake, false),
-        ...document.decoys.map((placed) => intakeBody(placed, true)),
+        ...IntakeGeometry.body(document.intake),
+        ...document.decoys.flatMap((placed) => IntakeGeometry.body(placed, true)),
         ...document.pipes.map((pipe) => ({
           x: pipe.x,
           y: pipe.y,
@@ -244,8 +245,8 @@ export class ContentCompiler {
       ],
       fixtures: [
         clone(document.target),
-        intakeBody(document.intake, false),
-        ...document.decoys.map((placed) => intakeBody(placed, true)),
+        ...IntakeGeometry.body(document.intake),
+        ...document.decoys.flatMap((placed) => IntakeGeometry.body(placed, true)),
       ],
       pipeRects,
       canteens: clone(document.canteens),
@@ -561,23 +562,6 @@ function intakeDefinition(
           },
         }),
   };
-}
-
-function intakeBody(placed: PlacedIntake, dummy: boolean): Rect {
-  if (dummy) {
-    const vertical = placed.facing === "up" || placed.facing === "down";
-    const w = vertical ? 1.1 : 2.15;
-    const h = vertical ? 2.15 : 1.1;
-    return { x: placed.x - w / 2, y: placed.y - h / 2, w, h };
-  }
-  const horizontal = placed.facing === "left" || placed.facing === "right";
-  const w = horizontal ? 0.7 : 1.35;
-  const h = horizontal ? 1.35 : 0.7;
-  const offsetX =
-    placed.facing === "left" ? -0.15 : placed.facing === "right" ? 0.15 : 0;
-  const offsetY =
-    placed.facing === "up" ? -0.15 : placed.facing === "down" ? 0.15 : 0;
-  return { x: placed.x + offsetX - w / 2, y: placed.y + offsetY - h / 2, w, h };
 }
 
 function gridRuns(grid: Uint8Array, value: number): Rect[] {

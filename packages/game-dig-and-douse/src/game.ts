@@ -1,3 +1,4 @@
+import { IntakeGeometry } from "./intake-geometry";
 import { getLevel, LEVELS, getNextLevel, loadCampaignLevels } from "./levels";
 import { AuthoredObstacleRenderer } from "./authored-art";
 import { COLS, ROWS, WaterSimulation } from "./physics";
@@ -603,7 +604,8 @@ class SceneRenderer {
       this.context.shadowColor = "#17120baa";
       this.context.shadowBlur = 7;
       this.context.shadowOffsetY = 4;
-      this.context.drawImage(this.assets.dummy, -32, -48, 64, 96);
+      const art = IntakeGeometry.cappedArtwork;
+      this.context.drawImage(this.assets.dummy, art.x * SCALE, art.y * SCALE, art.w * SCALE, art.h * SCALE);
       this.context.restore();
       if (level.steps - level.lastWaste < 120)
         this.text("LEAK — NO HOSE", x, y - 47, 10, "#eed59f");
@@ -621,7 +623,8 @@ class SceneRenderer {
     this.context.shadowColor = "#17120baa";
     this.context.shadowBlur = 7;
     this.context.shadowOffsetY = 4;
-    this.context.drawImage(this.assets.working, -55, -36, 110, 73);
+    const art = IntakeGeometry.artwork;
+    this.context.drawImage(this.assets.working, art.x * SCALE, art.y * SCALE, art.w * SCALE, art.h * SCALE);
     this.context.restore();
     const mouthX = x - 45 * Math.cos(angle);
     const mouthY = y - 45 * Math.sin(angle);

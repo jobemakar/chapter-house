@@ -178,7 +178,14 @@
               aria-label="Editable 12 by 15 Dig and Douse board. Use the palette, then click or drag on the board."
             ></canvas>
           </div>
-          <div id="play-stage" class="play-frame" hidden>
+          <div
+            id="play-stage"
+            class="play-frame"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Draft playtest"
+            hidden
+          >
             <div id="play-host"></div>
             <div class="play-controls">
               <span id="play-status">Testing this draft snapshot</span>

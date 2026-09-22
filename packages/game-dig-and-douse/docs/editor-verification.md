@@ -40,3 +40,10 @@ The full application typecheck currently reports optional-value errors in the se
 ## Delivered state
 
 Source files are in the existing application repository, independent original book repositories are untouched, and the local editor server runs at `http://127.0.0.1:5192/editor.html`. Only the original level remains in the delivered campaign. No new authored campaign levels or publication were requested by this editor implementation.
+
+## 2026-09-22 follow-up
+- `npm run check`: passed typecheck, seven test entrypoints and production build. Existing Vite native-config / LiquidFun browser externalization warnings remain.
+- CUA browser verification: board 480 × 599.5 at 1280 × 720; 618 × 772 at 1440 × 900. Stop/Restart visible within viewport.
+- Saved the user’s current custom draft before source refresh. Fresh editor restored the saved drawn paths. Dug a route from its reservoir to the corrected intake; reached Fire out / 100%. Restart reset to 0%; Escape returned to Saved authoring state.
+- Regression assertions cover open space above working pipe in all four rotations, solid barrel, open mouth, solid capped dome and original campaign fixtures matching shared geometry. Original winning-route physics still passes.
+- User-authored `levels/new-level.json` remains local and outside the campaign/source commit. No publication.

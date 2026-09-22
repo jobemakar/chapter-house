@@ -1,3 +1,4 @@
+import { IntakeGeometry } from "../src/intake-geometry";
 import assert from "node:assert/strict";
 import paintedJson from "../levels/painted-hillside.json";
 import { ContentCompiler, parseLevelDocument } from "../src/content";
@@ -203,5 +204,29 @@ async function testRuntimeFileLoading(): Promise<void> {
         value: savedDocument,
       });
     globalThis.fetch = savedFetch;
+  }
+}
+
+// The old oversized fixture left water suspended above the illustrated barrel.
+for (const facing of ["left", "up", "right", "down"] as const) {
+  const turns = { left: 0, up: 1, right: 2, down: 3 }[facing];
+  const point = (x: number, y: number) => {
+    for (let i = 0; i < turns; i++) [x, y] = [-y, x];
+    return { x: 6 + x, y: 8 + y };
+  };
+  const bodies = IntakeGeometry.body({ x: 6, y: 8, facing });
+  const above = point(0, -0.5), barrel = point(0, 0), mouth = point(-0.9, 0);
+  assert(!covered(bodies, above.x, above.y), "water can reach the visible pipe top in " + facing);
+  assert(covered(bodies, barrel.x, barrel.y), "visible barrel stays solid in " + facing);
+  assert(!covered(bodies, mouth.x, mouth.y), "working mouth stays open in " + facing);
+}
+const capped = IntakeGeometry.body({ x: 6, y: 8, facing: "up" }, true);
+assert(!covered(capped, 6, 7.05), "transparent padding above capped pipe is open");
+assert(covered(capped, 6, 7.3), "capped dome is solid");
+for (const intake of original.legacy!.intakes) {
+  for (const rect of IntakeGeometry.body(intake, intake.dummy)) {
+    assert(original.legacy!.fixtures.some((fixture) =>
+      ["x", "y", "w", "h"].every((key) => Math.abs(fixture[key as keyof Rect] - rect[key as keyof Rect]) < 1e-8)),
+      "original campaign fixtures match the authored intake geometry");
   }
 }
