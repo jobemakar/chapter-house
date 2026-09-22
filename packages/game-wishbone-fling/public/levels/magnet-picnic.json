@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 10,
+  "yard": {
+    "id": "magnet-picnic",
+    "name": "The Magnetic Picnic",
+    "subtitle": "Move the metal blocks. Tumble the picnic.",
+    "legacyIndex": 6,
+    "world": {
+      "width": 1200,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "bucket",
+        "x": 800,
+        "y": 568,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "bucket",
+        "x": 950,
+        "y": 568,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "plank",
+        "x": 875,
+        "y": 527,
+        "w": 245,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "target",
+        "x": 790,
+        "y": 498,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "target",
+        "x": 970,
+        "y": 498,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "bucket",
+        "x": 840,
+        "y": 486,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "bucket",
+        "x": 915,
+        "y": 486,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "plank",
+        "x": 878,
+        "y": 445,
+        "w": 160,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 8,
+        "kind": "target",
+        "x": 845,
+        "y": 416,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 9,
+        "kind": "target",
+        "x": 915,
+        "y": 416,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 3,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 600,
+        "y": 638,
+        "w": 1600,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": [
+      {
+        "id": "button-1",
+        "kind": "button",
+        "x": 600,
+        "y": 566,
+        "targetId": "field-1"
+      },
+      {
+        "id": "field-1",
+        "kind": "field",
+        "x": 890,
+        "y": 335,
+        "r": 270
+      }
+    ]
+  }
+}

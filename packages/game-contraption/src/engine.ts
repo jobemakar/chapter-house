@@ -1,5 +1,5 @@
-import { clamp, H, kit, levels, STEP, W } from "./levels";
-import type { Effect, GameEvent, Kernel, Part, Point } from "./types";
+import { clamp, H, kit, STEP, W } from "./levels";
+import type { Effect, GameEvent, Kernel, Part, Point, Level } from "./types";
 const local = (p: Part, x: number, y: number): Point => {
   const c = Math.cos(p.angle),
     s = Math.sin(p.angle);
@@ -30,6 +30,11 @@ export class ContraptionEngine {
   best = 0;
   counter = 0;
   directions: Record<string, number> = {};
+  fanStates: Record<string, boolean> = {};
+  latched = new Set<string>();
+  controlStates: Record<string, boolean> = {};
+  private contacts = new Set<string>();
+  board = 0;
   cleared = false;
   proofId = 0;
   proof = { id: 0, sent: 0, resolved: 0, good: 0, spilled: 0 };
@@ -37,8 +42,8 @@ export class ContraptionEngine {
   lastSpill = -1e9;
   seed: number;
   constructor(
-    public board = 0,
-    public parts: Part[] = levels[board].initial.map((p) => ({ ...p })),
+    public level: Level,
+    public parts: Part[] = level.initial.map((p) => ({ ...p })),
     seed = 42,
   ) {
     this.seed = seed;
@@ -63,13 +68,36 @@ export class ContraptionEngine {
   direction(p: Part) {
     return this.directions[p.id] ?? p.flip;
   }
-  press(p: Part) {
-    for (const id of p.targets ?? []) this.directions[id] = p.direction || 1;
-    this.effects.push({ x: p.x, y: p.y, type: "switch", life: 0.6 });
+  fanEnabled(p: Part): boolean {
+    return this.fanStates[p.id] ?? p.enabled !== false;
+  }
+  press(p: Part, source: "human" | "corn" = "human"): boolean {
+    if (p.type === "switch") {
+      for (const id of p.targets ?? []) this.directions[id] = p.direction || 1;
+    } else {
+      if (
+        (p.type === "button" && source !== "corn") ||
+        (p.type === "lever" && source !== "human") ||
+        !["button", "lever"].includes(p.type)
+      )
+        return false;
+      if (p.mode === "latch" && this.latched.has(p.id)) return false;
+      const target = this.parts.find((q) => q.id === p.targetId);
+      if (!target) return false;
+      if (target.type === "belt")
+        this.directions[target.id] = -this.direction(target);
+      else if (target.type === "fan")
+        this.fanStates[target.id] = !this.fanEnabled(target);
+      else return false;
+      if (p.mode === "latch") this.latched.add(p.id);
+    }
+    this.controlStates[p.id] = !this.controlStates[p.id];
+    this.effects.push({ x: p.x, y: p.y, type: p.type, life: 0.6 });
     this.events.push({ type: "switch" });
+    return true;
   }
   spawn() {
-    const l = levels[this.board],
+    const l = this.level,
       inlet = this.proof.sent % l.sources.length,
       s = l.sources[inlet],
       k: Kernel = {
@@ -134,7 +162,7 @@ export class ContraptionEngine {
     this.events = [];
     this.effects.forEach((effect) => (effect.life -= dt));
     this.effects = this.effects.filter((effect) => effect.life > 0).slice(-80);
-    const l = levels[this.board];
+    const l = this.level;
     if (this.roundWait > 0) {
       if ((this.roundWait -= dt) <= 0) this.invalidate();
     } else if (
@@ -145,6 +173,7 @@ export class ContraptionEngine {
       this.spawnClock = 0;
       this.spawn();
     }
+    const contacts = new Set<string>();
     for (const k of this.particles) {
       if (k.delay > 0) {
         k.delay -= dt;
@@ -157,7 +186,7 @@ export class ContraptionEngine {
         oy = k.y;
       k.vy += 700 * dt;
       for (const p of this.parts)
-        if (p.type === "fan") {
+        if (p.type === "fan" && this.fanEnabled(p)) {
           const q = local(p, k.x, k.y);
           if (q.x > 0 && q.x < 250 && Math.abs(q.y) < 42 + q.x * 0.12) {
             const f = 1600 * p.power * (1 - q.x / 320);
@@ -180,14 +209,25 @@ export class ContraptionEngine {
           ty = s,
           nx = s,
           ny = -c;
-        if (p.type === "fan") continue;
+        if (p.type === "fan" || p.type === "lever") continue;
+        if (p.type === "button") {
+          const key = k.id + ":" + p.id;
+          if (Math.abs(q.x) < 28 + k.r && Math.abs(q.y) < 22 + k.r) {
+            contacts.add(key);
+            if (!this.contacts.has(key)) {
+              this.press(p, "corn");
+              this.touch(k, p);
+            }
+          }
+          continue;
+        }
         if (p.type === "switch") {
           if (
             Math.abs(q.x) < 28 + k.r &&
             Math.abs(q.y) < 22 + k.r &&
             (k.cool[p.id] || 0) < this.time
           ) {
-            this.press(p);
+            this.press(p, "corn");
             this.touch(k, p);
             k.cool[p.id] = this.time + 0.8;
           }
@@ -297,6 +337,7 @@ export class ContraptionEngine {
       k.trail.push({ x: k.x, y: k.y });
       if (k.trail.length > 16) k.trail.shift();
     }
+    this.contacts = contacts;
     this.particles = this.particles.filter((k) => !k.dead);
     if (
       this.proof.sent === 12 &&

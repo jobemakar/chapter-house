@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 16,
+  "yard": {
+    "id": "long-yard",
+    "name": "The Long Walk Home",
+    "subtitle": "A long, loose tumble across the whole lawn.",
+    "legacyIndex": 7,
+    "world": {
+      "width": 2400,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "box",
+        "x": 790,
+        "y": 545,
+        "w": 64,
+        "h": 110,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "plank",
+        "x": 865,
+        "y": 484,
+        "w": 250,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "target",
+        "x": 720,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "target",
+        "x": 970,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "box",
+        "x": 1210,
+        "y": 540,
+        "w": 74,
+        "h": 118,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "plank",
+        "x": 1310,
+        "y": 475,
+        "w": 270,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "target",
+        "x": 1190,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "target",
+        "x": 1450,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 3,
+        "angle": 0
+      },
+      {
+        "id": 8,
+        "kind": "box",
+        "x": 1710,
+        "y": 545,
+        "w": 72,
+        "h": 108,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 9,
+        "kind": "plank",
+        "x": 1810,
+        "y": 488,
+        "w": 280,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 10,
+        "kind": "target",
+        "x": 1660,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 11,
+        "kind": "target",
+        "x": 1960,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 12,
+        "kind": "box",
+        "x": 2110,
+        "y": 540,
+        "w": 70,
+        "h": 120,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 13,
+        "kind": "plank",
+        "x": 2110,
+        "y": 465,
+        "w": 180,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 14,
+        "kind": "target",
+        "x": 2070,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 15,
+        "kind": "target",
+        "x": 2220,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 3,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 1200,
+        "y": 638,
+        "w": 2800,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": [
+      {
+        "id": "bellows-1",
+        "kind": "bellows",
+        "x": 1180,
+        "y": 580,
+        "angle": 0
+      }
+    ]
+  }
+}

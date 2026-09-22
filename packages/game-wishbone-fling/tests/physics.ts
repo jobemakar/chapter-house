@@ -1,3 +1,4 @@
+import "./legacy-catalog";
 import assert from "node:assert/strict";
 import { PowerYard } from "../src/powers";
 import { aim } from "../src/yard";

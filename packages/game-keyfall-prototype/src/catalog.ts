@@ -55,12 +55,15 @@ export class RoomValidator {
     return errors;
   }
 
-  validateCatalog(rooms: readonly RoomDefinition[]): CatalogValidation {
+  validateCatalog(rooms: readonly RoomDefinition[], enforceLegacyCounts = true): CatalogValidation {
     const errors = rooms.flatMap((room) => this.validate(room));
     const ids = rooms.map((room) => room.id);
     for (const duplicate of ids.filter((id, index) => ids.indexOf(id) !== index)) errors.push(`Duplicate room id: ${duplicate}`);
     const campaignCount = rooms.filter((room) => room.wing === "campaign").length;
     const prototypeCount = rooms.filter((room) => room.wing === "prototype").length;
+    // Authored files are append/remove/reorder capable. Historical tests retain
+    // the exact original twenty-plus-three contract through the default mode.
+    if (!enforceLegacyCounts) return Object.freeze({ errors: Object.freeze([...new Set(errors)]), campaignCount, prototypeCount, campaignComplete: campaignCount > 0 });
     const adaptations = rooms.filter((room) => room.source.kind === "mlgrope-mit-adaptation");
     const adaptationPaths = adaptations.map((room) => room.source.kind === "mlgrope-mit-adaptation" ? room.source.path : "");
     if (adaptations.length > 2) errors.push(`Campaign permits at most 2 mlgrope adaptations; found ${adaptations.length}`);
@@ -94,8 +97,8 @@ function isPositive(value: number): boolean { return Number.isFinite(value) && v
 export class CampaignCatalog {
   readonly validation: CatalogValidation;
 
-  constructor(private readonly definitions: readonly RoomDefinition[], validator: RoomValidator) {
-    this.validation = validator.validateCatalog(definitions);
+  constructor(private readonly definitions: readonly RoomDefinition[], validator: RoomValidator, enforceLegacyCounts = true) {
+    this.validation = validator.validateCatalog(definitions, enforceLegacyCounts);
     if (this.validation.errors.length) throw new Error(`Invalid Keyfall catalog:\n${this.validation.errors.join("\n")}`);
   }
 

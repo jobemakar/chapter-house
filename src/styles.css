@@ -1065,6 +1065,83 @@ dialog::backdrop {
 .startup-error p {
   margin: 20px 0;
 }
+.games-shelf {
+  width: min(960px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(28px, 7vw, 72px) 0;
+  color: #314435;
+}
+.games-shelf-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.games-shelf h1 {
+  margin: 4px 0 10px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(31px, 6vw, 54px);
+  line-height: 1;
+}
+.games-shelf-header p {
+  max-width: 600px;
+  margin: 0;
+  line-height: 1.55;
+}
+.games-shelf-notice {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #edf0df;
+}
+.games-shelf-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 18px;
+}
+.games-shelf-card {
+  overflow: hidden;
+  border: 1px solid #dfe2cf;
+  border-radius: 18px;
+  background: #f4f3e8;
+}
+.games-shelf-card img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background: #dbe3c9;
+}
+.games-shelf-card > div {
+  padding: 17px;
+}
+.games-shelf-card span {
+  color: #728064;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.games-shelf-card h2 {
+  margin: 6px 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 25px;
+}
+.games-shelf-card p {
+  min-height: 42px;
+  margin: 0 0 15px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.games-shelf-playing {
+  width: 100%;
+  max-width: none;
+  padding: 14px;
+}
+.games-shelf-playing .games-shelf-header {
+  margin-bottom: 10px;
+}
 @media (min-width: 1100px) {
   .yard-wrap {
     width: min(100%, calc((100dvh - 360px) * 5 / 3));

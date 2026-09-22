@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#244a3d" />
+    <meta name="description" content="Local desktop level editor for Wishbone Fling." />
+    <title>Wishbone Yard Workshop</title>
+  </head>
+  <body>
+    <main id="wishbone-editor" class="editor-app">
+      <header class="app-header">
+        <div><p class="eyebrow">Wishbone Fling · Local author tool</p><h1>Yard Workshop</h1></div>
+        <div class="document-heading" aria-live="polite">
+          <strong id="document-title">Untitled Yard</strong><code id="document-id">new-wishbone-yard</code>
+          <span id="dirty-marker" class="state-pill" data-dirty="false">Saved</span>
+        </div>
+      </header>
+
+      <section class="library-bar" aria-labelledby="library-heading">
+        <div><label id="library-heading" for="level-select">Saved level file</label><select id="level-select" data-edit-control></select></div>
+        <div class="library-new">
+          <label for="new-level-id">New file ID</label>
+          <input id="new-level-id" data-edit-control value="new-wishbone-yard" spellcheck="false" />
+          <button id="blank-button" data-edit-control type="button">New blank</button>
+          <button id="copy-button" data-edit-control type="button">Copy current</button>
+        </div>
+        <p id="library-status" class="status-line" data-kind="working" role="status">Loading local level files…</p>
+      </section>
+
+      <div class="editor-workspace">
+        <aside class="rail left-rail">
+          <section class="panel">
+            <div class="panel-heading"><h2>Yard details</h2><span>01</span></div>
+            <label for="yard-name">Title</label><input id="yard-name" data-edit-control maxlength="100" />
+            <label for="yard-subtitle">Subtitle</label><textarea id="yard-subtitle" data-edit-control rows="2" maxlength="240"></textarea>
+            <div class="coordinate-grid">
+              <label for="world-width">Width <input id="world-width" data-edit-control type="number" min="640" max="10000" step="20" /></label>
+              <label for="world-height">Height <input id="world-height" data-edit-control type="number" min="480" max="6000" step="20" /></label>
+            </div>
+          </section>
+
+          <section class="panel palette-panel">
+            <div class="panel-heading"><h2>Piece palette</h2><span>02</span></div>
+            <p class="hint">Pieces keep their gameplay size and strength. Add one, then drag it into place.</p>
+            <div class="palette-grid">
+              <button data-palette="launcher" data-edit-control type="button"><span>🐕</span>Launcher</button>
+              <button data-palette="target" data-edit-control type="button"><span>✦</span>Squeaky toy</button>
+              <button data-palette="box" data-edit-control type="button"><span>□</span>Crate</button>
+              <button data-palette="plank" data-edit-control type="button"><span>━</span>Plank</button>
+              <button data-palette="bucket" data-edit-control type="button"><span>▣</span>Metal block</button>
+              <button data-palette="cushion" data-edit-control type="button"><span>▰</span>Cushion</button>
+              <button data-palette="terrain" data-edit-control type="button"><span>▱</span>Terrain</button>
+            </div>
+            <h3>Devices</h3>
+            <div class="palette-grid compact">
+              <button data-palette="bellows" data-edit-control type="button"><span>↗</span>Spring</button>
+              <button data-palette="lever" data-edit-control type="button"><span>⌁</span>Lever</button>
+              <button data-palette="gate" data-edit-control type="button"><span>║</span>Gate</button>
+              <button data-palette="button" data-edit-control type="button"><span>●</span>Magnet control</button>
+              <button data-palette="field" data-edit-control type="button"><span>∪</span>Magnet field</button>
+            </div>
+          </section>
+        </aside>
+
+        <section class="stage-column" aria-label="Yard canvas">
+          <div class="stage-toolbar">
+            <div class="toolbar-group"><button id="undo-button" data-edit-control type="button">Undo</button><button id="redo-button" data-edit-control type="button">Redo</button></div>
+            <label class="toggle"><input id="snap-toggle" data-edit-control type="checkbox" checked /> Snap 20</label>
+            <div class="toolbar-group"><button id="zoom-out-button" type="button" title="Zoom out">−</button><button id="fit-button" type="button">Fit</button><button id="zoom-in-button" type="button" title="Zoom in">+</button></div>
+            <button id="play-button" class="primary-action" type="button">▶ Play</button>
+          </div>
+          <div id="edit-stage" class="canvas-frame">
+            <canvas id="editor-canvas" width="1200" height="720" aria-label="Wishbone yard preview"></canvas>
+            <canvas id="editor-overlay" width="1200" height="720" tabindex="0" aria-label="Editable yard. Click or drag an object; hold Space and drag to pan."></canvas>
+          </div>
+          <div id="play-stage" class="playtest-frame" aria-label="Production Wishbone playtest"></div>
+          <div class="playtest-controls">
+            <span id="playtest-status" role="status">Running isolated playtest</span>
+            <button id="play-pause-button" type="button">Pause</button>
+            <button id="play-restart-button" type="button">Restart</button>
+            <button id="play-stop-button" class="stop-button" type="button">Stop</button>
+          </div>
+          <p id="editor-status" class="status-line stage-status" data-kind="ok" role="status">Select an object or add one from the palette.</p>
+        </section>
+
+        <aside class="rail right-rail">
+          <section class="panel">
+            <div class="panel-heading"><h2>Inspector</h2><span>03</span></div>
+            <p id="inspector-empty" class="hint">Select an object in the yard.</p>
+            <div id="inspector-fields" hidden>
+              <h3 id="selected-label">Object</h3>
+              <div class="coordinate-grid">
+                <label for="object-x">X <input id="object-x" data-edit-control type="number" step="1" /></label>
+                <label for="object-y">Y <input id="object-y" data-edit-control type="number" step="1" /></label>
+              </div>
+              <label id="rotation-row" for="object-rotation">Rotation ° <input id="object-rotation" data-edit-control type="number" step="1" /></label>
+              <div id="size-fields" class="coordinate-grid" hidden>
+                <label for="object-width">Width <input id="object-width" data-edit-control type="number" min="10" step="1" /></label>
+                <label for="object-height">Height <input id="object-height" data-edit-control type="number" min="10" step="1" /></label>
+              </div>
+              <label id="link-row" for="object-link" hidden>Controls <select id="object-link" data-edit-control></select></label>
+              <div class="button-row"><button id="duplicate-button" data-edit-control type="button">Duplicate</button><button id="delete-button" data-edit-control class="danger-quiet" type="button">Delete</button></div>
+            </div>
+          </section>
+
+          <section class="panel validation-panel">
+            <div class="panel-heading"><h2>Yard check</h2><span id="issue-summary" class="validation-summary">Checking…</span></div>
+            <ul id="issue-list" class="issue-list"></ul>
+            <p class="hint">Drafts may be saved with issues. Play and campaign inclusion require a valid yard.</p>
+          </section>
+
+          <section class="panel campaign-panel">
+            <div class="panel-heading"><h2>Playable order</h2><span id="campaign-dirty" class="state-pill" data-dirty="false">Order saved</span></div>
+            <ol id="campaign-list" class="campaign-list"></ol>
+            <div class="campaign-actions"><button id="campaign-add-button" type="button">Add saved yard</button><button id="campaign-save-button" class="primary-action" type="button">Save order</button></div>
+            <p id="campaign-status" class="status-line" data-kind="ok" role="status">Saving a file never includes it automatically.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="editor-footer">
+        <div class="save-cluster"><button id="save-button" data-edit-control class="save-button" type="button">Save draft file</button><span>Ctrl/⌘ S</span></div>
+        <p><kbd>Delete</kbd> remove · <kbd>Arrows</kbd> nudge · <kbd>Shift</kbd> + arrows move 20 · <kbd>Space</kbd> drag to pan · mouse wheel zooms</p>
+      </footer>
+    </main>
+    <script type="module" src="/src/editor/main.ts"></script>
+  </body>
+</html>

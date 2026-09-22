@@ -5,6 +5,7 @@ export class Plush {
   world: M.Composite;
   parts: PlushBody[];
   joints: M.Constraint[];
+  private jointAnchors: { a: M.Vector; b: M.Vector }[] = [];
   clock: number;
   body: PlushBody;
   head: PlushBody;
@@ -55,6 +56,7 @@ export class Plush {
         damping: 0.13,
       });
       this.joints.push(joint);
+      this.jointAnchors.push({ a: { ...pa }, b: { ...pb } });
     };
     attach(this.body, this.head, { x: 27, y: -12 }, { x: -11, y: 7 });
     attach(this.body, this.head, { x: 28, y: 6 }, { x: -10, y: 25 }, 0.28);
@@ -104,10 +106,22 @@ export class Plush {
       Body.setAngle(b, angle * facing);
       b.collisionFilter.mask = 0;
     }
+    this.joints.forEach((joint, i) => {
+      const anchor = this.jointAnchors[i];
+      joint.pointA = { x: anchor.a.x * facing, y: anchor.a.y };
+      joint.pointB = { x: anchor.b.x * facing, y: anchor.b.y };
+      // Pose resets every part; keep Matter's stored reference angles in sync.
+      const tracked = joint as M.Constraint & {
+        angleA: number;
+        angleB: number;
+      };
+      tracked.angleA = joint.bodyA?.angle ?? 0;
+      tracked.angleB = joint.bodyB?.angle ?? 0;
+    });
     this.facing = facing;
   }
   launch(velocity: M.Vector) {
-    this.facing = 1;
+    this.facing = velocity.x < 0 ? -1 : 1;
     for (const b of this.parts) {
       Body.setStatic(b, false);
       b.collisionFilter.mask = 0xffffffff;
@@ -275,4 +289,3 @@ export function drawPlush(
   for (const name of order)
     shape(plush.parts.find((b) => b.game.name === name)!);
 }
-

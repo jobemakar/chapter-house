@@ -8,6 +8,9 @@ import { collisionId, tagCollision, WorldElementFactory, type WorldElement, type
  * bounces longer. Reset the room or reload after editing these captured values.
  */
 export const CORD_TUNING = Object.freeze({ stiffness: 0.002, damping: 0.001 });
+/** Flat authoring props share default length and fixed thickness. */
+export const PLATFORM_WIDTH = 104;
+export const PLATFORM_HEIGHT = 20;
 export const PHYSICS_TUNING = Object.freeze({
   gravityY: 0.82, keyRadius: 21, keyRestitution: 0.44,
   keyFrictionAir: 0.01, keyDensity: 0.002, bumperRestitution: 1.16,
@@ -116,12 +119,29 @@ export class PhysicsRoom {
     this.anchors.set(definition.id, anchor); this.cords.set(definition.id, cord);
   }
   for (const ticket of room.tickets) this.tickets.set(ticket.id, tagCollision(Matter.Bodies.circle(ticket.position.x, ticket.position.y, 15, { isStatic: true, isSensor: true }), "ticket"));
-  room.props.forEach((prop, index) => this.props.set(`${prop.kind}-${index}`, prop.kind === "bumper" ? tagCollision(Matter.Bodies.circle(prop.position.x, prop.position.y, prop.radius, { isStatic: true, restitution: PHYSICS_TUNING.bumperRestitution }), "bumper") : tagCollision(Matter.Bodies.rectangle(prop.position.x, prop.position.y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true }), "air-zone")));
+  room.props.forEach((prop, index) => {
+    const { x, y } = prop.position;
+    const body = prop.kind === "bumper"
+      ? tagCollision(Matter.Bodies.circle(x, y, prop.radius, { isStatic: true, restitution: PHYSICS_TUNING.bumperRestitution }), "bumper")
+      : prop.kind === "platform" || prop.kind === "wall"
+        ? tagCollision(Matter.Bodies.rectangle(x, y, prop.length ?? PLATFORM_WIDTH, PLATFORM_HEIGHT, { isStatic: true, angle: prop.angle ?? 0, restitution: prop.kind === "wall" ? 0 : PHYSICS_TUNING.bumperRestitution }), prop.kind === "wall" ? "wall" : "bumper")
+        : tagCollision(Matter.Bodies.rectangle(x, y, prop.radius * 1.45, prop.radius * 0.75, { isStatic: true, isSensor: true, angle: prop.angle ?? 0 }), "air-zone");
+    this.props.set(`${prop.kind}-${index}`, body);
+  });
   Matter.Composite.add(engine.world, [key, goal, ...walls, ...this.anchors.values(), ...this.tickets.values(), ...this.props.values()]);
   for (const cord of this.cords.values()) cord.addTo(engine.world);
   this.elements = Object.freeze((room.elements ?? []).map((definition) => factory.create(definition)));
   for (const element of this.elements) element.create({ engine, key, onHazard: (reason) => this.hazardReasons.push(reason) });
-  this.collisionHandler = (event) => { for (const element of this.elements) element.handleCollision(event); };
+  this.collisionHandler = (event) => {
+    for (const pair of event.pairs) {
+      if (collisionId(pair.bodyA) === "wall" || collisionId(pair.bodyB) === "wall") {
+        // Matter recomputes max(body restitutions) each step. Lock only this
+        // wall contact to zero so even a bouncy key cannot rebound from it.
+        Object.defineProperty(pair, "restitution", { configurable: true, enumerable: true, get: () => 0, set: () => {} });
+      }
+    }
+    for (const element of this.elements) element.handleCollision(event);
+  };
   Matter.Events.on(engine, "collisionStart", this.collisionHandler);
   }
 
@@ -154,7 +174,11 @@ export function removeCord(world: KeyfallWorld, cordId: string, segmentIndex?: n
   return cord?.cut(world.engine.world, segmentIndex ?? Math.floor(cord.constraints.length / 2)) ?? false;
 }
 export function updateCordFragments(world: KeyfallWorld, deltaMs: number): void { for (const cord of world.cords.values()) cord.update(world.engine.world, deltaMs); }
-export function puff(world: KeyfallWorld, direction: Vec = { x: 1, y: -0.2 }): void { Matter.Body.applyForce(world.key, world.key.position, { x: direction.x * 0.09, y: direction.y * 0.09 }); }
+export function puff(world: KeyfallWorld, direction: Vec = { x: 1, y: -0.2 }, power = 1): void { Matter.Body.applyForce(world.key, world.key.position, { x: direction.x * 0.09 * power, y: direction.y * 0.09 * power }); }
+/** Rotate the legacy puff without changing its force magnitude or default direction. */
+export function bellowsDirection(angle = 0): Vec {
+  return { x: Math.cos(angle) + 0.2 * Math.sin(angle), y: Math.sin(angle) - 0.2 * Math.cos(angle) };
+}
 export function resetVelocity(world: KeyfallWorld): void { Matter.Body.setVelocity(world.key, { x: 0, y: 0 }); Matter.Body.setAngularVelocity(world.key, 0); }
 export function propFor(world: KeyfallWorld, prop: PropDefinition, index: number): Matter.Body | undefined { return world.props.get(`${prop.kind}-${index}`); }
 export { collisionId };

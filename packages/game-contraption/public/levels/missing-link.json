@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "level": {
+    "id": "missing-link",
+    "name": "02 · The Missing Link",
+    "tag": "A gap in the machine. One conveyor in your toolbox.",
+    "sources": [
+      {
+        "x": 135,
+        "y": 95,
+        "vx": 75
+      }
+    ],
+    "period": 0.6,
+    "bowl": {
+      "x": 885,
+      "y": 548
+    },
+    "initial": [
+      {
+        "id": "ramp-1",
+        "type": "ramp",
+        "x": 230,
+        "y": 210,
+        "angle": 0.24,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "spring-1",
+        "type": "spring",
+        "x": 598,
+        "y": 468,
+        "angle": 0.25,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "funnel-1",
+        "type": "funnel",
+        "x": 860,
+        "y": 350,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "fan-1",
+        "type": "fan",
+        "x": 910,
+        "y": 452,
+        "angle": -1.5707963267948966,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      }
+    ],
+    "spares": [
+      {
+        "id": "belt-1",
+        "type": "belt",
+        "x": 418,
+        "y": 305,
+        "angle": 0.1,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      }
+    ],
+    "legacy": {
+      "solution": [
+        {
+          "id": "ramp-1",
+          "type": "ramp",
+          "x": 230,
+          "y": 210,
+          "angle": 0.24,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "belt-1",
+          "type": "belt",
+          "x": 418,
+          "y": 305,
+          "angle": 0.1,
+          "power": 1,
+          "flip": 1,
+          "locked": false
+        },
+        {
+          "id": "spring-1",
+          "type": "spring",
+          "x": 598,
+          "y": 468,
+          "angle": 0.25,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "funnel-1",
+          "type": "funnel",
+          "x": 860,
+          "y": 350,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "fan-1",
+          "type": "fan",
+          "x": 910,
+          "y": 452,
+          "angle": -1.5707963267948966,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        }
+      ],
+      "hint": "Bridge the gap between the wooden ramp and trampoline with the conveyor."
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 8,
+  "yard": {
+    "id": "seesaw-orchard",
+    "name": "The Seesaw Orchard",
+    "subtitle": "Tap one end to roll the orchard over.",
+    "legacyIndex": 10,
+    "world": {
+      "width": 1200,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "box",
+        "x": 725,
+        "y": 564,
+        "w": 54,
+        "h": 72,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "plank",
+        "x": 725,
+        "y": 516,
+        "w": 330,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "bucket",
+        "x": 590,
+        "y": 475,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "target",
+        "x": 590,
+        "y": 403,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "bucket",
+        "x": 860,
+        "y": 475,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "target",
+        "x": 860,
+        "y": 403,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "box",
+        "x": 725,
+        "y": 456,
+        "w": 62,
+        "h": 72,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "target",
+        "x": 725,
+        "y": 398,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 600,
+        "y": 638,
+        "w": 1600,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": []
+  }
+}

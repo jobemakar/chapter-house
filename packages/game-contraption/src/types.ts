@@ -1,5 +1,14 @@
 export type PartType =
-  "ramp" | "belt" | "spring" | "fan" | "funnel" | "bumper" | "wall" | "switch";
+  | "ramp"
+  | "belt"
+  | "spring"
+  | "fan"
+  | "funnel"
+  | "bumper"
+  | "wall"
+  | "switch"
+  | "button"
+  | "lever";
 export interface Point {
   x: number;
   y: number;
@@ -15,6 +24,9 @@ export interface Part {
   locked?: boolean;
   targets?: string[];
   direction?: number;
+  targetId?: string;
+  mode?: "toggle" | "latch";
+  enabled?: boolean;
 }
 export interface Inlet extends Point {
   vx: number;
@@ -23,13 +35,14 @@ export interface Level {
   id: string;
   name: string;
   tag: string;
-  hint: string;
   sources: Inlet[];
   period: number;
   bowl: Point;
-  kit: Partial<Record<PartType, number>>;
-  solution: Part[];
   initial: Part[];
+  /** Each spare has stable identity and options, especially control bindings. */
+  spares: Part[];
+  /** Preserved old assists and directional switches; never required for new levels. */
+  legacy?: { solution: Part[]; hint: string };
 }
 export interface Kernel {
   id: number;

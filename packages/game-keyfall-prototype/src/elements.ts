@@ -4,6 +4,9 @@ import type { AirJetDefinition, Bounds, BubbleDefinition, CollisionId, Counterwe
 
 type TaggedPlugin = { keyfallCollisionId?: CollisionId };
 
+/** Net bubble acceleration after gravity: 1 = original lift, 0.1 = ten percent. */
+export const BUBBLE_TUNING = { accelerationScale: 0.1 } as const;
+
 export function tagCollision(body: Matter.Body, id: CollisionId): Matter.Body {
   (body.plugin as TaggedPlugin).keyfallCollisionId = id;
   body.label = id;
@@ -71,7 +74,10 @@ export class BubbleElement extends RuntimeElement implements WorldElement {
     if (this.popped) return;
     if (!this.captured && distance(this.runtime.key.position as Vec, this.definition.position) <= this.definition.captureRadius + 21) this.capture();
     if (!this.captured) return;
-    Matter.Body.applyForce(this.runtime.key, this.runtime.key.position, { x: 0, y: -this.definition.buoyancy * this.runtime.key.mass });
+    const gravity = this.runtime.engine.gravity;
+    const downwardAcceleration = gravity.y * gravity.scale;
+    const lift = downwardAcceleration + (this.definition.buoyancy - downwardAcceleration) * BUBBLE_TUNING.accelerationScale;
+    Matter.Body.applyForce(this.runtime.key, this.runtime.key.position, { x: 0, y: -lift * this.runtime.key.mass });
   }
 
   handleCollision(event: Matter.IEventCollision<Matter.Engine>): void {

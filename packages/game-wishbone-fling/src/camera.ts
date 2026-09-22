@@ -11,11 +11,16 @@ export class WishboneCamera {
   x = 600;
   y = 360;
   zoom = 1;
+  origin: ViewPoint = { x: 162, y: 478 };
   private manual = false;
   private lastMode = "ready";
   private launchZoom = false;
   private get minZoom() {
-    return Math.min(1, this.width / this.worldWidth);
+    return Math.min(
+      1,
+      this.width / this.worldWidth,
+      this.height / this.worldHeight,
+    );
   }
   toWorld(p: ViewPoint): ViewPoint {
     return {
@@ -29,7 +34,11 @@ export class WishboneCamera {
       y: (p.y - this.y) * this.zoom + this.height / 2,
     };
   }
-  setWorld(world: { width: number; height: number }) {
+  setWorld(
+    world: { width: number; height: number },
+    origin: ViewPoint = { x: 162, y: 478 },
+  ) {
+    this.origin = { ...origin };
     this.worldWidth = world.width;
     this.worldHeight = world.height;
     this.clamp();
@@ -65,14 +74,16 @@ export class WishboneCamera {
   home(detail = false) {
     this.launchZoom = false;
     this.zoom = detail ? Math.min(1.5, 1.8) : this.minZoom;
-    this.x = detail ? 162 : this.worldWidth / 2;
-    this.y = 390;
+    this.x = detail ? this.origin.x : this.worldWidth / 2;
+    this.y = detail ? this.origin.y : this.worldHeight / 2;
     this.manual = false;
     this.clamp();
   }
   launched() {
     // Preserve the overview on release; the render loop eases into flight detail.
-    this.launchZoom = this.worldWidth > this.width && this.zoom < 1;
+    this.launchZoom =
+      (this.worldWidth > this.width || this.worldHeight > this.height) &&
+      this.zoom < 1;
     this.manual = false;
     this.lastMode = "flight";
   }
@@ -98,16 +109,20 @@ export class WishboneCamera {
     // Returning always restores launch visibility; a manual look around lasts for this throw.
     if (mode !== this.lastMode && mode !== "flight") this.manual = false;
     this.lastMode = mode;
-    if (this.manual || (this.zoom === 1 && this.worldWidth <= this.width))
+    if (
+      this.manual ||
+      (this.zoom === 1 &&
+        this.worldWidth <= this.width &&
+        this.worldHeight <= this.height)
+    )
       return;
     const target =
       mode === "flight"
         ? { x: dog.x + 120 / this.zoom, y: dog.y }
-        : { x: 162, y: 390 };
+        : this.origin;
     const blend = reduced ? 1 : 1 - Math.exp(-Math.min(dt, 0.06) * 5);
     this.x += (target.x - this.x) * blend;
     this.y += (target.y - this.y) * blend;
     this.clamp();
   }
 }
-

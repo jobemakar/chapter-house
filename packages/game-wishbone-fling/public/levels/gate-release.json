@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 9,
+  "yard": {
+    "id": "gate-release",
+    "name": "The Garden Gate",
+    "subtitle": "Flip the paddle. Open the way.",
+    "legacyIndex": 4,
+    "world": {
+      "width": 1200,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "box",
+        "x": 870,
+        "y": 548,
+        "w": 64,
+        "h": 104,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "box",
+        "x": 1020,
+        "y": 548,
+        "w": 64,
+        "h": 104,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "plank",
+        "x": 945,
+        "y": 487,
+        "w": 245,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "target",
+        "x": 865,
+        "y": 458,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "target",
+        "x": 1025,
+        "y": 458,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "box",
+        "x": 945,
+        "y": 435,
+        "w": 64,
+        "h": 86,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "plank",
+        "x": 945,
+        "y": 383,
+        "w": 145,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "target",
+        "x": 910,
+        "y": 354,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 8,
+        "kind": "target",
+        "x": 980,
+        "y": 354,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 3,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 600,
+        "y": 638,
+        "w": 1600,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": [
+      {
+        "id": "lever-1",
+        "kind": "lever",
+        "x": 490,
+        "y": 485,
+        "targetId": "gate-1"
+      },
+      {
+        "id": "gate-1",
+        "kind": "gate",
+        "x": 770,
+        "y": 490
+      }
+    ]
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "level": {
+    "id": "switchboard-symphony",
+    "name": "06 · Switchboard Symphony",
+    "tag": "Catch each stream with a switch. Both belts reverse together.",
+    "sources": [
+      {
+        "x": 360,
+        "y": 95,
+        "vx": 0
+      },
+      {
+        "x": 740,
+        "y": 95,
+        "vx": 0
+      }
+    ],
+    "period": 3,
+    "bowl": {
+      "x": 550,
+      "y": 550
+    },
+    "initial": [
+      {
+        "id": "left-belt",
+        "type": "belt",
+        "x": 360,
+        "y": 270,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "right-belt",
+        "type": "belt",
+        "x": 740,
+        "y": 270,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "shared-funnel",
+        "type": "funnel",
+        "x": 550,
+        "y": 410,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "switch-right",
+        "type": "switch",
+        "x": 260,
+        "y": 175,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false,
+        "targets": [
+          "left-belt",
+          "right-belt"
+        ],
+        "direction": 1
+      },
+      {
+        "id": "switch-left",
+        "type": "switch",
+        "x": 840,
+        "y": 175,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false,
+        "targets": [
+          "left-belt",
+          "right-belt"
+        ],
+        "direction": -1
+      }
+    ],
+    "spares": [],
+    "legacy": {
+      "solution": [
+        {
+          "id": "left-belt",
+          "type": "belt",
+          "x": 360,
+          "y": 270,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "right-belt",
+          "type": "belt",
+          "x": 740,
+          "y": 270,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "shared-funnel",
+          "type": "funnel",
+          "x": 550,
+          "y": 410,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "switch-right",
+          "type": "switch",
+          "x": 360,
+          "y": 175,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": false,
+          "targets": [
+            "left-belt",
+            "right-belt"
+          ],
+          "direction": 1
+        },
+        {
+          "id": "switch-left",
+          "type": "switch",
+          "x": 740,
+          "y": 175,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": false,
+          "targets": [
+            "left-belt",
+            "right-belt"
+          ],
+          "direction": -1
+        }
+      ],
+      "hint": "Put the → switch under the left inlet and the ← switch under the right."
+    }
+  }
+}

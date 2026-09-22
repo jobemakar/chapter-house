@@ -1,3 +1,4 @@
+import { legacyYards } from "../packages/game-wishbone-fling/tests/legacy-catalog";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { WishboneGame } from "../packages/game-wishbone-fling/src/game";
@@ -109,7 +110,8 @@ class Harness {
   store = new Store();
   profile = new ProfileRepository(this.store);
   game: WishboneGame;
-  constructor() {
+  effects = { saves: 0, credits: 0, rewards: 0, notifications: 0 };
+  constructor(private readonly playtest = false) {
     const self = this;
     const globals: Record<string, unknown> = {
       window: this.window,
@@ -146,21 +148,34 @@ class Harness {
     this.game = this.mount();
   }
   mount() {
-    return new WishboneGame(this.host as unknown as HTMLElement, {
-      progress: loadWishboneProgress(
-        this.profile.gameProgress("wishbone-fling"),
-      ),
-      muted: this.profile.state.muted,
-      reducedMotion: this.profile.state.reduced,
-      activePlaySeconds: this.profile.state.activeSeconds,
-      exit: () => {},
-      notify: () => {},
-      saveProgress: (progress) =>
-        this.profile.saveGameProgress("wishbone-fling", progress),
-      creditActivePlay: (total) => this.profile.creditActivity(total),
-      awardReward: (rewardId) =>
-        this.profile.awardGameReward("wishbone-fling", rewardId),
-    });
+    return new WishboneGame(
+      this.host as unknown as HTMLElement,
+      {
+        progress: loadWishboneProgress(
+          this.profile.gameProgress("wishbone-fling"),
+        ),
+        muted: this.profile.state.muted,
+        reducedMotion: this.profile.state.reduced,
+        activePlaySeconds: this.profile.state.activeSeconds,
+        exit: () => {},
+        notify: () => {
+          this.effects.notifications++;
+        },
+        saveProgress: (progress) => {
+          this.effects.saves++;
+          this.profile.saveGameProgress("wishbone-fling", progress);
+        },
+        creditActivePlay: (total) => {
+          this.effects.credits++;
+          return this.profile.creditActivity(total);
+        },
+        awardReward: (rewardId) => {
+          this.effects.rewards++;
+          return this.profile.awardGameReward("wishbone-fling", rewardId);
+        },
+      },
+      { levels: legacyYards, playtest: this.playtest },
+    );
   }
   advance(count: number) {
     for (let i = 0; i < count; i++) {
@@ -357,6 +372,36 @@ test("zoomed launcher input uses inverse camera coordinates and wheel stays pres
     assert.equal(wheel.defaultPrevented, true);
     assert.ok(h.game.status().camera.zoom > c.zoom);
     assert.equal(h.game.status().throws, 1);
+  } finally {
+    h.finish();
+  }
+});
+
+test("editor production playtest suppresses every durable host effect through restart and disposal", () => {
+  const h = new Harness(true);
+  try {
+    const before = JSON.stringify(h.profile.state);
+    h.advance(2);
+    h.launch();
+    h.advance(180);
+    h.game.setPaused(true);
+    h.game.setMuted(true);
+    h.game.flushProgress();
+    h.game.dispose();
+    h.game = h.mount();
+    h.advance(2);
+    h.launch();
+    h.advance(180);
+    h.game.dispose();
+    assert.deepEqual(h.effects, {
+      saves: 0,
+      credits: 0,
+      rewards: 0,
+      notifications: 0,
+    });
+    assert.equal(JSON.stringify(h.profile.state), before);
+    assert.equal(h.frames.size, 0);
+    assert.equal(h.observers.size, 0);
   } finally {
     h.finish();
   }

@@ -1,1 +1,241 @@
-.veda-game,.veda-game *{box-sizing:border-box}.veda-game{min-height:100%;background:#172e29;color:#f6f0dc;font-family:"Segoe UI",system-ui,sans-serif}.veda-game button{font:inherit;cursor:pointer;color:inherit}.veda-game button:focus-visible,.veda-game .board:focus-visible{outline:3px solid #f0bd57;outline-offset:4px}.veda-game__shell{max-width:1140px;margin:auto;padding:30px 35px}.veda-game header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.veda-game .header-actions{display:flex;gap:8px}.veda-game .eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:#dcb968}.veda-game h1{font:800 37px/1.15 "Segoe UI",system-ui,sans-serif;letter-spacing:-1.4px;margin:10px 0 0}.veda-game h1 span{display:block;font:400 14px/1.4 "Segoe UI",system-ui,sans-serif;letter-spacing:0;color:#a9beb0;margin-top:9px}.veda-game header button{background:transparent;border:1px solid #456155;border-radius:30px;padding:10px 17px;font-size:13px}.veda-game button:hover:not(:disabled){filter:brightness(1.18)}.veda-game .layout{display:grid;grid-template-columns:minmax(0,1fr) 265px;gap:32px}.veda-game .play{background:#213d33;border:1px solid #42604b;border-radius:24px;padding:24px;box-shadow:0 25px 80px #0c1b1733}.veda-game .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.veda-game [data-veda=chapter]{font-size:11px;letter-spacing:2px;color:#a5bc90}.veda-game h2{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:6px 0;letter-spacing:-.7px}.veda-game .scores{display:flex;gap:13px;font-size:13px;color:#e9dcb8}.veda-game .scores span{background:#152e25;padding:9px 11px;border-radius:9px}.veda-game .board{position:relative;width:100%;max-width:560px;margin-inline:auto;aspect-ratio:9/7;background:#608d5c;border:7px solid #102b23;border-radius:15px;overflow:hidden;touch-action:none;box-shadow:0 5px 0 #10291f;isolation:isolate}.veda-game .tile{position:absolute;width:11.1112%;height:14.2858%;display:flex;align-items:center;justify-content:center;border-right:1px solid #36513f22;border-bottom:1px solid #36513f22}.veda-game .floor{background:#89a96b}.veda-game .floor.alt{background:#83a366}.veda-game .wall{background:#315c41;box-shadow:inset 0 5px 0 #537a50,inset 0 -6px 0 #234932;border:2px solid #284d36;border-radius:8px}.veda-game .target{color:#f5d77c;font-size:clamp(20px,3vw,42px);background:#667e47;box-shadow:inset 0 0 0 5px #bda458;border-radius:50%;width:65%;height:65%;display:grid;place-items:center}.veda-game .exit{background:#253f37}.veda-game .exit>span{font-size:clamp(20px,3vw,40px);filter:grayscale(1);opacity:.5}.veda-game .exit.open{background:#dfb960;box-shadow:inset 0 0 18px #ffeda9}.veda-game .exit.open>span{filter:none;opacity:1}.veda-game .peach{font-size:clamp(20px,3vw,35px);animation:veda-bob 2s ease-in-out infinite}.veda-game .sprite{position:absolute;width:11.1112%;height:14.2858%;display:grid;place-items:center;pointer-events:none;transition:left .12s ease,top .12s ease;font-size:clamp(30px,5.3vw,62px);z-index:4;filter:drop-shadow(0 5px 2px #152f3655)}.veda-game .crate{font-size:clamp(25px,4.3vw,49px);z-index:3}.veda-game .crate.parked{filter:drop-shadow(0 0 7px #ffe48a)}.veda-game .player{transform:scaleX(-1)}.veda-game .player.left{transform:scaleX(1)}.veda-game .player.selected{filter:drop-shadow(0 0 9px #fff4a3) drop-shadow(0 5px 2px #152f3655);animation:veda-select .8s ease-in-out infinite}.veda-game .tile.valid-move:after{content:"";width:27%;height:27%;border-radius:50%;background:#fff5a8;box-shadow:0 0 0 5px #fff5a866,0 0 16px #fff8b4;animation:veda-target .85s ease-in-out infinite}.veda-game .hint-arrow{position:absolute;inset:0;display:grid;place-items:center;color:white;text-shadow:0 2px 8px #000;font-size:48px;z-index:8;background:#fff3;border-radius:12px;pointer-events:none}.veda-game .message{min-height:43px;text-align:center;font-size:14px;color:#e4d3a5;line-height:1.6;margin:17px 0 10px}.veda-game .controls{display:flex;gap:10px;justify-content:center}.veda-game .controls button{background:#365445;border:1px solid #53715b;border-radius:10px;padding:10px 14px;font-size:13px}.veda-game button:disabled{opacity:.4;cursor:default}.veda-game kbd{font-size:10px;opacity:.5;margin-left:8px}.veda-game .dpad{text-align:center;margin-top:18px;display:none}.veda-game .dpad button{background:#42614d;border:1px solid #71926b;border-bottom-width:4px;border-radius:12px;font-size:22px;width:51px;height:43px;margin:3px;touch-action:manipulation}.veda-game .dpad button:active{background:#83935a;transform:translateY(2px)}.veda-game aside{padding:0}.veda-game .story{border-radius:20px;padding:24px;background:linear-gradient(#15392ac9,#15392aed),var(--sanctuary) center/cover}.veda-game .story h2{font-size:29px;line-height:1.25;margin:16px 0}.veda-game .story p{font-size:14px;line-height:1.7;color:#c7d2ba;margin:0}.veda-game .how{padding:15px 4px}.veda-game .how h3,.veda-game .journey h3{font-size:15px;margin:15px 0}.veda-game .how>p{font-size:13px;color:#b9cbb6}.veda-game .how>div{display:flex;gap:13px;align-items:center;margin:12px 0}.veda-game .how>div>span{font-size:26px;width:28px;flex-shrink:0}.veda-game .how p{font-size:13px;line-height:1.6;margin:0;color:#b9cbb6}.veda-game .legend-target{color:#e7c36c}.veda-game .journey{border-top:1px solid #3f5a48}.veda-game .journey button{border:1px solid #537358;border-radius:50%;height:36px;width:36px;margin:0 5px 0 0;background:transparent;font-size:12px}.veda-game .journey button.current{background:#e9bc63;color:#243d2e;border-color:#e9bc63}.veda-game .journey button.done{background:#58754e}.veda-game .note{font-size:11px;line-height:1.7;color:#7e9a86;margin-top:22px}.veda-game.is-paused .play:after{content:"Paused";position:absolute;inset:0;display:grid;place-items:center;background:#071f19cc;color:#f5efd9;font-size:28px;font-weight:700;z-index:20}.veda-game.is-paused .play{position:relative}.veda-game dialog{width:min(440px,90%);text-align:center;background:#f5efd9;color:#243e31;border:0;border-radius:24px;padding:35px;box-shadow:0 20px 90px #0008}.veda-game dialog::backdrop{background:#071f19bf;backdrop-filter:blur(5px)}.veda-game .win-icon{font-size:70px}.veda-game dialog .eyebrow{color:#8e7237}.veda-game dialog h2{font-size:30px;margin:15px 0}.veda-game dialog p{font-size:15px;line-height:1.8;color:#69705a}.veda-game dialog button{display:block;width:100%;border:0;background:transparent;padding:12px;border-radius:12px}.veda-game dialog .primary{background:#294e3b;color:#fff;margin-bottom:8px}.veda-game [data-veda=stay]{font-size:13px;color:#7a806a}@keyframes veda-bob{50%{transform:translateY(-4px)}}@keyframes veda-select{50%{filter:drop-shadow(0 0 15px #fff8b8) drop-shadow(0 5px 2px #152f3655)}}@keyframes veda-target{50%{transform:scale(1.23);opacity:.75}}@media(max-width:800px){.veda-game__shell{padding:20px 15px}.veda-game .layout{grid-template-columns:1fr}.veda-game .play{padding:15px}.veda-game header{gap:12px}.veda-game h1{font-size:29px}.veda-game .eyebrow{font-size:9px}.veda-game header button{font-size:11px;padding:9px;white-space:nowrap}.veda-game aside{display:grid;grid-template-columns:1fr 1fr;gap:20px}.veda-game .story{display:none}.veda-game .how{padding:0}.veda-game .journey{border-top:0}.veda-game .note{display:none}.veda-game .sprite{font-size:clamp(28px,8vw,60px)}.veda-game .crate{font-size:clamp(25px,7vw,49px)}.veda-game .topline h2{font-size:19px}.veda-game .scores{gap:5px;font-size:11px}.veda-game .scores span{padding:8px}.veda-game .controls button{padding:10px 11px}.veda-game kbd{display:none}.veda-game .dpad{display:block}}@media(prefers-reduced-motion:reduce){.veda-game *{animation:none!important;transition:none!important}}
+.veda-game,
+.veda-game * { box-sizing: border-box; }
+.veda-game {
+  container-type: size;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  height: 100%;
+  overflow: auto;
+  color: #f6f0dc;
+  background: radial-gradient(circle at 50% -20%, #2e5542, #172e29 68%);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+.veda-game.is-standalone { min-height: calc(100dvh - 16px); }
+.veda-game .veda-game__shell,
+.veda-game header,
+.veda-game header > div,
+.veda-game .layout,
+.veda-game .play,
+.veda-game aside,
+.veda-game .topline,
+.veda-game .controls,
+.veda-game .dpad { min-width: 0; max-width: 100%; }
+.veda-game button { color: inherit; font: inherit; cursor: pointer; touch-action: manipulation; }
+.veda-game button:focus-visible,
+.veda-game .board:focus-visible { outline: 3px solid #f0bd57; outline-offset: 4px; }
+.veda-game .veda-game__shell {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 1240px);
+  min-height: 0;
+  height: 100%;
+  margin: 0 auto;
+  padding: clamp(12px, 2.5cqw, 30px) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(10px, 2cqw, 22px);
+}
+.veda-game header { display: flex; justify-content: space-between; align-items: center; gap: 18px; min-height: 44px; }
+.veda-game .header-actions { display: flex; flex-wrap: wrap; gap: 8px; flex-shrink: 0; min-width: 0; max-width: 100%; }
+.veda-game .eyebrow { color: #dcb968; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.veda-game h1 { margin: 8px 0 0; font: 800 clamp(25px, 3.3cqw, 37px)/1.15 "Segoe UI", system-ui, sans-serif; letter-spacing: -1.4px; }
+.veda-game h1 span { display: block; margin-top: 7px; color: #a9beb0; font: 400 14px/1.4 "Segoe UI", system-ui, sans-serif; letter-spacing: 0; }
+.veda-game header button { min-width: 44px; min-height: 44px; padding: 10px 17px; border: 1px solid #638166; border-radius: 30px; background: #1f3b30aa; font-size: 13px; }
+.veda-game button:hover:not(:disabled) { filter: brightness(1.18); }
+.veda-game .layout { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.veda-game .play {
+  min-height: 0;
+  padding: clamp(10px, 2cqw, 24px);
+  border: 1px solid #42604b;
+  border-radius: 24px;
+  background: #213d33;
+  box-shadow: 0 25px 80px #0c1b1733;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 220px);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  column-gap: clamp(10px, 2cqw, 22px);
+  row-gap: 8px;
+  align-items: center;
+}
+.veda-game .topline { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-height: 50px; margin: 0; }
+.veda-game [data-veda="chapter"] { color: #a5bc90; font-size: 11px; letter-spacing: 2px; }
+.veda-game h2 { margin: 5px 0; font: 800 24px/1.2 "Segoe UI", system-ui, sans-serif; letter-spacing: -.7px; }
+.veda-game .scores { display: flex; gap: 5px; flex-shrink: 0; color: #e9dcb8; font-size: 12px; }
+.veda-game .scores span { padding: 8px 10px; border-radius: 9px; background: #152e25; white-space: nowrap; }
+.veda-game .board-stage { position: relative; grid-column: 1; grid-row: 1 / 5; min-width: 0; min-height: 0; align-self: stretch; display: grid; place-items: center; }
+.veda-game .board {
+  position: relative;
+  width: min(100%, 900px);
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 7;
+  margin: 0 auto;
+  border: 7px solid #102b23;
+  border-radius: 15px;
+  background: #608d5c;
+  overflow: hidden;
+  touch-action: none;
+  box-shadow: 0 5px 0 #10291f;
+  isolation: isolate;
+  container-type: inline-size;
+}
+.veda-game .tile { position: absolute; width: 11.1112%; height: 14.2858%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-right: 1px solid #36513f22; border-bottom: 1px solid #36513f22; }
+.veda-game .tile-art,
+.veda-game .sprite { background-repeat: no-repeat; background-position: 0 0; background-color: transparent; background-origin: border-box; background-clip: padding-box; }
+.veda-game .terrain { position: absolute; inset: 0; background-size: 100% 100%; opacity: .82; }
+.veda-game[data-assets="loading"] .tile-art { visibility: hidden; }
+.veda-game[data-assets="loading"] .board,
+.veda-game[data-assets="loading"] [data-direction] { pointer-events: none; }
+.veda-game[data-assets="loading"] .board { cursor: progress; }
+.veda-game[data-assets="fallback"] .switch { inset: 18%; border: 4px solid #f2d36f; border-radius: 50%; background: #a77842; box-shadow: 0 0 0 3px #59482c; }
+.veda-game[data-assets="fallback"] .gate { inset: 8%; border: 5px solid #e4c77b; border-radius: 10px; background: #4a644c; }
+.veda-game[data-assets="fallback"] .peach { inset: 24%; border: 3px solid #ffd19a; border-radius: 50% 50% 58% 42%; background: #df8657; }
+.veda-game[data-assets="fallback"] .crate { inset: 12%; border: 3px solid #c28d52; border-radius: 8px; background: #9c673e; }
+.veda-game[data-assets="fallback"] .player { inset: 8%; border: 3px solid #f0d6a0; border-radius: 46% 46% 38% 38%; background: #b88656; }
+.veda-game .floor { background: #789961; }
+.veda-game .wall { border: 2px solid #284d36; border-radius: 8px; background: #315c41; box-shadow: inset 0 5px 0 #537a50, inset 0 -6px 0 #234932; }
+.veda-game .fixed-wall { position: absolute; inset: 5%; z-index: 2; background-position: 50% 100%; background-size: 300% 300%; filter: drop-shadow(0 3px 2px #152f3655); }
+.veda-game .switch { position: absolute; inset: 14%; z-index: 1; background-position: 100% 0; background-size: 300% 300%; }
+.veda-game .gate { position: absolute; inset: 0; z-index: 2; background-position: 100% 50%; background-size: 300% 300%; filter: drop-shadow(0 4px 2px #152f3655); }
+.veda-game .gate[data-gate-state="open"] { background-position: 0 100%; filter: drop-shadow(0 0 8px #ffe48a); }
+.veda-game .peach { position: absolute; inset: 12%; z-index: 3; background-position: 50% 50%; background-size: 300% 300%; animation: veda-bob 2s ease-in-out infinite; }
+.veda-game .exit { background: #253f37; }
+.veda-game .exit.open { background: #dfb960; box-shadow: inset 0 0 18px #ffeda9; }
+.veda-game .sprite { position: absolute; width: 11.1112%; height: 14.2858%; display: block; z-index: 4; pointer-events: none; background-color: transparent; filter: drop-shadow(0 5px 2px #152f3655); transition: left .12s ease, top .12s ease; }
+.veda-game .crate { z-index: 3; background-position: 0 0; background-size: 300% 300%; }
+.veda-game .crate.parked { filter: drop-shadow(0 0 7px #ffe48a); }
+.veda-game .player { z-index: 5; background-position: 0 66.6667%; background-size: 400% 400%; }
+.veda-game .player.selected { animation: veda-select .8s ease-in-out infinite; filter: drop-shadow(0 0 9px #fff4a3) drop-shadow(0 5px 2px #152f3655); }
+.veda-game .tile.valid-move::after { z-index: 8; width: 27%; height: 27%; border-radius: 50%; background: #fff5a8; box-shadow: 0 0 0 5px #fff5a866, 0 0 16px #fff8b4; content: ""; animation: veda-target .85s ease-in-out infinite; }
+.veda-game .hint-arrow { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; border-radius: 12px; color: #fff; background: #fff3; font-size: 48px; pointer-events: none; text-shadow: 0 2px 8px #000; }
+.veda-game .hint-arrow::after { content: "→"; }
+.veda-game .hint-arrow[data-direction="up"]::after { content: "↑"; }
+.veda-game .hint-arrow[data-direction="down"]::after { content: "↓"; }
+.veda-game .hint-arrow[data-direction="left"]::after { content: "←"; }
+.veda-game .message { grid-column: 2; grid-row: 2; align-self: start; min-height: 43px; max-height: 5.2em; margin: 0; overflow: hidden; color: #e4d3a5; font-size: 13px; line-height: 1.4; text-align: left; }
+.veda-game .controls { grid-column: 2; grid-row: 3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: center; gap: 6px; }
+.veda-game .controls button { min-height: 44px; padding: 10px 14px; border: 1px solid #53715b; border-radius: 10px; background: #365445; font-size: 13px; }
+.veda-game button:disabled { opacity: .4; cursor: default; }
+.veda-game kbd { margin-left: 7px; opacity: .5; font-size: 10px; }
+.veda-game .dpad { display: none; margin-top: 6px; text-align: center; }
+.veda-game .dpad button { width: 51px; height: 47px; min-height: 44px; margin: 3px; border: 1px solid #71926b; border-bottom-width: 4px; border-radius: 12px; background: #42614d; font-size: 22px; }
+.veda-game .dpad button:active { transform: translateY(2px); background: #83935a; }
+.veda-game aside { display: none; }
+.veda-game .journey,
+.veda-game .story,
+.veda-game .how,
+.veda-game .note,
+.veda-game [data-veda="levels"] { min-width: 0; max-width: 100%; }
+.veda-game .story { min-height: 105px; padding: 20px; border-radius: 20px; background: linear-gradient(#15392ac9, #15392aed), var(--sanctuary) center/cover; }
+.veda-game .story h2 { margin: 14px 0; font-size: 25px; line-height: 1.2; }
+.veda-game .story p { margin: 0; color: #c7d2ba; font-size: 13px; line-height: 1.6; }
+.veda-game .how { padding: 0 4px; }
+.veda-game .how h3,
+.veda-game .journey h3 { margin: 5px 0 12px; font-size: 15px; }
+.veda-game .how > p { margin: 0 0 7px; color: #b9cbb6; font-size: 13px; }
+.veda-game .how > div { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.veda-game .how > div > p { margin: 0; color: #b9cbb6; font-size: 12px; line-height: 1.45; }
+.veda-game .legend-art { width: 36px; height: 36px; flex-shrink: 0; background: url("./assets/veda-object-atlas.png") 0 0/300% 300% no-repeat; }
+.veda-game .legend-switch { background-position: 100% 0; }
+.veda-game .legend-peach { background-position: 50% 50%; }
+.veda-game .journey { grid-column: 2; grid-row: 4; min-width: 0; padding-top: 5px; border-top: 1px solid #3f5a48; }
+.veda-game .journey button { width: 44px; height: 44px; min-height: 44px; margin: 0 5px 5px 0; border: 1px solid #537358; border-radius: 50%; background: transparent; font-size: 12px; }
+.veda-game .journey button.current { border-color: #e9bc63; color: #243d2e; background: #e9bc63; }
+.veda-game .journey button.done { background: #58754e; }
+.veda-game .note { margin: 0; color: #7e9a86; font-size: 11px; line-height: 1.5; }
+.veda-game dialog { width: min(440px, calc(100% - 28px)); padding: 28px; border: 0; border-radius: 24px; color: #243e31; background: #f5efd9; box-shadow: 0 20px 90px #0008; text-align: center; }
+.veda-game dialog::backdrop { background: #071f19bf; backdrop-filter: blur(5px); }
+.veda-game dialog h2 { margin: 15px 0; font-size: 30px; }
+.veda-game dialog p { color: #69705a; font-size: 15px; line-height: 1.7; }
+.veda-game dialog button { width: 100%; min-height: 44px; padding: 12px; border: 0; border-radius: 12px; background: transparent; }
+.veda-game dialog .primary { margin-bottom: 8px; color: #fff; background: #294e3b; }
+.veda-game dialog[data-completion="visible"] { border: 3px solid #edc766; }
+.veda-game .completion-burst { width: 92px; height: 18px; margin: 0 auto -3px; border-radius: 50%; background: radial-gradient(circle, #ffeaa0 0 8%, transparent 10% 100%), radial-gradient(circle at 15% 50%, #e3a94f 0 7%, transparent 9%), radial-gradient(circle at 85% 50%, #e3a94f 0 7%, transparent 9%); opacity: 0; }
+.veda-game dialog[data-completion="visible"] .completion-burst { animation: veda-completion-burst .9s ease-out forwards; opacity: 1; }
+.veda-game .win-icon { width: 84px; height: 84px; margin: 0 auto; background: url("./assets/veda-idle-atlas.png") 0 66.6667%/100% 400% no-repeat; }
+.veda-game.is-complete .win-icon { filter: drop-shadow(0 0 14px #edc766); animation: veda-complete .9s ease-in-out 2 alternate forwards; }
+.veda-game .veda-vfx { position: absolute; z-index: 12; display: block; border-radius: 50%; opacity: 0; pointer-events: none; animation: veda-vfx-pop .54s ease-out forwards; }
+.veda-game .veda-vfx::after { position: absolute; inset: 20%; border: 2px solid currentColor; border-radius: 50%; content: ""; }
+.veda-game .veda-vfx--walk { color: #e7dba2; background: #e7dba233; }
+.veda-game .veda-vfx--push { color: #f2b96b; background: #f2b96b33; }
+.veda-game .veda-vfx--switch,
+.veda-game .veda-vfx--gate-open { color: #ffe68e; background: #ffe68e44; }
+.veda-game .veda-vfx--peach { color: #f6a56e; background: #f6a56e55; }
+.veda-game .veda-vfx--blocked { color: #c8bda4; background: #b1a68d22; }
+.veda-game .veda-vfx--gate-locked { color: #b9c4a4; background: #83917944; }
+.veda-game .veda-vfx--hint { color: #fff5a8; background: #fff5a822; }
+.veda-game .veda-vfx--completion { color: #fff2a4; background: #ffe7a955; }
+.veda-game [data-reduced-motion="true"] .veda-vfx,
+.veda-game [data-reduced-motion="true"] .peach,
+.veda-game [data-reduced-motion="true"] .player.selected,
+.veda-game [data-reduced-motion="true"] .valid-move::after { animation: none; }
+.veda-game [data-reduced-motion="true"] .veda-vfx { opacity: .65; }
+.veda-game[data-reduced-motion="true"] .win-icon,
+.veda-game[data-reduced-motion="true"] .sprite,
+.veda-game[data-reduced-motion="true"] dialog * { animation: none !important; transition: none !important; }
+.veda-game.is-paused .board::after { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; color: #f5efd9; background: #071f19cc; content: "Paused"; font-size: 28px; font-weight: 700; }
+.veda-game.is-paused .veda-vfx { display: none; }
+@keyframes veda-bob { 50% { transform: translateY(-4px); } }
+@keyframes veda-select { 50% { filter: drop-shadow(0 0 15px #fff8b8) drop-shadow(0 5px 2px #152f3655); } }
+@keyframes veda-target { 50% { opacity: .75; transform: scale(1.23); } }
+@keyframes veda-vfx-pop { 0% { opacity: 0; transform: scale(.25); } 22% { opacity: .9; transform: scale(1.08); } 100% { opacity: 0; transform: scale(1.8); } }
+@keyframes veda-complete { to { transform: scale(1.06); } }
+@keyframes veda-completion-burst { 0% { opacity: 0; transform: scale(.6); } 24% { opacity: 1; transform: scale(1.1); } 100% { opacity: .2; transform: scale(1); } }
+@media (max-width: 800px) {
+  .veda-game .veda-game__shell { padding-top: 14px; }
+  .veda-game header { flex-wrap: wrap; gap: 10px; }
+  .veda-game h1 { font-size: 29px; }
+  .veda-game .eyebrow { font-size: 9px; }
+  .veda-game header button { padding: 9px; font-size: 11px; white-space: nowrap; }
+  .veda-game .play { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(110px, 1fr) auto auto auto auto; gap: 0; padding: 10px; }
+  .veda-game .layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .veda-game .topline { grid-column: 1; grid-row: 1; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .veda-game .board-stage { grid-column: 1; grid-row: 2; }
+  .veda-game .message { grid-column: 1; grid-row: 3; align-self: auto; min-height: 43px; max-height: none; margin: 8px 0 6px; text-align: center; }
+  .veda-game .controls { grid-column: 1; grid-row: 4; display: flex; flex-wrap: wrap; gap: 8px; }
+  .veda-game .dpad { grid-column: 1; grid-row: 5; }
+  .veda-game .journey { grid-column: 1; grid-row: 6; border-top: 0; }
+  .veda-game .topline h2 { font-size: 19px; }
+  .veda-game .scores { gap: 5px; font-size: 11px; }
+  .veda-game .scores span { padding: 8px; }
+  .veda-game kbd { display: none; }
+  .veda-game .dpad { display: block; }
+}
+@media (max-width: 520px) {
+  .veda-game h1 { font-size: 23px; }
+  .veda-game h1 span { display: none; }
+  .veda-game .scores { flex-direction: row; gap: 3px; }
+  .veda-game .topline { align-items: center; min-height: 36px; margin-bottom: 4px; }
+  .veda-game .topline h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .veda-game .message { min-height: 36px; max-height: 54px; overflow: hidden; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.3; }
+  .veda-game .journey { display: flex; align-items: center; gap: 2px; height: 44px; min-height: 44px; overflow: visible; padding: 0; }
+  .veda-game .journey h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .veda-game .journey [data-veda="levels"] { display: flex; flex: 1 1 auto; flex-wrap: nowrap; justify-content: flex-start; gap: 2px; min-width: 0; overflow: visible; }
+  .veda-game .journey button { flex: 0 0 44px; margin: 0; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .veda-game .veda-game__shell { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-height: 0; padding: 4px; }
+  .veda-game header { position: absolute; inset: 4px 4px auto; z-index: 30; min-height: 0; pointer-events: none; }
+  .veda-game header > div:first-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .veda-game .header-actions { position: absolute; left: 4px; top: 4px; width: 80px; display: grid; grid-template-columns: 1fr; gap: 4px; margin: 0; pointer-events: auto; }
+  .veda-game .header-actions button { width: 80px; min-width: 0; padding: 3px; font-size: 11px; line-height: 1.1; white-space: normal; }
+  .veda-game .layout { --veda-rail-width: 170px; grid-template-columns: minmax(0, 1fr) var(--veda-rail-width); grid-template-rows: minmax(36px, 1fr) auto auto auto; gap: 6px; height: 100%; }
+  .veda-game .play { display: contents; }
+  .veda-game .topline { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .veda-game .board-stage { grid-column: 1; grid-row: 1 / 5; align-self: center; width: 100%; height: 100%; }
+  .veda-game .board { width: 100%; max-width: 100%; }
+  .veda-game .message { position: static; grid-column: 2; grid-row: 1; align-self: center; display: -webkit-box; min-height: 32px; max-height: 36px; margin: 0; overflow: hidden; padding: 2px 5px; color: #fff4cc; background: transparent; font-size: 11px; line-height: 1.25; text-align: center; -webkit-box-orient: vertical; -webkit-line-clamp: 2; pointer-events: none; white-space: normal; }
+  .veda-game .controls { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; gap: 4px; }
+  .veda-game .controls button { min-width: 0; padding-inline: 3px; }
+  .veda-game .dpad { grid-column: 2; grid-row: 3; display: block; margin: 0; }
+  .veda-game .dpad button { width: 44px; height: 44px; margin: 1px; }
+  .veda-game .journey { grid-column: 2; grid-row: 4; display: block; width: auto; height: auto; min-height: 0; min-width: 0; overflow: hidden; border-top: 0; padding: 0; }
+  .veda-game .journey h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .veda-game .journey [data-veda="levels"] { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+  .veda-game .journey button { margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .veda-game * { animation: none !important; transition: none !important; }
+}

@@ -1,3 +1,4 @@
+import "../packages/game-wishbone-fling/tests/legacy-catalog";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import M from "matter-js";

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "level": {
+    "id": "special-delivery",
+    "name": "01 · Special Delivery",
+    "tag": "Move the conveyor underneath the inlet.",
+    "sources": [
+      {
+        "x": 400,
+        "y": 100,
+        "vx": 0
+      }
+    ],
+    "period": 0.6,
+    "bowl": {
+      "x": 745,
+      "y": 550
+    },
+    "initial": [
+      {
+        "id": "delivery-belt",
+        "type": "belt",
+        "x": 640,
+        "y": 300,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      }
+    ],
+    "spares": [],
+    "legacy": {
+      "solution": [
+        {
+          "id": "delivery-belt",
+          "type": "belt",
+          "x": 470,
+          "y": 300,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": false
+        }
+      ],
+      "hint": "Move the conveyor below the inlet, then watch where corn leaves its right end."
+    }
+  }
+}

@@ -1,2 +1,38 @@
-import {ContraptionGame,loadContraptionProgress,type ContraptionProgress} from "./index";import {CONTRAPTION_SAVE_KEY,LEGACY_SAVE_KEY} from "./progress";import type {GameHostServices} from "@chapter-house/game-host";
-const key=CONTRAPTION_SAVE_KEY;let stored:ContraptionProgress;try{const v2=localStorage.getItem(key);stored=loadContraptionProgress(JSON.parse(v2??localStorage.getItem(LEGACY_SAVE_KEY)??"null"));if(!v2&&matchMedia("(prefers-reduced-motion: reduce)").matches)stored.slow=true}catch{stored=loadContraptionProgress(null)}const host:GameHostServices<ContraptionProgress>={progress:stored,muted:stored.mute,reducedMotion:matchMedia("(prefers-reduced-motion: reduce)").matches,activePlaySeconds:0,exit:()=>location.hash="exit",notify:m=>console.info(m),saveProgress:p=>localStorage.setItem(key,JSON.stringify(p)),creditActivePlay:t=>Math.floor(t),awardReward:()=>true};new ContraptionGame(document.getElementById("contraption-root")!,host);
+import {
+  createContraptionSession,
+  loadLevelCatalog,
+  loadContraptionProgress,
+  type ContraptionProgress,
+} from "./index";
+import { CONTRAPTION_SAVE_KEY, LEGACY_SAVE_KEY } from "./progress";
+import type { GameHostServices } from "@chapter-house/game-host";
+const key = CONTRAPTION_SAVE_KEY;
+let stored: ContraptionProgress;
+try {
+  const v2 = localStorage.getItem(key);
+  stored = loadContraptionProgress(
+    JSON.parse(v2 ?? localStorage.getItem(LEGACY_SAVE_KEY) ?? "null"),
+  );
+  if (!v2 && matchMedia("(prefers-reduced-motion: reduce)").matches)
+    stored.slow = true;
+} catch {
+  stored = loadContraptionProgress(null);
+}
+const host: GameHostServices<ContraptionProgress> = {
+  progress: stored,
+  muted: stored.mute,
+  reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+  activePlaySeconds: 0,
+  exit: () => (location.hash = "exit"),
+  notify: (m) => console.info(m),
+  saveProgress: (p) => localStorage.setItem(key, JSON.stringify(p)),
+  creditActivePlay: (t) => Math.floor(t),
+  awardReward: () => true,
+};
+void loadLevelCatalog(new URL("./levels/", document.baseURI)).then((catalog) =>
+  createContraptionSession(
+    document.getElementById("contraption-root")!,
+    host,
+    catalog,
+  ),
+);

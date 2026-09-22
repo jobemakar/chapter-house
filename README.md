@@ -20,6 +20,17 @@ Package/source/save/reward details and verification are in the
 [repeatable recipe](docs/game-package-migration.md). Accounts, Firebase and
 live visits remain later work. No publication is implied by this local work.
 
+## Veda painted-diorama migration — 2026-09-22
+
+Veda's Great Escape is locally at package revision 1.1.0. The migration keeps
+the five authored 9×7 puzzles, `veda-great-escape.v1` save key, progress
+version 1, reward IDs and active-play accounting while replacing the emoji study
+with package-owned painted sprites, authored directional frames, bounded board
+feedback and gesture-gated semantic audio. The [concept provenance](docs/concepts/vedas-great-escape/asset-provenance.md)
+and [verification receipt](docs/veda-painted-diorama-verification.md) record
+the source prompts, hashes, exact checks, browser evidence and unverified
+physical/listening boundary. This revision is local only; no Site was updated.
+
 ## Public demo
 
 The current committed build is published at

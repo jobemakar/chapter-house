@@ -84,6 +84,24 @@ source snapshot and hashes remain in the provenance records. Sanctuary Seasons
 is now a superseded proposal, preserved in dated historical documents rather
 than represented as a second game.
 
+## Veda painted-diorama migration — 2026-09-22
+
+The canonical Veda package advanced from 1.0.0 to 1.1.0 for a local visual
+migration. The five 9×7 puzzle maps, `veda-great-escape.v1` save key, progress
+version 1, reward IDs, thresholds, solver and active-play accounting are stable.
+Package-owned painted terrain/object atlases, authored up/right/down/left
+walk/idle/push frames, bounded interaction effects, responsive board-first CSS
+and semantic gesture-gated audio are now the shared standalone and integrated
+implementation. See [asset provenance](concepts/vedas-great-escape/asset-provenance.md)
+and the [verification receipt](veda-painted-diorama-verification.md).
+
+The local package checks and root checks passed. Standalone browser smoke reached
+the complete first-level push/switch/gate/completion loop and recovery controls;
+the integrated browser host stopped at its documented WebGL-required fallback,
+so integrated content-box fit was verified through the package's faithful 9:7
+layout contracts rather than claimed as a real WebGL launch. No publication or
+save migration occurred.
+
 ## Legacy repository consolidation — 2026-09-19
 
 After all ten packages were integrated and verified, the ten former top-level

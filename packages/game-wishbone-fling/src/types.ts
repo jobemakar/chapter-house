@@ -7,6 +7,9 @@ export interface PowerState {
   autoGust: boolean;
 }
 export interface PieceDefinition {
+  /** Stable within a level; legacy levels retain their original array indices. */
+  id?: number;
+  angle?: number;
   kind: string;
   x: number;
   y: number;
@@ -20,6 +23,18 @@ export interface YardDefinition {
   name: string;
   subtitle: string;
   pieces: PieceDefinition[];
+  launcher?: { x: number; y: number };
+  terrain?: {
+    id: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    angle: number;
+  }[];
+  revision?: string;
+  legacyIndex?: number;
+  deviceInstances?: DeviceDefinition[];
   mechanisms?: ("lever" | "bellows" | "magnet")[];
   devices?: {
     lever?: { x: number; y: number };
@@ -30,6 +45,15 @@ export interface YardDefinition {
   };
   /** Authored world dimensions. Old yards omit this and retain the classic field. */
   world?: { width: number; height?: number };
+}
+export interface DeviceDefinition {
+  id: string;
+  kind: "lever" | "gate" | "bellows" | "button" | "field";
+  x: number;
+  y: number;
+  angle?: number;
+  targetId?: string;
+  r?: number;
 }
 export interface PieceMetadata extends PieceDefinition {
   id: number;
@@ -52,6 +76,9 @@ export interface PlushBody extends Matter.Body {
   game: PlushMetadata;
 }
 export interface Checkpoint {
+  revision?: string;
+  removed?: number[];
+  devices?: Record<string, { open?: boolean; polarity?: number }>;
   rescued: number[];
   pieces: { id: number; x: number; y: number; angle: number }[];
   gadgets?: {
@@ -90,4 +117,3 @@ declare module "matter-js" {
     game?: { kind: string };
   }
 }
-

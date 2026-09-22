@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "level": {
+    "id": "little-breeze",
+    "name": "04 · A Little Breeze",
+    "tag": "Use the breeze to carry corn sideways.",
+    "sources": [
+      {
+        "x": 500,
+        "y": 95,
+        "vx": 0
+      }
+    ],
+    "period": 0.6,
+    "bowl": {
+      "x": 790,
+      "y": 550
+    },
+    "initial": [
+      {
+        "id": "breeze",
+        "type": "fan",
+        "x": 700,
+        "y": 160,
+        "angle": -1.5707963267948966,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      },
+      {
+        "id": "catcher",
+        "type": "funnel",
+        "x": 790,
+        "y": 415,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      }
+    ],
+    "spares": [],
+    "legacy": {
+      "solution": [
+        {
+          "id": "breeze",
+          "type": "fan",
+          "x": 320,
+          "y": 160,
+          "angle": -0.2617993877991494,
+          "power": 1,
+          "flip": 1,
+          "locked": false
+        },
+        {
+          "id": "catcher",
+          "type": "funnel",
+          "x": 790,
+          "y": 415,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        }
+      ],
+      "hint": "Place the fan up and left of the stream."
+    }
+  }
+}

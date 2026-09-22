@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "level": {
+    "id": "meet-in-the-middle",
+    "name": "05 · Meet in the Middle",
+    "tag": "Two inlets. One bucket. Find the meeting point.",
+    "sources": [
+      {
+        "x": 360,
+        "y": 100,
+        "vx": 0
+      },
+      {
+        "x": 740,
+        "y": 100,
+        "vx": 0
+      }
+    ],
+    "period": 1.2,
+    "bowl": {
+      "x": 550,
+      "y": 550
+    },
+    "initial": [
+      {
+        "id": "left-belt",
+        "type": "belt",
+        "x": 360,
+        "y": 240,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "right-belt",
+        "type": "belt",
+        "x": 740,
+        "y": 240,
+        "angle": 0,
+        "power": 1,
+        "flip": -1,
+        "locked": true
+      },
+      {
+        "id": "meeting-funnel",
+        "type": "funnel",
+        "x": 720,
+        "y": 380,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      }
+    ],
+    "spares": [],
+    "legacy": {
+      "solution": [
+        {
+          "id": "left-belt",
+          "type": "belt",
+          "x": 360,
+          "y": 240,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "right-belt",
+          "type": "belt",
+          "x": 740,
+          "y": 240,
+          "angle": 0,
+          "power": 1,
+          "flip": -1,
+          "locked": true
+        },
+        {
+          "id": "meeting-funnel",
+          "type": "funnel",
+          "x": 550,
+          "y": 380,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": false
+        }
+      ],
+      "hint": "Center the funnel beneath both conveyor ends."
+    }
+  }
+}

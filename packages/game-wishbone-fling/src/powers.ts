@@ -1,7 +1,15 @@
 import M from "matter-js";
 import { FloppyYard } from "./floppy-yard";
+import type { YardOptions } from "./yard";
 import { record, count } from "./validation";
-import type { PowerId, PowerState, Checkpoint, PieceBody } from "./types";
+import type {
+  PowerId,
+  PowerState,
+  Checkpoint,
+  PieceBody,
+  YardDefinition,
+  DeviceDefinition,
+} from "./types";
 export const definitions: {
   id: PowerId;
   name: string;
@@ -56,115 +64,236 @@ export function loadPowers(raw?: unknown): PowerState {
     autoGust: data.autoGust === true,
   };
 }
+export interface RuntimeDevice {
+  definition: DeviceDefinition;
+  body: M.Body;
+  open: boolean;
+  lift: number;
+  polarity: number;
+  activatedAt: number;
+  gustUntil: number;
+}
+/** Each device owns its state; controls address stable IDs, never array positions. */
 export class PowerYard extends FloppyYard {
   powers: PowerState;
-  gateOpen: boolean;
-  gateLift: number;
-  polarity: number;
-  switchAt: number;
-  bellowsAt: number;
-  gustUntil: number;
-  field: { x: number; y: number; r: number };
-  lever: M.Body;
-  button: M.Body;
-  bellows: M.Body;
-  gate: M.Body;
-  gadgets: M.Body[];
+  instances: RuntimeDevice[] = [];
+  gadgets: M.Body[] = [];
   private legacyGadgets: Checkpoint["gadgets"];
+  private first(kind: DeviceDefinition["kind"]) {
+    return this.instances.find((d) => d.definition.kind === kind);
+  }
+  get lever() {
+    return this.first("lever")!.body;
+  }
+  get button() {
+    return this.first("button")!.body;
+  }
+  get bellows() {
+    return this.first("bellows")!.body;
+  }
+  get gate() {
+    return this.first("gate")!.body;
+  }
+  get field() {
+    const d = this.first("field")?.definition;
+    return { x: d?.x ?? 970, y: d?.y ?? 415, r: d?.r ?? 165 };
+  }
+  get gateOpen() {
+    return this.first("gate")?.open ?? false;
+  }
+  set gateOpen(v: boolean) {
+    const d = this.first("gate");
+    if (d) d.open = v;
+  }
+  get gateLift() {
+    return this.first("gate")?.lift ?? 0;
+  }
+  get polarity() {
+    return this.first("field")?.polarity ?? 0;
+  }
+  set polarity(v: number) {
+    const d = this.first("field");
+    if (d) d.polarity = v;
+  }
+  get bellowsAt() {
+    return this.first("bellows")?.activatedAt ?? -10;
+  }
+  get gustUntil() {
+    return this.first("bellows")?.gustUntil ?? 0;
+  }
+  set gustUntil(v: number) {
+    const d = this.first("bellows");
+    if (d) d.gustUntil = v;
+  }
   hasMechanism(kind: "lever" | "magnet" | "bellows") {
-    return this.layout.mechanisms?.includes(kind) ?? true;
+    return this.instances.some(
+      (d) => d.definition.kind === (kind === "magnet" ? "field" : kind),
+    );
   }
   constructor(
-    index = 0,
+    index: number | YardDefinition = 0,
     checkpoint: Checkpoint | null = null,
     powers = loadPowers(),
+    options: YardOptions = {},
   ) {
-    super(index, checkpoint);
+    super(index, null, { settle: false });
     this.powers = powers;
-    this.maxFlightAge = this.world.width > 1200 ? 8.2 : 4.2;
-    const old = checkpoint?.gadgets;
-    this.legacyGadgets = old;
-    this.gateOpen = !!old?.gateOpen;
-    this.gateLift = this.gateOpen ? 1 : 0;
-    this.polarity =
-      old?.polarity === -1 || old?.polarity === 1 ? old.polarity : 0;
-    this.switchAt = -10;
-    this.bellowsAt = -10;
-    this.gustUntil = 0;
-    this.field = this.layout.devices?.field ?? { x: 970, y: 415, r: 165 };
-    const sensor = (
-      kind: string,
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-    ) => {
-      const b = M.Bodies.rectangle(x, y, w, h, {
-        isStatic: true,
-        isSensor: true,
-      });
-      b.game = { kind };
-      return b;
-    };
-    const positions = this.layout.devices;
-    const lever = positions?.lever ?? { x: 420, y: 485 };
-    const button = positions?.button ?? { x: 850, y: 566 };
-    const bellows = positions?.bellows ?? { x: 470, y: 580 };
-    const gate = positions?.gate ?? { x: 1100, y: 490 };
-    this.lever = sensor("lever", lever.x, lever.y, 36, 74);
-    this.button = sensor("polarity", button.x, button.y, 48, 50);
-    this.bellows = sensor("bellows", bellows.x, bellows.y, 68, 32);
-    this.gate = M.Bodies.rectangle(gate.x, gate.y, 18, 220, { isStatic: true });
-    this.gate.game = { kind: "gate" };
-    if (this.gateOpen)
-      M.Body.setPosition(this.gate, { x: gate.x, y: gate.y - 250 });
-    this.gadgets = [
-      ...(this.hasMechanism("lever") ? [this.lever, this.gate] : []),
-      ...(this.hasMechanism("magnet") ? [this.button] : []),
-      ...(this.hasMechanism("bellows") ? [this.bellows] : []),
+    this.maxFlightAge =
+      this.world.width > 1200 || this.world.height > 720 ? 8.2 : 4.2;
+    const validCheckpoint =
+      checkpoint &&
+      (!this.layout.revision || checkpoint.revision === this.layout.revision)
+        ? checkpoint
+        : null;
+    this.legacyGadgets = checkpoint?.gadgets;
+    const legacy = this.layout.devices;
+    const has = (kind: "lever" | "magnet" | "bellows") =>
+      this.layout.mechanisms?.includes(kind) ?? true;
+    const definitions: DeviceDefinition[] = this.layout.deviceInstances ?? [
+      ...(has("lever")
+        ? [
+            {
+              id: "lever",
+              kind: "lever" as const,
+              ...(legacy?.lever ?? { x: 420, y: 485 }),
+              targetId: "gate",
+            },
+            {
+              id: "gate",
+              kind: "gate" as const,
+              ...(legacy?.gate ?? { x: 1100, y: 490 }),
+            },
+          ]
+        : []),
+      ...(has("magnet")
+        ? [
+            {
+              id: "button",
+              kind: "button" as const,
+              ...(legacy?.button ?? { x: 850, y: 566 }),
+              targetId: "field",
+            },
+            {
+              id: "field",
+              kind: "field" as const,
+              ...(legacy?.field ?? { x: 970, y: 415, r: 165 }),
+            },
+          ]
+        : []),
+      ...(has("bellows")
+        ? [
+            {
+              id: "bellows",
+              kind: "bellows" as const,
+              ...(legacy?.bellows ?? { x: 470, y: 580 }),
+            },
+          ]
+        : []),
     ];
+    for (const definition of definitions) {
+      const size =
+        definition.kind === "gate"
+          ? [18, 220]
+          : definition.kind === "lever"
+            ? [36, 74]
+            : definition.kind === "button"
+              ? [48, 50]
+              : definition.kind === "field"
+                ? [1, 1]
+                : [68, 32];
+      const body = M.Bodies.rectangle(
+        definition.x,
+        definition.y,
+        size[0],
+        size[1],
+        {
+          isStatic: true,
+          isSensor: definition.kind !== "gate",
+          angle: definition.angle ?? 0,
+        },
+      );
+      body.game = { kind: definition.kind };
+      const saved = validCheckpoint?.devices?.[definition.id];
+      const open =
+        saved?.open ??
+        (definition.kind === "gate" && !!validCheckpoint?.gadgets?.gateOpen);
+      const polarity =
+        saved?.polarity ??
+        (definition.kind === "field"
+          ? (validCheckpoint?.gadgets?.polarity ?? 0)
+          : 0);
+      const instance = {
+        definition,
+        body,
+        open,
+        lift: open ? 1 : 0,
+        polarity,
+        activatedAt: -10,
+        gustUntil: 0,
+      };
+      this.instances.push(instance);
+      if (definition.kind !== "field") this.gadgets.push(body);
+      if (open)
+        M.Body.setPosition(body, {
+          x: definition.x + Math.sin(definition.angle ?? 0) * 250,
+          y: definition.y - Math.cos(definition.angle ?? 0) * 250,
+        });
+    }
     M.Composite.add(this.engine.world, this.gadgets);
+    if (options.settle !== false) this.settle();
+    this.restore(validCheckpoint);
     M.Events.on(this.engine, "collisionStart", (event) => {
-      for (const pair of event.pairs) {
+      for (const pair of event.pairs)
         for (const [device, other] of [
           [pair.bodyA, pair.bodyB],
           [pair.bodyB, pair.bodyA],
         ]) {
           if (other.isStatic || other.isSensor || other.speed < 0.7) continue;
-          if (device === this.lever && !this.gateOpen) {
-            this.gateOpen = true;
+          const instance = this.instances.find((d) => d.body === device);
+          if (!instance) continue;
+          const d = instance.definition,
+            target = this.instances.find((i) => i.definition.id === d.targetId);
+          if (
+            d.kind === "lever" &&
+            target?.definition.kind === "gate" &&
+            !target.open
+          ) {
+            target.open = true;
             this.events.push({
               type: "mechanism",
               text: "The gate is open!",
-              x: lever.x,
-              y: lever.y - 45,
+              x: d.x,
+              y: d.y - 45,
             });
           }
-          if (device === this.button && this.time - this.switchAt > 0.8) {
-            this.switchAt = this.time;
-            this.polarity = this.polarity === 1 ? -1 : 1;
+          if (
+            d.kind === "button" &&
+            target?.definition.kind === "field" &&
+            this.time - instance.activatedAt > 0.8
+          ) {
+            instance.activatedAt = this.time;
+            target.polarity = target.polarity === 1 ? -1 : 1;
             this.events.push({
               type: "mechanism",
               text:
-                this.polarity === 1
+                target.polarity === 1
                   ? "Magnet pulls inward"
                   : "Magnet pushes outward",
-              x: button.x,
-              y: button.y - 46,
+              x: d.x,
+              y: d.y - 46,
             });
           }
-          if (device === this.bellows && this.time - this.bellowsAt > 2) {
-            this.bellowsAt = this.time;
-            this.gustUntil = this.time + 0.8;
+          if (d.kind === "bellows" && this.time - instance.activatedAt > 2) {
+            instance.activatedAt = this.time;
+            instance.gustUntil = this.time + 0.8;
             this.events.push({
               type: "mechanism",
               text: "Boing!",
-              x: bellows.x,
-              y: bellows.y - 60,
+              x: d.x,
+              y: d.y - 60,
             });
           }
         }
-      }
     });
   }
   boost(dx: number, dy: number) {
@@ -185,47 +314,58 @@ export class PowerYard extends FloppyYard {
     });
   }
   tick(dt: number) {
-    if (!this.gadgets) return super.tick(dt);
-    if (this.gateOpen && this.gateLift < 1) {
-      this.gateLift = Math.min(1, this.gateLift + dt * 2.5);
-      M.Body.setPosition(this.gate, {
-        x: this.layout.devices?.gate?.x ?? 1100,
-        y: (this.layout.devices?.gate?.y ?? 490) - this.gateLift * 250,
-      });
+    if (!this.instances) return super.tick(dt);
+    for (const instance of this.instances) {
+      const d = instance.definition;
+      if (d.kind === "gate" && instance.open && instance.lift < 1) {
+        instance.lift = Math.min(1, instance.lift + dt * 2.5);
+        M.Body.setPosition(instance.body, {
+          x: d.x + Math.sin(d.angle ?? 0) * instance.lift * 250,
+          y: d.y - Math.cos(d.angle ?? 0) * instance.lift * 250,
+        });
+      }
+      if (d.kind === "field" && instance.polarity)
+        for (const b of this.pieces) {
+          if (
+            b.game.kind === "bucket" &&
+            !this.removed.has(b.game.id) &&
+            Math.hypot(b.position.x - d.x, b.position.y - d.y) < (d.r ?? 165)
+          )
+            this.pull(b, d.x, d.y, 0.0017 * instance.polarity);
+        }
+      if (d.kind === "bellows" && this.time < instance.gustUntil) {
+        const angle = d.angle ?? 0,
+          cos = Math.cos(angle),
+          sin = Math.sin(angle);
+        for (const b of [
+          ...this.pieces.filter(
+            (p) => !this.rescued.has(p.game.id) && !this.removed.has(p.game.id),
+          ),
+          ...(this.mode === "flight" ? this.plush.parts : []),
+        ]) {
+          const dx = b.position.x - d.x,
+            dy = b.position.y - d.y;
+          const across = dx * cos + dy * sin,
+            along = -dx * sin + dy * cos;
+          if (Math.abs(across) < 85 && along > -260 && along < 30)
+            M.Body.applyForce(b, b.position, {
+              x: (0.00035 * cos + 0.004 * sin) * b.mass,
+              y: (0.00035 * sin - 0.004 * cos) * b.mass,
+            });
+        }
+      }
     }
-    if (this.hasMechanism("magnet") && this.polarity)
-      for (const b of this.pieces) {
-        if (b.game?.kind !== "bucket") continue;
-        if (
-          Math.hypot(b.position.x - this.field.x, b.position.y - this.field.y) <
-          this.field.r
-        )
-          this.pull(b, this.field.x, this.field.y, 0.0017 * this.polarity);
-      }
-    if (this.time < this.gustUntil)
-      for (const b of [
-        ...this.pieces,
-        ...(this.mode === "flight" ? this.plush.parts : []),
-      ]) {
-        if (
-          !(
-            "id" in (b.game || {}) && this.rescued.has((b as PieceBody).game.id)
-          ) &&
-          Math.abs(b.position.x - this.bellows.position.x) < 85 &&
-          b.position.y > 320 &&
-          b.position.y < 610
-        )
-          M.Body.applyForce(b, b.position, {
-            x: 0.00035 * b.mass,
-            y: -0.004 * b.mass,
-          });
-      }
     super.tick(dt);
   }
-  checkpoint() {
+  checkpoint(): Checkpoint {
     const data = super.checkpoint();
-    // Preserve old gadget fields exactly enough for archival saves. They have no
-    // active pickup/reward meaning in the current game.
+    data.devices = Object.fromEntries(
+      this.instances
+        .filter(
+          (i) => i.definition.kind === "gate" || i.definition.kind === "field",
+        )
+        .map((i) => [i.definition.id, { open: i.open, polarity: i.polarity }]),
+    );
     data.gadgets = {
       claimed: this.legacyGadgets?.claimed ?? [],
       clearPaid: this.legacyGadgets?.clearPaid ?? false,
@@ -236,4 +376,3 @@ export class PowerYard extends FloppyYard {
     return data;
   }
 }
-

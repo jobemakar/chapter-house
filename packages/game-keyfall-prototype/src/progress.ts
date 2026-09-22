@@ -1,4 +1,5 @@
 import type { KeyfallProgress } from "./types";
+export type { KeyfallProgress } from "./types";
 export const SAVE_KEY = "chapter-house:keyfall-prototype:v1";
 export function emptyProgress(): KeyfallProgress { return { version: 1, completed: [], bestTickets: {}, muted: false, reducedMotion: false }; }
 export function normalizeProgress(value: unknown): KeyfallProgress {
@@ -9,3 +10,8 @@ export function normalizeProgress(value: unknown): KeyfallProgress {
 }
 export function recordCompletion(progress: KeyfallProgress, roomId: string, tickets: number): KeyfallProgress { const completed = progress.completed.includes(roomId) ? progress.completed : [...progress.completed, roomId]; return { ...progress, completed, bestTickets: { ...progress.bestTickets, [roomId]: Math.max(progress.bestTickets[roomId] ?? 0, Math.min(3, Math.max(0, Math.floor(tickets)))) } }; }
 export function completedRoom(progress: KeyfallProgress, roomId: string): boolean { return progress.completed.includes(roomId); }
+
+/** Host-facing names keep Keyfall aligned with the other integrated packages. */
+export const loadKeyfallProgress = normalizeProgress;
+export const freshKeyfallProgress = emptyProgress;
+export const KEYFALL_SAVE_KEY = SAVE_KEY;

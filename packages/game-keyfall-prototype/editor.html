@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#163d43" />
+    <meta name="description" content="Local file editor for Keyfall rooms." />
+    <title>Keyfall Room Workshop</title>
+  </head>
+  <body>
+    <main id="keyfall-editor" class="editor-app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Keyfall · Local author tool</p>
+          <h1>Keyfall Room Workshop</h1>
+        </div>
+        <div class="document-heading" aria-live="polite">
+          <strong id="document-title">Untitled Room</strong>
+          <code id="document-id">new-keyfall-room</code>
+          <span id="dirty-marker" class="state-pill" data-dirty="true">Unsaved</span>
+          <span id="playtested-marker" class="state-pill quiet">Not playtested</span>
+        </div>
+      </header>
+
+      <section class="library-bar" aria-labelledby="library-heading">
+        <div class="library-open">
+          <label id="library-heading" for="level-select">Saved level file</label>
+          <select id="level-select" data-edit-control aria-describedby="library-status"></select>
+        </div>
+        <div class="library-new">
+          <label for="new-level-id">New file name</label>
+          <input id="new-level-id" data-edit-control value="new-keyfall-room" inputmode="url" spellcheck="false" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
+          <button id="blank-button" data-edit-control type="button">Blank</button>
+          <button id="copy-button" data-edit-control type="button">Copy current</button>
+        </div>
+        <p id="library-status" class="status-line" data-kind="working" role="status">Loading local level files…</p>
+      </section>
+
+      <div class="editor-workspace">
+        <aside class="left-rail">
+          <section id="metadata-panel" class="panel">
+            <div class="panel-heading"><h2>Room details</h2><span class="step-number">01</span></div>
+            <label for="room-title">Title</label>
+            <input id="room-title" data-edit-control maxlength="80" />
+            <label for="room-instruction">Player instruction</label>
+            <textarea id="room-instruction" data-edit-control rows="3" maxlength="240"></textarea>
+          </section>
+
+          <section id="palette-panel" class="panel">
+            <div class="panel-heading"><h2>Object palette</h2><span class="step-number">02</span></div>
+            <p class="hint">Add at center, then drag into place.</p>
+            <div class="palette-grid">
+              <button data-edit-control data-palette="key" type="button"><span>🔑</span>Key</button>
+              <button data-edit-control data-palette="goal" type="button"><span>◉</span>Goal</button>
+              <button data-edit-control data-palette="anchor" type="button"><span>⌁</span>Anchor</button>
+              <button data-edit-control data-palette="ticket" type="button"><span>▰</span>Ticket</button>
+              <button data-edit-control data-palette="bumper" type="button"><span>●</span>Bumper</button>
+              <button data-edit-control data-palette="platform" type="button"><span>━</span>Platform</button>
+              <button data-edit-control data-palette="wall" type="button"><span>┃</span>Wall</button>
+              <button data-edit-control data-palette="bellows" type="button" title="Tap to push. Rotation sets airflow: 0° right, 90° down."><span>✣</span>Fan</button>
+              <button data-edit-control data-palette="bubble" type="button"><span>○</span>Bubble</button>
+              <button data-edit-control data-palette="air-jet" type="button"><span>≋</span>Air jet</button>
+              <button data-edit-control data-palette="counterweight" type="button"><span>⬡</span>Weight</button>
+              <button data-edit-control data-palette="reset-hazard" type="button"><span>▥</span>Hazard</button>
+            </div>
+          </section>
+        </aside>
+
+        <section class="stage-column" aria-label="Room canvas">
+          <div class="stage-toolbar">
+            <div class="toolbar-group">
+              <button id="undo-button" data-edit-control type="button">Undo</button>
+              <button id="redo-button" data-edit-control type="button">Redo</button>
+            </div>
+            <label class="toggle"><input id="snap-toggle" data-edit-control type="checkbox" checked /> Snap 10 px</label>
+            <button id="play-button" class="primary-action" type="button">▶ Play</button>
+          </div>
+
+          <div id="edit-stage" class="canvas-frame">
+            <canvas id="editor-canvas" width="560" height="800" aria-label="Keyfall room preview"></canvas>
+            <canvas id="editor-overlay" width="560" height="800" tabindex="0" aria-label="Editable Keyfall objects. Click or drag an object to select and move it."></canvas>
+          </div>
+
+          <div id="play-stage" class="canvas-frame playtest-frame" aria-label="Live room playtest">
+            <canvas id="playtest-canvas" width="560" height="800"></canvas>
+          </div>
+          <div class="playtest-controls">
+            <span id="playtest-status" role="status">Ready · 0 tickets</span>
+            <button id="play-pause-button" type="button">Pause</button>
+            <button id="play-reset-button" type="button">Reset</button>
+            <button id="play-stop-button" class="stop-button" type="button">Stop</button>
+          </div>
+
+          <p id="editor-status" class="status-line stage-status" data-kind="ok" role="status">Select an object to edit it, or add one from the palette.</p>
+        </section>
+
+        <aside class="right-rail">
+          <section id="inspector-panel" class="panel">
+            <div class="panel-heading"><h2>Inspector</h2><span class="step-number">03</span></div>
+            <p id="inspector-empty" class="empty-copy">Select an object on the board.</p>
+            <div id="inspector-fields" hidden>
+              <h3 id="selected-label">Object</h3>
+              <div class="coordinate-grid">
+                <label for="object-x">X <input id="object-x" data-edit-control type="number" min="0" max="560" step="1" /></label>
+                <label for="object-y">Y <input id="object-y" data-edit-control type="number" min="0" max="800" step="1" /></label>
+              </div>
+              <label id="rotation-row" for="object-rotation">Rotation ° <input id="object-rotation" data-edit-control type="number" step="1" /></label>
+              <label id="power-row" for="object-power" hidden>Power × <input id="object-power" data-edit-control type="number" min="0.25" max="3" step="0.25" /></label>
+              <label id="length-row" for="object-length" hidden>Length px <input id="object-length" data-edit-control type="number" min="40" max="280" step="1" /></label>
+              <div class="button-row">
+                <button id="duplicate-button" data-edit-control type="button">Duplicate</button>
+                <button id="delete-button" data-edit-control class="danger-quiet" type="button">Delete</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel validation-panel">
+            <div class="panel-heading"><h2>Room check</h2><span id="issue-summary" class="validation-summary" data-valid="false">Checking…</span></div>
+            <ul id="issue-list" class="issue-list"></ul>
+            <p class="hint">Drafts can be saved with issues. Play and campaign inclusion need a valid room.</p>
+          </section>
+
+          <section class="panel campaign-panel">
+            <div class="panel-heading"><h2>Campaign order</h2><span id="campaign-dirty" class="state-pill" data-dirty="false">Order saved</span></div>
+            <ol id="campaign-list" class="campaign-list"></ol>
+            <div class="campaign-actions">
+              <button id="campaign-add-button" data-edit-control type="button">Add saved room</button>
+              <button id="campaign-clear-button" type="button">Clear list</button>
+              <button id="campaign-save-button" class="primary-action" type="button">Save order</button>
+            </div>
+            <p id="campaign-status" class="status-line" data-kind="ok" role="status">Saving a level does not add it here.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="editor-footer">
+        <div class="save-cluster">
+          <button id="save-button" data-edit-control class="save-button" type="button">Save level file</button>
+          <span>Ctrl/⌘ S</span>
+        </div>
+        <p><kbd>Delete</kbd> remove · <kbd>Arrow keys</kbd> nudge · <kbd>Shift</kbd> + arrows move 10 px · <kbd>Q</kbd>/<kbd>E</kbd> rotate 15° · <kbd>Ctrl/⌘ D</kbd> duplicate · <kbd>Ctrl/⌘ Z</kbd> undo</p>
+      </footer>
+    </main>
+    <script type="module" src="/src/editor/main.ts"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { H, kit, levels, W } from "./levels";
+import { H, kit, W } from "./levels";
 import type { ContraptionEngine } from "./engine";
 import type { Part, PartType, Point } from "./types";
 
@@ -174,6 +174,7 @@ export class ContraptionRenderer {
     ghost: Part | null,
     trails: boolean,
     hint: Part[] | null = null,
+    showConnections = false,
   ): void {
     const c = canvas.getContext("2d")!;
     c.save();
@@ -192,28 +193,32 @@ export class ContraptionRenderer {
           );
           c.restore();
         }
-    for (const controller of engine.parts.filter(
-      (part) => part.type === "switch",
-    ))
-      for (const id of controller.targets ?? []) {
-        const target = engine.parts.find((part) => part.id === id);
-        if (target) {
-          c.save();
-          c.globalAlpha = 0.55;
-          c.setLineDash([5, 6]);
-          line(
-            c,
-            [
-              [controller.x, controller.y + 20],
-              [controller.x, controller.y + 48],
-              [target.x, target.y - 20],
-            ],
-            (controller.direction || 1) > 0 ? "#b66b48" : "#548896",
-            2,
-          );
-          c.restore();
+    // Wiring is authoring guidance; players discover device bindings.
+    if (showConnections)
+      for (const controller of engine.parts.filter((part) =>
+        ["switch", "button", "lever"].includes(part.type),
+      ))
+        for (const id of controller.targetId
+          ? [controller.targetId]
+          : (controller.targets ?? [])) {
+          const target = engine.parts.find((part) => part.id === id);
+          if (target) {
+            c.save();
+            c.globalAlpha = 0.55;
+            c.setLineDash([5, 6]);
+            line(
+              c,
+              [
+                [controller.x, controller.y + 20],
+                [controller.x, controller.y + 48],
+                [target.x, target.y - 20],
+              ],
+              (controller.direction || 1) > 0 ? "#b66b48" : "#548896",
+              2,
+            );
+            c.restore();
+          }
         }
-      }
     if (hint)
       for (const part of hint.filter((part) => !part.locked)) {
         c.save();
@@ -230,7 +235,13 @@ export class ContraptionRenderer {
       );
       this.device(
         c,
-        part.type === "belt" ? { ...part, flip: engine.direction(part) } : part,
+        part.type === "belt"
+          ? { ...part, flip: engine.direction(part) }
+          : part.type === "fan"
+            ? { ...part, enabled: engine.fanEnabled(part) }
+            : part.type === "button" || part.type === "lever"
+              ? { ...part, enabled: engine.controlStates[part.id] ?? false }
+              : part,
         engine.time,
         part.id === selected,
         effect?.life ?? 0,
@@ -312,7 +323,7 @@ export class ContraptionRenderer {
     c: CanvasRenderingContext2D,
     engine: ContraptionEngine,
   ): void {
-    const level = levels[engine.board],
+    const level = engine.level,
       palette = ["#f7e9b9", "#dce9dc", "#e2dfee"],
       ink = ["#446477", "#487b79", "#6e7199"][engine.board % 3];
     c.fillStyle = palette[engine.board % 3];
@@ -326,6 +337,8 @@ export class ContraptionRenderer {
       for (let y = 25; y < H - 50; y += 30)
         oval(c, x, y, 1.6, 1.6, "#375b6b1b", null);
     level.sources.forEach((source, index) => {
+      c.save();
+      c.translate(0, source.y - 96);
       line(
         c,
         [
@@ -353,15 +366,16 @@ export class ContraptionRenderer {
       label(c, "POP-O-MATIC", source.x - 30, 32, 10);
       label(c, "freshly ridiculous", source.x - 30, 47, 8);
       for (let n = 0; n < 5; n++) kernel(c, source.x - 65 + n * 16, 7, 8, n);
-      arrow(c, source.x + 43, source.y - 10, 0.9, 27, "#af8050");
+      arrow(c, source.x + 43, 86, 0.9, 27, "#af8050");
       label(
         c,
         level.sources.length > 1 ? `INLET ${index + 1}` : "START HERE",
         source.x + 92,
-        source.y - 21,
+        75,
         10,
         "#8b7850",
       );
+      c.restore();
     });
     const bowl = level.bowl;
     polygon(
@@ -455,6 +469,39 @@ export class ContraptionRenderer {
         );
       screw(c, -100, 0);
       screw(c, 100, 0);
+    }
+    if (part.type === "button") {
+      box(c, -29, -19, 58, 39, "#b98a5e");
+      oval(
+        c,
+        0,
+        -13,
+        23,
+        12,
+        part.enabled ? "#a8c895" : flash ? "#f9d777" : "#e59c6d",
+      );
+      label(c, part.enabled ? "SET" : "POP", 0, -10, 9);
+    }
+    if (part.type === "lever") {
+      box(c, -27, 12, 54, 20, "#6fa7ac");
+      line(
+        c,
+        [
+          [0, 18],
+          [part.enabled ? 16 : -16, -18],
+        ],
+        INK,
+        7,
+      );
+      oval(
+        c,
+        part.enabled ? 16 : -16,
+        -18,
+        11,
+        11,
+        part.enabled ? "#a8c895" : "#f0cc6e",
+      );
+      label(c, part.enabled ? "SET" : "TAP", 0, 47, 9);
     }
     if (part.type === "switch") {
       box(c, -29, -19, 58, 39, "#b98a5e");
@@ -567,7 +614,7 @@ export class ContraptionRenderer {
     }
     if (part.type === "fan") {
       c.save();
-      c.globalAlpha = 0.2;
+      c.globalAlpha = part.enabled === false ? 0 : 0.2;
       for (let index = -2; index <= 2; index++)
         arrow(
           c,
@@ -584,12 +631,15 @@ export class ContraptionRenderer {
       c.scale(0.58, 1);
       for (let index = 0; index < 3; index++) {
         c.save();
-        c.rotate(time * 9 + (index * Math.PI * 2) / 3);
+        c.rotate(
+          (part.enabled === false ? 0 : time * 9) + (index * Math.PI * 2) / 3,
+        );
         oval(c, 0, -15, 10, 20, "#608ba0", INK, 2);
         c.restore();
       }
       c.restore();
       oval(c, 0, 0, 6, 8, "#f5cf71", INK, 2);
+      label(c, part.enabled === false ? "OFF" : "ON", -10, 53, 10);
     }
     if (part.type === "bumper") {
       const radius = 34 + flash * 7;
@@ -612,7 +662,18 @@ export class ContraptionRenderer {
         8,
       );
       c.restore();
-      label(c, "⚓ BOLTED", 0, size.h / 2 + 30, 9, "#365f70");
+      // Slotted metal bolts make the mounting visible without relying on color.
+      for (const x of [-size.w / 2 - 5, size.w / 2 + 5]) {
+        for (const y of [-size.h / 2 - 5, size.h / 2 + 5]) {
+          oval(c, x, y, 6, 6, "#d5dfe0", "#365663", 2);
+          c.beginPath();
+          c.moveTo(x - 3, y + 3);
+          c.lineTo(x + 3, y - 3);
+          c.strokeStyle = "#365663";
+          c.lineWidth = 2;
+          c.stroke();
+        }
+      }
     } else {
       c.save();
       c.setLineDash([4, 4]);
@@ -627,7 +688,11 @@ export class ContraptionRenderer {
         7,
       );
       c.restore();
-      label(c, "⠿ DRAG", 0, size.h / 2 + 28, 8, "#a95842");
+      const gripY = size.h / 2 + 13;
+      box(c, -15, gripY - 5, 30, 13, "#ffe4ad", "#a95842", 4);
+      for (const x of [-7, 0, 7])
+        for (const y of [gripY - 1, gripY + 4])
+          oval(c, x, y, 1.5, 1.5, "#a95842", null);
     }
     c.restore();
   }

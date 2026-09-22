@@ -5,7 +5,7 @@ import {
   clamp,
   clone,
   kit,
-  levels,
+  inventory,
   normalizeLayout,
   part,
   STEP,
@@ -15,8 +15,9 @@ import {
   loadContraptionProgress,
   type ContraptionProgress,
 } from "./progress";
+import { CatalogProgress } from "./catalog-progress";
 import { ContraptionRenderer } from "./renderer";
-import type { Part, PartType, Point } from "./types";
+import type { Part, PartType, Point, Level } from "./types";
 class ActiveClock {
   private now = 0;
   private action = -Infinity;
@@ -44,7 +45,9 @@ const deviceText: Record<PartType, string> = {
   fan: "The breeze pushes corn along blue arrows.",
   funnel: "Gather kernels into the spout.",
   bumper: "A springy reward bumper.",
-  switch: "Corn changes both wired belt directions.",
+  switch: "Legacy corn switch controls its wired belts.",
+  button: "Popcorn presses this button. Each button controls one device.",
+  lever: "Tap to operate; drag to move. Each lever controls one device.",
   wall: "Bolted in place. Corn collides with both sides.",
 };
 /** One shared, canvas-first campaign instance. It owns no profile or application navigation state. */
@@ -72,7 +75,8 @@ export class ContraptionGame implements GameSession {
     before: Part[];
     moved: boolean;
   } | null = null;
-  private histories: Part[][][] = levels.map(() => []);
+  private histories: Part[][][];
+  private board = 0;
   private toastTimer = 0;
   private saveTimer = 0;
   private imageUrl: string | null = null;
@@ -81,11 +85,12 @@ export class ContraptionGame implements GameSession {
   constructor(
     private host: HTMLElement,
     private services: GameHostServices<ContraptionProgress>,
+    private levels: Level[] = [],
   ) {
+    if (!levels.length) throw new Error("No playable Contraption levels");
+    this.histories = levels.map(() => []);
     this.progress = loadContraptionProgress(services.progress);
-    this.progress.layouts = levels.map((_, i) =>
-      normalizeLayout(i, this.progress.layouts[i] ?? levels[i].initial),
-    );
+    this.board = CatalogProgress.prepare(this.progress, levels);
     this.audio = new ContraptionAudio(services.muted || this.progress.mute);
     this.activity = new ActiveClock(services.activePlaySeconds);
     this.engine = this.makeEngine();
@@ -126,14 +131,15 @@ export class ContraptionGame implements GameSession {
     return this.host.querySelector(s) as T;
   }
   private engineLevel() {
-    return levels[this.progress.board];
+    return this.levels[this.board];
   }
   private makeEngine() {
     const e = new ContraptionEngine(
-      this.progress.board,
-      clone(this.progress.layouts[this.progress.board]),
+      this.engineLevel(),
+      clone(this.progress.layoutsById[this.engineLevel().id]),
     );
-    e.cleared = this.progress.cleared.includes(this.progress.board);
+    e.cleared = this.progress.clearedIds.includes(this.engineLevel().id);
+    e.board = this.board;
     return e;
   }
   private chosen() {
@@ -141,11 +147,9 @@ export class ContraptionGame implements GameSession {
   }
   private budget(type: PartType) {
     const l = this.engineLevel();
-    return (
-      l.kit[type] ??
-      l.solution.filter((p) => !p.locked && p.type === type).length
-    );
+    return inventory(l).filter((p) => p.type === type).length;
   }
+
   private remaining(type: PartType) {
     return (
       this.budget(type) -
@@ -157,11 +161,13 @@ export class ContraptionGame implements GameSession {
       p = this.chosen();
     this.q("[data-u=name]").textContent = l.name;
     this.q("[data-u=tag]").textContent = l.tag;
+    this.q<HTMLButtonElement>("[data-a=hint]").hidden = !l.legacy;
+    this.q<HTMLButtonElement>("[data-a=solution]").hidden = !l.legacy;
     this.q("[data-u=delivered]").textContent = String(this.progress.delivered);
     this.q("[data-u=clears]").textContent =
-      `${this.progress.cleared.length} / ${levels.length} cleared`;
-    this.q("[data-u=proof]").textContent = this.progress.cleared.includes(
-      this.progress.board,
+      `${this.progress.clearedIds.filter((id) => this.levels.some((l) => l.id === id)).length} / ${this.levels.length} cleared`;
+    this.q("[data-u=proof]").textContent = this.progress.clearedIds.includes(
+      l.id,
     )
       ? "✓ Clear saved — keep tinkering!"
       : `${this.engine.proof.good} / 12 safe · ${this.engine.proof.sent} released${this.engine.proof.spilled ? ` · ${this.engine.proof.spilled} returned` : ""}`;
@@ -181,12 +187,11 @@ export class ContraptionGame implements GameSession {
     this.q("[data-u=pause-cover]").toggleAttribute("hidden", !this.paused);
     const level = this.q<HTMLSelectElement>("[data-u=level]");
     if (!level.options.length)
-      levels.forEach((x, i) => level.add(new Option(x.name, String(i))));
-    level.value = String(this.progress.board);
+      this.levels.forEach((x, i) => level.add(new Option(x.name, String(i))));
+    level.value = String(this.board);
     const kitBox = this.q("[data-u=kit]");
     if (!kitBox.children.length)
       for (const t of Object.keys(kit) as PartType[]) {
-        if (t === "wall") continue;
         const b = document.createElement("button");
         b.dataset.a = `kit:${t}`;
         b.innerHTML = `<canvas width="72" height="44" aria-hidden="true"></canvas><b>${kit[t].name}</b><small></small>`;
@@ -208,12 +213,17 @@ export class ContraptionGame implements GameSession {
         !!p.locked ||
         (a === "duplicate" && p ? this.remaining(p.type) <= 0 : false);
     }
-    this.q<HTMLButtonElement>("[data-a=press]").hidden = p?.type !== "switch";
+    this.q<HTMLButtonElement>("[data-a=press]").hidden =
+      p?.type !== "switch" && p?.type !== "lever";
+    this.q<HTMLButtonElement>("[data-a=press]").textContent =
+      p?.type === "lever" ? "Pull lever" : "Press switch";
+    this.q<HTMLButtonElement>("[data-a=press]").disabled =
+      !!p && p.mode === "latch" && this.engine.latched.has(p.id);
     this.q<HTMLInputElement>("[data-u=slow]").checked = this.progress.slow;
     this.q<HTMLInputElement>("[data-u=trails]").checked = this.progress.trails;
     this.q<HTMLButtonElement>("[data-a=next]").hidden =
-      !this.progress.cleared.includes(this.progress.board) ||
-      this.progress.board === 5;
+      !this.progress.clearedIds.includes(this.engineLevel().id) ||
+      this.board === this.levels.length - 1;
     this.q("[data-u=reward]").textContent =
       this.progress.delivered >= 20
         ? "✓ Mini popcorn machine earned"
@@ -222,7 +232,8 @@ export class ContraptionGame implements GameSession {
           : `${5 - this.progress.delivered} more deliveries earns a spring ornament`;
   }
   private persist() {
-    this.progress.layouts[this.progress.board] = clone(this.engine.parts);
+    this.progress.selectedId = this.engineLevel().id;
+    this.progress.layoutsById[this.engineLevel().id] = clone(this.engine.parts);
     this.services.saveProgress(this.progress);
   }
   private schedule() {
@@ -243,7 +254,7 @@ export class ContraptionGame implements GameSession {
   private edit(fn: (p: Part) => void) {
     const p = this.chosen();
     if (!p || p.locked) return;
-    this.histories[this.progress.board].push(clone(this.engine.parts));
+    this.histories[this.board].push(clone(this.engine.parts));
     this.invalidate();
     fn(p);
     this.audio.effect("place");
@@ -252,17 +263,17 @@ export class ContraptionGame implements GameSession {
   }
   private add(t: PartType, x: number, y: number) {
     if (this.remaining(t) <= 0) return;
-    this.histories[this.progress.board].push(clone(this.engine.parts));
+    this.histories[this.board].push(clone(this.engine.parts));
     this.invalidate();
-    const template = this.engineLevel().solution.find(
+    const template = inventory(this.engineLevel()).find(
       (p) =>
         !p.locked &&
         p.type === t &&
         !this.engine.parts.some((q) => q.id === p.id),
     );
     const p = template ? clone(template) : part(t, x, y);
-    p.x = clamp(x, 55, 1045);
-    p.y = clamp(y, 90, 565);
+    p.x = clamp(x, 30, 1070);
+    p.y = clamp(y, 35, 580);
     this.engine.parts.push(p);
     this.selected = p.id;
     this.placing = null;
@@ -304,12 +315,14 @@ export class ContraptionGame implements GameSession {
     }
     if (a === "hint") {
       this.showedHint = !this.showedHint;
-      this.note(this.engineLevel().hint);
+      this.note(this.engineLevel().legacy?.hint ?? "");
       return;
     }
     if (a === "solution") {
       this.replace(
-        clone(this.engineLevel().solution),
+        clone(
+          this.engineLevel().legacy?.solution ?? this.engineLevel().initial,
+        ),
         "One working arrangement. Watch it run, then make it yours.",
       );
       return;
@@ -329,7 +342,7 @@ export class ContraptionGame implements GameSession {
       return;
     }
     if (a === "undo") {
-      const old = this.histories[this.progress.board].pop();
+      const old = this.histories[this.board].pop();
       if (old) {
         this.engine.parts = old;
         this.invalidate();
@@ -339,7 +352,7 @@ export class ContraptionGame implements GameSession {
       return;
     }
     if (a === "next") {
-      this.change(Math.min(5, this.progress.board + 1));
+      this.change(Math.min(this.levels.length - 1, this.board + 1));
       return;
     }
     if (a === "left") this.edit((p) => (p.angle -= Math.PI / 12));
@@ -354,8 +367,8 @@ export class ContraptionGame implements GameSession {
     }
     if (a === "remove") {
       const p = this.chosen();
-      if (p && !p.locked) {
-        this.histories[this.progress.board].push(clone(this.engine.parts));
+      if (p && (!p.locked || p.type === "lever")) {
+        this.histories[this.board].push(clone(this.engine.parts));
         this.engine.parts = this.engine.parts.filter((q) => q !== p);
         this.selected = null;
         this.invalidate();
@@ -365,13 +378,20 @@ export class ContraptionGame implements GameSession {
     }
     if (a === "press") {
       const p = this.chosen();
-      if (p?.type === "switch") this.engine.press(p);
+      if (p?.type === "switch" || p?.type === "lever") {
+        this.engine.press(p);
+        this.sync();
+      }
     }
     if (a === "picture") this.picture();
   };
   private replace(parts: Part[], message: string) {
-    this.histories[this.progress.board].push(clone(this.engine.parts));
-    this.engine.parts = parts;
+    this.histories[this.board].push(clone(this.engine.parts));
+    this.engine = new ContraptionEngine(this.engineLevel(), parts);
+    this.engine.board = this.board;
+    this.engine.cleared = this.progress.clearedIds.includes(
+      this.engineLevel().id,
+    );
     this.selected = null;
     this.placing = null;
     this.invalidate();
@@ -381,7 +401,7 @@ export class ContraptionGame implements GameSession {
   }
   private change(i: number) {
     this.persist();
-    this.progress.board = i;
+    this.board = i;
     this.engine = this.makeEngine();
     this.selected = null;
     this.placing = null;
@@ -420,7 +440,7 @@ export class ContraptionGame implements GameSession {
       .reverse()
       .find((x) => hit(x, q.x, q.y, e.pointerType === "touch" ? 28 : 14));
     this.selected = p?.id ?? null;
-    if (p && !p.locked) {
+    if (p && (!p.locked || p.type === "lever")) {
       this.drag = {
         id: e.pointerId,
         p,
@@ -450,7 +470,9 @@ export class ContraptionGame implements GameSession {
         .find((x) => hit(x, q.x, q.y, e.pointerType === "touch" ? 28 : 14));
       this.canvas.style.cursor = p
         ? p.locked
-          ? "not-allowed"
+          ? p.type === "lever"
+            ? "pointer"
+            : "not-allowed"
           : "grab"
         : "default";
       return;
@@ -458,19 +480,31 @@ export class ContraptionGame implements GameSession {
     const d = this.drag,
       x = clamp(q.x + d.dx, 55, 1045),
       y = clamp(q.y + d.dy, 90, 565);
-    if (Math.hypot(x - d.p.x, y - d.p.y) > 1) {
+    if (
+      !d.p.locked &&
+      Math.hypot(
+        x - (d.before.find((p) => p.id === d.p.id)?.x ?? d.p.x),
+        y - (d.before.find((p) => p.id === d.p.id)?.y ?? d.p.y),
+      ) > 4
+    ) {
       if (!d.moved) this.invalidate();
       d.moved = true;
     }
-    d.p.x = x;
-    d.p.y = y;
+    if (!d.p.locked && d.moved) {
+      d.p.x = x;
+      d.p.y = y;
+    }
     this.activity.interact();
   };
   private finish(cancel = false) {
     const d = this.drag;
     if (!d) return;
     if (cancel) this.engine.parts = d.before;
-    else if (d.moved) this.histories[this.progress.board].push(d.before);
+    else if (d.moved) this.histories[this.board].push(d.before);
+    else if (d.p.type === "lever") {
+      this.audio.unlock();
+      this.engine.press(d.p);
+    }
     this.drag = null;
     this.persist();
     this.sync();
@@ -539,9 +573,9 @@ export class ContraptionGame implements GameSession {
             );
           else if (
             x.type === "clear" &&
-            !this.progress.cleared.includes(this.progress.board)
+            !this.progress.clearedIds.includes(this.engineLevel().id)
           ) {
-            this.progress.cleared.push(this.progress.board);
+            this.progress.clearedIds.push(this.engineLevel().id);
             this.persist();
             this.note("Clean batch! Level cleared. Keep tinkering or move on.");
           }
@@ -560,7 +594,7 @@ export class ContraptionGame implements GameSession {
       this.selected,
       this.ghost,
       this.progress.trails,
-      this.showedHint ? this.engineLevel().solution : null,
+      this.showedHint ? (this.engineLevel().legacy?.solution ?? null) : null,
     );
   }
   private picture() {
@@ -611,9 +645,11 @@ export class ContraptionGame implements GameSession {
   }
   status() {
     return {
-      level: this.progress.board,
+      level: this.board,
       delivered: this.progress.delivered,
-      cleared: this.progress.cleared.length,
+      cleared: this.progress.clearedIds.filter((id) =>
+        this.levels.some((l) => l.id === id),
+      ).length,
     };
   }
 }

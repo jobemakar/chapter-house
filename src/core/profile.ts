@@ -37,6 +37,8 @@ export interface Profile {
   collection: Record<DiscoveryKind, Record<string, number>>;
   /** Versioned package-owned durable progress; transient game sessions stay out. */
   games: Record<IntegratedGameId, unknown>;
+  /** Removed games retain their durable data without remaining in the active shelf. */
+  archivedGames: Record<string, unknown>;
   muted: boolean;
   reduced: boolean;
   legacyImported: boolean;
@@ -119,6 +121,7 @@ function fresh(): Profile {
     ],
     collection: { fish: {}, finds: {} },
     games: IntegratedGames.fresh(),
+    archivedGames: {},
     muted: false,
     reduced: false,
     legacyImported: false,
@@ -210,6 +213,9 @@ export class ProfileRepository {
         }
       }
       const savedGames = record(data.games);
+      Object.assign(initial.archivedGames, record(data.archivedGames));
+      if (savedGames["pocket-funhouse"] !== undefined)
+        initial.archivedGames["pocket-funhouse"] = savedGames["pocket-funhouse"];
       for (const adapter of IntegratedGames.adapters) {
         const id = adapter.definition.id;
         const legacy =

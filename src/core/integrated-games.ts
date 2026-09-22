@@ -12,11 +12,13 @@ import {
 } from "@chapter-house/game-dig-and-douse/progress";
 import { digAndDouseManifest } from "@chapter-house/game-dig-and-douse/manifest";
 import {
-  loadPocketFunhouseProgress,
-  POCKET_FUNHOUSE_REWARD_IDS,
-  type PocketFunhouseProgress,
-} from "@chapter-house/game-pocket-funhouse/progress";
-import { pocketFunhouseManifest } from "@chapter-house/game-pocket-funhouse/manifest";
+  loadKeyfallProgress,
+  type KeyfallProgress,
+} from "@chapter-house/game-keyfall/progress";
+import {
+  keyfallManifest,
+  KEYFALL_REWARD_ID,
+} from "@chapter-house/game-keyfall/manifest";
 import {
   ARCTIC_DUET_REWARDS,
   loadArcticDuetProgress,
@@ -63,7 +65,7 @@ import { vedasGreatEscapeManifest } from "@chapter-house/game-vedas-great-escape
 export type IntegratedGameId =
   | "wishbone-fling"
   | "dig-and-douse"
-  | "pocket-funhouse"
+  | "keyfall"
   | "arctic-duet"
   | "gummy-nook"
   | "contraption"
@@ -171,7 +173,9 @@ const wishbone: IntegratedGameAdapter = {
     const { loadWishboneFling } = await import(
       "@chapter-house/game-wishbone-fling"
     );
-    const { WishboneGame } = await loadWishboneFling();
+    const { WishboneGame } = await loadWishboneFling(
+      new URL(`${import.meta.env.BASE_URL}game-data/wishbone-fling/levels/`, window.location.href),
+    );
     return (target, services) =>
       new WishboneGame(
         target,
@@ -219,54 +223,46 @@ const douse: IntegratedGameAdapter = {
   },
 };
 
-const pocketRewards: readonly IntegratedRewardDefinition[] =
-  pocketFunhouseManifest.rewards.map((reward) => ({
-    rewardId: reward.rewardId,
-    catalogId: `funhouse-${reward.legacyId}`,
-  }));
-const pocket: IntegratedGameAdapter = {
+const keyfall: IntegratedGameAdapter = {
   definition: {
-    id: "pocket-funhouse",
-    book: pocketFunhouseManifest.book,
-    title: pocketFunhouseManifest.title,
-    heading: pocketFunhouseManifest.heading,
-    description: pocketFunhouseManifest.description,
-    cardArtUrl: pocketFunhouseManifest.cardArtUrl,
-    cardArtAlt: pocketFunhouseManifest.cardArtAlt,
-    rewards: pocketRewards,
+    ...keyfallManifest,
+    rewards: keyfallManifest.rewards.map((reward) => ({ ...reward })),
   },
-  normalize: loadPocketFunhouseProgress,
+  normalize: loadKeyfallProgress,
   summarize(raw) {
-    const progress = loadPocketFunhouseProgress(raw);
-    return progress.solved.length
-      ? `${progress.solved.length} / 12 rooms solved · ${progress.ownedRewardIds.length} curios found.`
-      : "Solve your first little room to bring home a funhouse curio.";
+    const progress = loadKeyfallProgress(raw);
+    const tickets = progress.bestTickets["campaign-06-soft-rebound"] ?? 0;
+    return progress.completed.includes("campaign-06-soft-rebound")
+      ? `Soft Rebound complete · best ${tickets} / 3 clue tickets.`
+      : "Guide the brass key through Soft Rebound to bring home a Velvet Key Plaque.";
   },
   ownedRewardIds(raw) {
-    return loadPocketFunhouseProgress(raw).ownedRewardIds;
+    return loadKeyfallProgress(raw).completed.includes("campaign-06-soft-rebound")
+      ? [KEYFALL_REWARD_ID]
+      : [];
   },
   addReward(raw, rewardId) {
-    if (!(POCKET_FUNHOUSE_REWARD_IDS as readonly string[]).includes(rewardId))
-      return null;
-    const progress = loadPocketFunhouseProgress(raw);
-    if (progress.ownedRewardIds.includes(rewardId)) return null;
+    if (rewardId !== KEYFALL_REWARD_ID) return null;
+    const progress = loadKeyfallProgress(raw);
+    if (progress.completed.includes("campaign-06-soft-rebound")) return null;
     return {
       ...progress,
-      ownedRewardIds: [...progress.ownedRewardIds, rewardId],
+      completed: [...progress.completed, "campaign-06-soft-rebound"],
     };
   },
   async load() {
-    const { PocketFunhouseGame } = await import(
-      "@chapter-house/game-pocket-funhouse"
+    const { KeyfallGame, loadLevelFiles, CampaignCatalog, RoomValidator, GAME_VIEWPORT } = await import("@chapter-house/game-keyfall");
+    const loaded = await loadLevelFiles(
+      new URL(`${import.meta.env.BASE_URL}game-data/keyfall/levels/`, window.location.href),
     );
-    return (target, services) =>
-      new PocketFunhouseGame(
-        target,
-        servicesFor<PocketFunhouseProgress>(
-          services,
-          loadPocketFunhouseProgress,
-        ),
-      );
+    if (!loaded.rooms.length) throw new Error("Keyfall has no playable level files.");
+    const catalog = new CampaignCatalog(loaded.rooms, new RoomValidator(GAME_VIEWPORT), false);
+    return (target, services) => new KeyfallGame(
+      target,
+      servicesFor<KeyfallProgress>(services, loadKeyfallProgress),
+      catalog,
+      { showStandaloneControls: false },
+    );
   },
 };
 
@@ -395,7 +391,7 @@ const contraption: IntegratedGameAdapter = {
   summarize(raw) {
     const progress = loadContraptionProgress(raw);
     return progress.delivered
-      ? `${progress.delivered} deliveries · ${progress.cleared.length} / 6 machines cleared.`
+      ? `${progress.delivered} deliveries · ${progress.clearedIds.length} machines cleared.`
       : "Deliver five kernels to earn a spring ornament.";
   },
   ownedRewardIds(raw) {
@@ -412,13 +408,15 @@ const contraption: IntegratedGameAdapter = {
     };
   },
   async load() {
-    const { ContraptionGame } = await import(
+    const { createContraptionSession, loadLevelCatalog } = await import(
       "@chapter-house/game-contraption"
     );
+    const catalog = await loadLevelCatalog(new URL("./contraption-levels/", document.baseURI));
     return (target, services) =>
-      new ContraptionGame(
+      createContraptionSession(
         target,
         servicesFor<ContraptionProgress>(services, loadContraptionProgress),
+        catalog,
       );
   },
 };
@@ -599,7 +597,7 @@ export class IntegratedGames {
   static readonly adapters: readonly IntegratedGameAdapter[] = [
     wishbone,
     douse,
-    pocket,
+    keyfall,
     arctic,
     gummy,
     contraption,

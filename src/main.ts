@@ -29,6 +29,7 @@ import {
   normalizeAvatarColor,
 } from "./core/avatar-colors";
 import { GamePreviews } from "./core/game-previews";
+import { GamesShelf } from "./core/games-shelf";
 import { furniture, pets, getFurniture } from "./core/catalog";
 import { setCurrentNavigation } from "./core/navigation-ui";
 import { FirebaseSession, type MemberSessionState } from "./firebase/session";
@@ -932,6 +933,5 @@ try {
   new ChapterHouse(document.querySelector("#app")!);
 } catch (error) {
   console.error(error);
-  document.querySelector("#app")!.innerHTML =
-    '<section class="startup-error"><h1>The clubhouse needs a fresh start.</h1><p>This view needs WebGL. Try reopening it in an up-to-date browser with graphics acceleration enabled.</p><button onclick="location.reload()">Try again</button></section>';
+  new GamesShelf(document.querySelector("#app")!);
 }

@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "level": {
+    "id": "editor-verification",
+    "name": "New machine",
+    "tag": "",
+    "sources": [
+      {
+        "x": 180,
+        "y": 100,
+        "vx": 0
+      },
+      {
+        "x": 550,
+        "y": 95,
+        "vx": 0
+      }
+    ],
+    "period": 0.6,
+    "bowl": {
+      "x": 850,
+      "y": 550
+    },
+    "initial": [
+      {
+        "id": "part-00b94051-8a95-4d0d-8c14-a0b753c65ec0",
+        "type": "belt",
+        "x": 260,
+        "y": 270,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "part-21addd04-e8f8-44b7-8700-6d36568cdfb2",
+        "type": "button",
+        "x": 180,
+        "y": 175,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false,
+        "mode": "toggle",
+        "targetId": "part-00b94051-8a95-4d0d-8c14-a0b753c65ec0"
+      },
+      {
+        "id": "part-94d5f256-8981-4477-b0fe-e386fe0a715f",
+        "type": "fan",
+        "x": 650,
+        "y": 450,
+        "angle": -1.5707963267948966,
+        "power": 1,
+        "flip": 1,
+        "locked": false,
+        "enabled": false
+      },
+      {
+        "id": "part-7fc8e158-3c5a-4df0-8aba-eec8bd235263",
+        "type": "lever",
+        "x": 800,
+        "y": 300,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false,
+        "mode": "latch",
+        "targetId": "part-94d5f256-8981-4477-b0fe-e386fe0a715f"
+      }
+    ],
+    "spares": [
+      {
+        "id": "part-c4d50e20-8d88-4350-bae0-f372eab4c18e",
+        "type": "belt",
+        "x": 550,
+        "y": 330,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      },
+      {
+        "id": "part-b82db799-df2b-4e17-9913-06a96bba840e",
+        "type": "belt",
+        "x": 550,
+        "y": 330,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      }
+    ]
+  }
+}

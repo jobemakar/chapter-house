@@ -22,33 +22,34 @@
       "collectiblePlan": "plans/11-collectible-catalog.md"
     },
     {
-      "id": "pocket-funhouse",
+      "id": "keyfall",
       "ideaId": "BOB-002",
       "bookTitle": "The Mystery of Locked Rooms",
       "author": "Lindsay Currie",
-      "gameTitle": "Pocket Funhouse",
-      "status": "implemented-demo",
-      "folder": "application/packages/game-pocket-funhouse",
-      "manifest": "application/packages/game-pocket-funhouse/src/manifest.ts",
-      "pitch": "application/docs/legacy-game-notes/the-mystery-of-locked-rooms/plans/pitch.md",
-      "playable": "application/packages/game-pocket-funhouse/index.html",
+      "gameTitle": "Keyfall",
+      "status": "implemented-integrated-single-room",
+      "folder": "application/packages/game-keyfall-prototype",
+      "manifest": "application/packages/game-keyfall-prototype/src/manifest.ts",
+      "pitch": "plans/62-keyfall-chapter-house-replacement.md",
+      "playable": "application/packages/game-keyfall-prototype/index.html",
       "publicUrl": null,
-      "primaryMechanic": "Tactile mechanical room puzzles",
+      "primaryMechanic": "Gesture-cut physics puzzle: guide a brass key through one forgiving funhouse room",
       "experiments": [
         { "id": "door-atelier", "ideaId": "BOB-002-ALT2", "title": "Door Atelier", "status": "rejected-archived-concept", "manifest": "application/docs/legacy-game-notes/the-mystery-of-locked-rooms/experiments/door-atelier/game.json", "sourceArchive": "archive/legacy-book-game-sources-2026-09-19.tar.gz", "internalPath": "the-mystery-of-locked-rooms/experiments/door-atelier", "plan": "application/docs/legacy-game-notes/the-mystery-of-locked-rooms/experiments/door-atelier/REQUIREMENTS.md" }
       ],
       "devicePriority": "iPad touch-first",
-      "localRevision": "0.1.1",
+      "localRevision": "0.2.0",
       "publishedRevision": null,
       "collectiblePlan": "plans/11-collectible-catalog.md",
-      "plannedRevision": {
-        "ideaId": "BOB-002-R2",
-        "title": "Pocket Funhouse: The Wandering Key",
-        "primaryMechanic": "Rearrange platforms and mechanisms to guide an autonomous wind-up key to a lock",
-        "status": "redesign-planned",
-        "plan": "application/docs/legacy-game-notes/the-mystery-of-locked-rooms/plans/redesign.md",
-        "requirements": "application/docs/legacy-game-notes/the-mystery-of-locked-rooms/plans/requirements-next.md"
-      }
+      "archive": {
+        "id": "pocket-funhouse",
+        "folder": "application/archive/game-pocket-funhouse",
+        "status": "removed-from-active-shelf",
+        "progress": "browser profile archivedGames.pocket-funhouse",
+        "preservedRewards": "existing funhouse curios remain placeable"
+      },
+      "activeLevelIds": ["campaign-06-soft-rebound"],
+      "archivedLevels": "application/packages/game-keyfall-prototype/archive/levels/pre-chapter-house"
     },
     {
       "id": "wishbone-floppy-fetch",
@@ -187,7 +188,7 @@
       "playable": "application/packages/game-vedas-great-escape/index.html",
       "publicUrl": null,
       "primaryMechanic": "Push crates onto switches, collect optional peaches, and route Veda through five authored grid puzzles to the sanctuary exit",
-      "localRevision": "1.0.0",
+      "localRevision": "1.1.0",
       "levelCount": 5,
       "devicePriority": "iPad touch-first",
       "collectiblePlan": "plans/11-collectible-catalog.md"
@@ -240,7 +241,7 @@
     "integratedGames": [
       "wishbone-floppy-fetch",
       "dig-and-douse",
-      "pocket-funhouse",
+      "keyfall",
       "arctic-duet",
       "gummy-galaxy",
       "popcorn-contraption-club",

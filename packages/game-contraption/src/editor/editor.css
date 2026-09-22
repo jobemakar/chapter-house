@@ -1,0 +1,544 @@
+body {
+  margin: 0;
+}
+#contraption-editor {
+  --ink: #173b43;
+  --teal: #194d52;
+  --gold: #d6a348;
+  --paper: #fffaf0;
+  --line: #c9bda4;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  background: #eee6d6;
+  font:
+    15px/1.4 system-ui,
+    sans-serif;
+}
+#contraption-editor *,
+#contraption-editor *::before,
+#contraption-editor *::after {
+  box-sizing: border-box;
+}
+#contraption-editor [hidden] {
+  display: none !important;
+}
+#contraption-editor button,
+#contraption-editor input,
+#contraption-editor select,
+#contraption-editor textarea {
+  font: inherit;
+}
+#contraption-editor button {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #b7aa90;
+  border-radius: 8px;
+  color: #173b43;
+  background: #fffaf0;
+  cursor: pointer;
+}
+#contraption-editor button:hover:not(:disabled) {
+  background: #fff1d0;
+  border-color: #856f53;
+}
+#contraption-editor button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+#contraption-editor input,
+#contraption-editor select,
+#contraption-editor textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid #b9ad97;
+  border-radius: 7px;
+  background: #fffdf6;
+  color: #173b43;
+}
+#contraption-editor input[type="checkbox"] {
+  width: auto;
+  accent-color: #b2783e;
+}
+#contraption-editor label {
+  display: block;
+  margin: 10px 0 4px;
+  color: #496164;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+#contraption-editor button:focus-visible,
+#contraption-editor input:focus-visible,
+#contraption-editor select:focus-visible,
+#contraption-editor canvas:focus-visible {
+  outline: 3px solid #e2b657;
+  outline-offset: 2px;
+}
+#contraption-editor .app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 14px;
+  color: #fff8e7;
+  background: linear-gradient(110deg, #103b42, #205a58);
+  border-bottom: 4px solid var(--gold);
+}
+#contraption-editor .app-header h1 {
+  margin: 0;
+  font:
+    650 1.35rem Georgia,
+    serif;
+}
+#contraption-editor .eyebrow {
+  margin: 0 0 3px;
+  color: #cbded4;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+#contraption-editor .document-heading {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#contraption-editor code {
+  padding: 4px 7px;
+  color: #d7e7df;
+  background: #0003;
+  border-radius: 5px;
+}
+#contraption-editor .state-pill {
+  padding: 3px 8px;
+  border-radius: 99px;
+  color: #62431d;
+  background: #f2d596;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+#contraption-editor .state-pill[data-dirty="false"] {
+  color: #d8eee1;
+  background: #caecd82b;
+}
+#contraption-editor .library-bar {
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) minmax(380px, 1.5fr);
+  gap: 8px 20px;
+  align-items: end;
+  padding: 10px clamp(16px, 3vw, 44px);
+  background: #f9f2e4;
+  border-bottom: 1px solid var(--line);
+}
+#contraption-editor .library-new {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto auto;
+  gap: 6px;
+  align-items: end;
+}
+#contraption-editor .library-new label {
+  grid-column: 1/-1;
+}
+#contraption-editor .status-line {
+  min-height: 18px;
+  margin: 0;
+  color: #59706d;
+  font-size: 0.76rem;
+}
+#contraption-editor #status {
+  grid-column: 1/-1;
+}
+#contraption-editor #status[data-error="true"] {
+  color: #9c2f46;
+  font-weight: 700;
+}
+#contraption-editor .editor-workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) 260px;
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 10px;
+}
+#contraption-editor.tools-collapsed .editor-workspace {
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+#contraption-editor.inspector-collapsed .editor-workspace {
+  grid-template-columns: 230px minmax(0, 1fr);
+}
+#contraption-editor.tools-collapsed.inspector-collapsed .editor-workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+#contraption-editor .left-rail,
+#contraption-editor .right-rail {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-content: start;
+}
+#contraption-editor .panel {
+  min-width: 0;
+  padding: 10px;
+  background: #fffaf0ed;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 7px 18px #37302112;
+}
+#contraption-editor .panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #ded3bd;
+}
+#contraption-editor .panel h2 {
+  margin: 0;
+  color: #103b42;
+  font:
+    700 1rem Georgia,
+    serif;
+}
+#contraption-editor .panel h3 {
+  margin: 10px 0 4px;
+  font:
+    700 0.9rem Georgia,
+    serif;
+}
+#contraption-editor .hint,
+#contraption-editor .empty-copy {
+  margin: 8px 0;
+  color: #6f7b78;
+  font-size: 0.73rem;
+  line-height: 1.42;
+}
+#contraption-editor .palette-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+#contraption-editor .palette-grid button {
+  text-align: left;
+  font-size: 0.75rem;
+}
+#contraption-editor .spare-row {
+  display: grid;
+  grid-template-columns: 1fr 74px;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 0 !important;
+}
+#contraption-editor .spare-row input {
+  padding: 4px 6px;
+}
+#contraption-editor .stage-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+#contraption-editor .stage-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 7px;
+  color: #eee2ca;
+  background: #103b42;
+  border-radius: 11px 11px 0 0;
+}
+#contraption-editor .toolbar-group {
+  display: flex;
+  gap: 5px;
+}
+#contraption-editor .stage-toolbar button {
+  color: #fff7e8;
+  background: #ffffff14;
+  border-color: #ffffff40;
+}
+#contraption-editor .primary-action {
+  color: #352813 !important;
+  background: #e1b65f !important;
+  border-color: #f2d48c !important;
+  font-weight: 800;
+}
+#contraption-editor .toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #d7e6df;
+  white-space: nowrap;
+}
+#contraption-editor .canvas-frame {
+  position: relative;
+  width: 100%;
+  max-width: calc((100dvh - 215px) * 1.666667);
+  align-self: center;
+  aspect-ratio: 1100/660;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #f7e9b9;
+  border-radius: 0 0 12px 12px;
+  box-shadow:
+    inset 0 0 0 5px #244c4c,
+    0 14px 35px #272b221f;
+  touch-action: none;
+}
+#contraption-editor .canvas-frame canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#contraption-editor #editor-overlay {
+  cursor: grab;
+}
+#contraption-editor #editor-overlay:active {
+  cursor: grabbing;
+}
+#contraption-editor .play-host {
+  display: none;
+  width: 100%;
+  min-height: 420px;
+  background: #f7e9b9;
+  border-radius: 11px;
+  overflow: hidden;
+}
+#contraption-editor.is-playing .stage-toolbar,
+#contraption-editor.is-playing #edit-stage {
+  display: none;
+}
+#contraption-editor.is-playing .editor-workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+#contraption-editor.is-playing .left-rail,
+#contraption-editor.is-playing .right-rail,
+#contraption-editor.is-playing #issue-summary,
+#contraption-editor.is-playing #issues {
+  display: none;
+}
+#contraption-editor.is-playing .play-host {
+  display: block;
+}
+#contraption-editor .playtest-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  padding: 8px;
+  background: #103b42;
+  border-radius: 0 0 10px 10px;
+}
+#contraption-editor .playtest-controls button {
+  color: #fff8e8;
+  background: #ffffff14;
+  border-color: #ffffff40;
+}
+#contraption-editor .playtest-controls .stop-button {
+  color: #4d2631;
+  background: #f4d5c4;
+}
+#contraption-editor .stage-status {
+  padding: 8px 3px 0;
+}
+#contraption-editor .coordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+#contraption-editor .button-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+#contraption-editor .button-row button {
+  flex: 1;
+}
+#contraption-editor .danger-quiet {
+  color: #8c2f48;
+}
+#contraption-editor .issue-list {
+  margin: 7px 0;
+  padding-left: 19px;
+  color: #96364b;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+#contraption-editor .campaign-list {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+#contraption-editor .campaign-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 3px;
+  align-items: center;
+  padding: 5px;
+  background: #f5ecda;
+  border: 1px solid #ddd0b8;
+  border-radius: 7px;
+  font-size: 0.7rem;
+}
+#contraption-editor .campaign-list li[data-invalid="true"] {
+  color: #913f47;
+  background: #f8e3dc;
+  border-color: #d7a39a;
+}
+#contraption-editor .campaign-list li.empty-list-row {
+  display: block;
+  color: #637477;
+  font-style: italic;
+}
+#contraption-editor .campaign-list li button {
+  min-height: 27px;
+  padding: 3px 6px;
+  font-size: 0.67rem;
+}
+#contraption-editor .list-panel > button {
+  margin: 3px;
+}
+#contraption-editor .editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px clamp(16px, 3vw, 44px);
+  color: #b9cfca;
+  background: #153a3f;
+  border-top: 2px solid #c69442;
+}
+#contraption-editor .editor-footer p {
+  margin: 0;
+  font-size: 0.73rem;
+}
+#contraption-editor .save-cluster {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.7rem;
+}
+#contraption-editor .save-button {
+  min-width: 150px;
+  color: #3c2e18;
+  background: #e1b65f;
+  border-color: #f0cf88;
+  font-weight: 850;
+}
+#contraption-editor kbd {
+  padding: 2px 5px;
+  color: #173a3e;
+  background: #eee6d5;
+  border: 1px solid #fff9eb;
+  border-radius: 4px;
+}
+
+#contraption-editor summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+#contraption-editor summary:focus-visible {
+  outline: 3px solid #e2b657;
+  outline-offset: 3px;
+}
+#contraption-editor summary h2 {
+  display: inline;
+}
+#contraption-editor details.panel[open] > summary {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #ded3bd;
+}
+#contraption-editor .library-drawer {
+  background: #f9f2e4;
+  border-bottom: 1px solid var(--line);
+}
+#contraption-editor .library-drawer > summary {
+  padding: 7px 14px;
+  font-size: 0.8rem;
+}
+#contraption-editor .library-bar {
+  padding: 0 14px 10px;
+  border-bottom: 0;
+}
+#contraption-editor .library-bar label {
+  margin-top: 0;
+}
+#contraption-editor .editor-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 7px 14px;
+}
+#contraption-editor .editor-footer #status {
+  color: #d8eee1;
+}
+#contraption-editor .editor-footer #status[data-error="true"] {
+  color: #ffb6ba;
+}
+#contraption-editor .list-panel .state-pill[data-dirty="false"] {
+  color: #496164;
+  background: #e3eadf;
+}
+#contraption-editor .left-rail,
+#contraption-editor .right-rail {
+  max-height: calc(100dvh - 165px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+@media (max-width: 1100px) {
+  #contraption-editor .editor-workspace,
+  #contraption-editor.tools-collapsed .editor-workspace,
+  #contraption-editor.inspector-collapsed .editor-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  #contraption-editor .stage-column {
+    grid-column: 1/-1;
+    grid-row: 1;
+  }
+  #contraption-editor .canvas-frame {
+    max-width: none;
+  }
+  #contraption-editor .left-rail,
+  #contraption-editor .right-rail {
+    max-height: none;
+  }
+  #contraption-editor .shortcut-hint {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  #contraption-editor .app-header,
+  #contraption-editor .editor-footer {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #contraption-editor .library-bar,
+  #contraption-editor .editor-workspace,
+  #contraption-editor.tools-collapsed .editor-workspace,
+  #contraption-editor.inspector-collapsed .editor-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #contraption-editor .library-new {
+    grid-template-columns: 1fr 1fr;
+  }
+  #contraption-editor .library-new input {
+    grid-column: 1/-1;
+  }
+}
+#contraption-editor.is-playing .editor-workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+#contraption-editor.is-playing .library-drawer,
+#contraption-editor.is-playing .editor-footer {
+  display: none;
+}

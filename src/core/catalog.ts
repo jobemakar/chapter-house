@@ -207,6 +207,17 @@ export const furniture: FurnitureDefinition[] = [
     gameReward: `pocket-funhouse:${id}`,
     description: "Pocket Funhouse · a tiny room-solving curio",
   })),
+  {
+    id: "keyfall-velvet-key-plaque",
+    name: "Velvet Key Plaque",
+    kind: "ornament" as const,
+    width: 0.62,
+    depth: 0.18,
+    height: 0.78,
+    color: 0xd7a843,
+    gameReward: "keyfall:velvet-key-plaque",
+    description: "Keyfall · a brass key from Soft Rebound",
+  },
   ...[
     ["duet-snow-cushion", "Duet Snow Cushion", 0xbad9e8],
     ["puffin-window-star", "Puffin Window Star", 0xf2cf68],

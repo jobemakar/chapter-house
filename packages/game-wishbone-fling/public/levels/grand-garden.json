@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 15,
+  "yard": {
+    "id": "grand-garden",
+    "name": "The Grand Garden",
+    "subtitle": "Open the long gate lane and plan the whole garden.",
+    "legacyIndex": 27,
+    "world": {
+      "width": 2800,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "box",
+        "x": 760,
+        "y": 548,
+        "w": 70,
+        "h": 104,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "plank",
+        "x": 840,
+        "y": 487,
+        "w": 260,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "target",
+        "x": 1050,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "target",
+        "x": 1130,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "box",
+        "x": 1510,
+        "y": 548,
+        "w": 72,
+        "h": 104,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "plank",
+        "x": 1600,
+        "y": 487,
+        "w": 290,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "target",
+        "x": 1750,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "target",
+        "x": 1840,
+        "y": 580,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 3,
+        "angle": 0
+      },
+      {
+        "id": 8,
+        "kind": "bucket",
+        "x": 2180,
+        "y": 568,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 9,
+        "kind": "box",
+        "x": 2290,
+        "y": 548,
+        "w": 72,
+        "h": 104,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 10,
+        "kind": "plank",
+        "x": 2240,
+        "y": 487,
+        "w": 250,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 11,
+        "kind": "target",
+        "x": 2180,
+        "y": 496,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 12,
+        "kind": "target",
+        "x": 2290,
+        "y": 456,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 13,
+        "kind": "box",
+        "x": 2580,
+        "y": 548,
+        "w": 70,
+        "h": 104,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 14,
+        "kind": "target",
+        "x": 2580,
+        "y": 456,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 1400,
+        "y": 638,
+        "w": 3200,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": [
+      {
+        "id": "lever-1",
+        "kind": "lever",
+        "x": 560,
+        "y": 485,
+        "targetId": "gate-1"
+      },
+      {
+        "id": "gate-1",
+        "kind": "gate",
+        "x": 1220,
+        "y": 490
+      }
+    ]
+  }
+}

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#173b43" />
+    <title>Popcorn Contraption · Level Workshop</title>
+  </head>
+  <body>
+    <main id="contraption-editor" class="editor-app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Popcorn Contraption · local author tool</p>
+          <h1>Machine Workshop</h1>
+        </div>
+        <div class="document-heading">
+          <code id="doc-id">new-contraption</code
+          ><span id="dirty" class="state-pill" data-dirty="true">Unsaved</span>
+        </div>
+      </header>
+      <details class="library-drawer">
+        <summary>Level files · open, copy or create</summary>
+        <section class="library-bar">
+          <div>
+            <label for="file-select">Saved level</label
+            ><select id="file-select"></select>
+          </div>
+          <div class="library-new">
+            <label for="new-id">New file ID</label
+            ><input id="new-id" value="new-machine" spellcheck="false" /><button
+              type="button"
+              data-action="blank"
+            >
+              Blank</button
+            ><button type="button" data-action="copy">Copy current</button>
+          </div>
+        </section>
+      </details>
+      <div id="edit-ui" class="editor-workspace">
+        <aside class="left-rail" id="tools-rail" aria-label="Level tools">
+          <details class="panel">
+            <summary><h2>Level details</h2></summary>
+            <label for="level-name">Name</label
+            ><input id="level-name" data-field="name" maxlength="80" /><label
+              for="level-tag"
+              >Short instruction</label
+            ><textarea
+              id="level-tag"
+              data-field="tag"
+              maxlength="300"
+              rows="2"
+            ></textarea
+            ><label for="release-period">Release interval (seconds)</label
+            ><input
+              id="release-period"
+              data-field="period"
+              type="number"
+              min="0.15"
+              max="5"
+              step="0.05"
+            />
+            <div class="button-row">
+              <button data-action="add-source" type="button">Add inlet</button
+              ><button data-action="remove-source" type="button">
+                Remove last inlet
+              </button>
+            </div>
+          </details>
+          <section class="panel">
+            <div class="panel-heading"><h2>Piece palette</h2></div>
+            <p class="hint">
+              Choose a piece to add it at the center, then drag it into place.
+            </p>
+            <div id="palette" class="palette-grid"></div>
+          </section>
+          <details class="panel">
+            <summary><h2>Spare toolbox</h2></summary>
+            <p class="hint">
+              Spare pieces add to the starting movable pieces. Each spare keeps
+              its own settings.
+            </p>
+            <div id="spares"></div>
+            <label for="spare-select">Configure spare piece</label
+            ><select id="spare-select"></select>
+          </details>
+        </aside>
+        <section class="stage-column">
+          <div class="stage-toolbar">
+            <span class="toolbar-group panel-toggles">
+              <button
+                type="button"
+                data-action="toggle-tools"
+                aria-expanded="true"
+                aria-controls="tools-rail"
+              >
+                Hide tools
+              </button>
+              <button
+                type="button"
+                data-action="toggle-inspector"
+                aria-expanded="true"
+                aria-controls="inspector-rail"
+              >
+                Hide inspector
+              </button>
+            </span>
+            <span class="toolbar-group"
+              ><button type="button" data-action="undo">Undo</button
+              ><button type="button" data-action="redo">Redo</button></span
+            ><label class="toggle"
+              ><input id="snap-toggle" type="checkbox" checked /> Snap 20
+              px</label
+            ><button type="button" data-action="play" class="primary-action">
+              ▶ Playtest
+            </button>
+          </div>
+          <div id="edit-stage" class="canvas-frame">
+            <canvas
+              id="editor-canvas"
+              width="1100"
+              height="660"
+              aria-hidden="true"
+            ></canvas
+            ><canvas
+              id="editor-overlay"
+              width="1100"
+              height="660"
+              tabindex="0"
+              aria-label="Contraption authoring board. Drag inlets, bowl and pieces to position them."
+            ></canvas>
+          </div>
+          <div
+            id="play-host"
+            class="play-host"
+            aria-label="Production game playtest"
+          ></div>
+          <div id="play-ui" class="playtest-controls" hidden>
+            <button type="button" data-action="restart">Restart</button
+            ><button type="button" data-action="stop" class="stop-button">
+              Stop
+            </button>
+          </div>
+          <p id="issue-summary" class="status-line stage-status">
+            Checking level…
+          </p>
+          <ul id="issues" class="issue-list"></ul>
+        </section>
+        <aside
+          class="right-rail"
+          id="inspector-rail"
+          aria-label="Inspector and playable list"
+        >
+          <section class="panel" id="inspector">
+            <div class="panel-heading"><h2>Inspector</h2></div>
+            <p id="empty" class="empty-copy">Select a piece, inlet or bowl.</p>
+            <div id="selected" hidden>
+              <h3 id="selection-name">Selected item</h3>
+              <div id="position-row" class="coordinate-grid">
+                <label
+                  >X<input
+                    data-field="x"
+                    type="number"
+                    min="0"
+                    max="1100"
+                    step="1" /></label
+                ><label
+                  >Y<input
+                    data-field="y"
+                    type="number"
+                    min="0"
+                    max="600"
+                    step="1"
+                /></label>
+              </div>
+              <label id="angle-row"
+                >Rotation °<input
+                  data-field="angle"
+                  type="number"
+                  step="1" /></label
+              ><label id="fixed-row"
+                ><input data-field="fixed" type="checkbox" /> Fixed piece (stays
+                during play)</label
+              >
+              <div id="control-row">
+                <label for="control-mode">Activation</label
+                ><select id="control-mode" data-field="mode">
+                  <option value="toggle">Repeatable · toggle</option>
+                  <option value="latch">One-shot · latch</option></select
+                ><label for="control-target">Controls this device</label
+                ><select id="control-target" data-field="target"></select>
+                <button type="button" data-action="pick-target">
+                  Pick target on board
+                </button>
+                <p id="target-pick-help" class="hint" role="status" hidden>
+                  Click a highlighted conveyor or fan. Escape cancels. Use the
+                  list above for spare devices.
+                </p>
+              </div>
+              <div id="fan-row">
+                <label
+                  ><input data-field="enabled" type="checkbox" /> Fan starts
+                  on</label
+                >
+              </div>
+              <div id="belt-row">
+                <label
+                  ><input data-field="direction" type="checkbox" /> Starts
+                  moving left</label
+                >
+              </div>
+              <div class="button-row">
+                <button
+                  type="button"
+                  data-action="rotate-left"
+                  title="Rotate left 15° (Q)"
+                >
+                  ↺ 15° · Q</button
+                ><button type="button" data-action="rotate-right">
+                  15° ↻ · E
+                </button>
+              </div>
+              <div class="button-row">
+                <button
+                  type="button"
+                  data-action="duplicate"
+                  title="Duplicate selected piece (Ctrl/⌘ D)"
+                >
+                  Duplicate</button
+                ><button
+                  type="button"
+                  data-action="delete"
+                  class="danger-quiet"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </section>
+          <details class="panel validation-panel">
+            <summary><h2>Level check</h2></summary>
+            <p class="hint">
+              Drafts may be saved with issues. Playtest and playable-list
+              inclusion need a valid level.
+            </p>
+          </details>
+          <details class="panel list-panel">
+            <summary>
+              <h2>Playable list</h2>
+              <span id="list-dirty" class="state-pill" data-dirty="false"
+                >List saved</span
+              >
+            </summary>
+            <ol id="included" class="campaign-list"></ol>
+            <button type="button" data-action="include">
+              Add current level</button
+            ><button
+              type="button"
+              data-action="list-save"
+              class="primary-action"
+            >
+              Save playable list
+            </button>
+            <p class="hint">
+              Saving a file never adds it here. Removing it leaves its file and
+              saved player history intact.
+            </p>
+          </details>
+        </aside>
+      </div>
+      <footer class="editor-footer">
+        <div class="save-cluster">
+          <button type="button" data-action="save" class="save-button">
+            Save level file</button
+          ><span>Ctrl/⌘ S</span>
+        </div>
+        <p id="status" class="status-line" role="status">
+          Loading saved levels…
+        </p>
+        <p class="shortcut-hint">
+          <kbd>Q / E</kbd> rotate 15° · <kbd>Ctrl/⌘ D</kbd> duplicate ·
+          <kbd>Delete</kbd> remove · <kbd>Ctrl/⌘ Z</kbd> undo ·
+          <kbd>Shift</kbd> + <kbd>Ctrl/⌘ Z</kbd> redo
+        </p>
+      </footer>
+    </main>
+    <script type="module" src="/src/editor/main.ts"></script>
+  </body>
+</html>

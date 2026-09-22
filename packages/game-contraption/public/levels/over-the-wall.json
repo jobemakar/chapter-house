@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "level": {
+    "id": "over-the-wall",
+    "name": "03 · Over the Wall",
+    "tag": "Tilt the trampoline to clear the wall.",
+    "sources": [
+      {
+        "x": 135,
+        "y": 95,
+        "vx": 75
+      }
+    ],
+    "period": 0.6,
+    "bowl": {
+      "x": 885,
+      "y": 548
+    },
+    "initial": [
+      {
+        "id": "ramp-1",
+        "type": "ramp",
+        "x": 230,
+        "y": 210,
+        "angle": 0.24,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "belt-1",
+        "type": "belt",
+        "x": 418,
+        "y": 305,
+        "angle": 0.1,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "spring-1",
+        "type": "spring",
+        "x": 598,
+        "y": 468,
+        "angle": -0.25,
+        "power": 1,
+        "flip": 1,
+        "locked": false
+      },
+      {
+        "id": "funnel-1",
+        "type": "funnel",
+        "x": 860,
+        "y": 350,
+        "angle": 0,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "fan-1",
+        "type": "fan",
+        "x": 910,
+        "y": 452,
+        "angle": -1.5707963267948966,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      },
+      {
+        "id": "wall-1",
+        "type": "wall",
+        "x": 750,
+        "y": 465,
+        "angle": 1.5707963267948966,
+        "power": 1,
+        "flip": 1,
+        "locked": true
+      }
+    ],
+    "spares": [],
+    "legacy": {
+      "solution": [
+        {
+          "id": "ramp-1",
+          "type": "ramp",
+          "x": 230,
+          "y": 210,
+          "angle": 0.24,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "belt-1",
+          "type": "belt",
+          "x": 418,
+          "y": 305,
+          "angle": 0.1,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "spring-1",
+          "type": "spring",
+          "x": 598,
+          "y": 468,
+          "angle": 0.25,
+          "power": 1,
+          "flip": 1,
+          "locked": false
+        },
+        {
+          "id": "funnel-1",
+          "type": "funnel",
+          "x": 860,
+          "y": 350,
+          "angle": 0,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "fan-1",
+          "type": "fan",
+          "x": 910,
+          "y": 452,
+          "angle": -1.5707963267948966,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        },
+        {
+          "id": "wall-1",
+          "type": "wall",
+          "x": 750,
+          "y": 465,
+          "angle": 1.5707963267948966,
+          "power": 1,
+          "flip": 1,
+          "locked": true
+        }
+      ],
+      "hint": "Angle the trampoline toward the right."
+    }
+  }
+}

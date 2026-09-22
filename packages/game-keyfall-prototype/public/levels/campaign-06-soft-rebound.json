@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "room": {
+    "id": "campaign-06-soft-rebound",
+    "title": "Soft Rebound",
+    "subtitle": "Release onto the velvet bumper and follow its safe leftward bank.",
+    "wing": "campaign",
+    "source": {
+      "kind": "original"
+    },
+    "kind": "drop",
+    "keyStart": {
+      "x": 330,
+      "y": 240
+    },
+    "cords": [
+      {
+        "id": "room-6-cord",
+        "anchor": {
+          "x": 365,
+          "y": 50
+        },
+        "length": 190,
+        "angle": 0.18421052631578946
+      }
+    ],
+    "tickets": [
+      {
+        "id": "ticket-6-1",
+        "position": {
+          "x": 340,
+          "y": 185
+        }
+      },
+      {
+        "id": "ticket-6-2",
+        "position": {
+          "x": 353,
+          "y": 131
+        }
+      },
+      {
+        "id": "ticket-6-3",
+        "position": {
+          "x": 345,
+          "y": 87
+        }
+      }
+    ],
+    "goal": {
+      "x": 180,
+      "y": 670
+    },
+    "props": [
+      {
+        "kind": "bumper",
+        "position": {
+          "x": 400,
+          "y": 500
+        },
+        "radius": 58
+      }
+    ],
+    "elements": [
+      {
+        "id": "room-6-bubble",
+        "kind": "bubble",
+        "position": {
+          "x": 330,
+          "y": 240
+        },
+        "captureRadius": 40,
+        "buoyancy": 0.003,
+        "popRadius": 60
+      }
+    ]
+  },
+  "playtested": true
+}

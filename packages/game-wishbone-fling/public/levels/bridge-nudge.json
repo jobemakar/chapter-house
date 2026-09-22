@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 9,
+  "yard": {
+    "id": "bridge-nudge",
+    "name": "The Wobbly Bridge",
+    "subtitle": "Nudge a foot. Spill a bridge.",
+    "legacyIndex": 2,
+    "world": {
+      "width": 1200,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "box",
+        "x": 610,
+        "y": 540,
+        "w": 52,
+        "h": 120,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "box",
+        "x": 850,
+        "y": 540,
+        "w": 72,
+        "h": 120,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "plank",
+        "x": 730,
+        "y": 471,
+        "w": 340,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "target",
+        "x": 625,
+        "y": 442,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "target",
+        "x": 835,
+        "y": 442,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "box",
+        "x": 730,
+        "y": 430,
+        "w": 60,
+        "h": 64,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "plank",
+        "x": 730,
+        "y": 389,
+        "w": 150,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "target",
+        "x": 690,
+        "y": 360,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 8,
+        "kind": "target",
+        "x": 770,
+        "y": 360,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 3,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 600,
+        "y": 638,
+        "w": 1600,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": []
+  }
+}

@@ -18,7 +18,7 @@ export const TUNE = {
 };
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 export function aim(dx: number, dy: number) {
-  dx = clamp(dx, 0, TUNE.maxPull);
+  dx = clamp(dx, -TUNE.maxPull, TUNE.maxPull);
   dy = clamp(dy, -25, TUNE.maxPull);
   const length = Math.hypot(dx, dy),
     factor = Math.min(1, TUNE.maxPull / (length || 1));
@@ -28,7 +28,14 @@ export function aim(dx: number, dy: number) {
     power: Math.min(length / TUNE.maxPull, 1),
   };
 }
+export interface YardOptions {
+  settle?: boolean;
+}
 export class Yard {
+  origin: M.Vector;
+  terrain: M.Body[];
+  removed = new Set<number>();
+  unstable = new Set<number>();
   index: number;
   layout: YardDefinition;
   events: GameEvent[];
@@ -50,9 +57,18 @@ export class Yard {
   activeToy: M.Body | null;
   facing: number;
   world: { width: number; height: number };
-  constructor(index = 0, checkpoint: Checkpoint | null = null) {
-    this.index = index;
-    this.layout = yards[index];
+  constructor(
+    index: number | YardDefinition = 0,
+    checkpoint: Checkpoint | null = null,
+    options: YardOptions = {},
+  ) {
+    this.index = typeof index === "number" ? index : -1;
+    this.layout = typeof index === "number" ? yards[index] : index;
+    if (!this.layout)
+      throw new Error(
+        "Wishbone requires a resolved level definition or a registered catalog index.",
+      );
+    this.origin = { ...(this.layout.launcher ?? TUNE.origin) };
     this.world = {
       width: this.layout.world?.width ?? TUNE.width,
       height: this.layout.world?.height ?? TUNE.height,
@@ -71,13 +87,44 @@ export class Yard {
       velocityIterations: 8,
     });
     this.engine.gravity.y = TUNE.gravity;
+    this.terrain = (
+      this.layout.terrain ?? [
+        {
+          id: "floor",
+          x: this.world.width / 2,
+          y: 638,
+          w: this.world.width + 400,
+          h: 76,
+          angle: 0,
+        },
+      ]
+    ).map((p) =>
+      Bodies.rectangle(p.x, p.y, p.w, p.h, {
+        isStatic: true,
+        friction: 0.75,
+        angle: p.angle,
+      }),
+    );
     this.bounds = [
-      Bodies.rectangle(this.world.width / 2, 638, this.world.width + 400, 76, {
+      ...this.terrain,
+      Bodies.rectangle(this.origin.x + 2, this.origin.y + 79, 128, 34, {
         isStatic: true,
         friction: 0.75,
       }),
-      Bodies.rectangle(-45, 250, 80, 900, { isStatic: true }),
-      Bodies.rectangle(this.world.width + 45, 250, 80, 900, { isStatic: true }),
+      Bodies.rectangle(
+        -45,
+        this.world.height / 2,
+        80,
+        this.world.height + 2000,
+        { isStatic: true },
+      ),
+      Bodies.rectangle(
+        this.world.width + 45,
+        this.world.height / 2,
+        80,
+        this.world.height + 2000,
+        { isStatic: true },
+      ),
     ];
     Composite.add(this.engine.world, this.bounds);
     this.pieces = this.layout.pieces.map((p, i) => {
@@ -87,6 +134,7 @@ export class Yard {
         restitution: p.kind === "cushion" ? 0.25 : 0.07,
         density: p.kind === "bucket" ? 0.00045 : 0.0008,
         sleepThreshold: 90,
+        angle: p.angle ?? 0,
       };
       const b = (
         p.r
@@ -96,15 +144,12 @@ export class Yard {
               chamfer: { radius: p.kind === "cushion" ? 10 : 3 },
             })
       ) as PieceBody;
-      b.game = { ...p, id: i, home: { x: p.x, y: p.y } };
+      b.game = { ...p, id: p.id ?? i, home: { x: p.x, y: p.y } };
       return b;
     });
     Composite.add(this.engine.world, this.pieces);
     // Settle authored stacks without awarding anything or playing impact sounds.
-    for (let n = 0; n < 240; n++) Engine.update(this.engine, TUNE.step);
-    this.pieces.forEach((b) => {
-      b.game.home = { ...b.position };
-    });
+    if (options.settle !== false) this.settle();
     this.dog = Bodies.rectangle(92, 575, 78, 46, {
       density: 0.008,
       friction: 0.12,
@@ -158,7 +203,7 @@ export class Yard {
       !Number.isFinite(velocity.y)
     )
       return false;
-    const b = Bodies.circle(TUNE.origin.x, TUNE.origin.y, 17, {
+    const b = Bodies.circle(this.origin.x, this.origin.y, 17, {
       density: 0.008,
       friction: 0.6,
       frictionAir: 0.001,
@@ -166,7 +211,7 @@ export class Yard {
     });
     b.game = { kind: "sock" };
     Body.setVelocity(b, {
-      x: clamp(velocity.x, 0, 23),
+      x: clamp(velocity.x, -23, 23),
       y: clamp(velocity.y, -23, 5),
     });
     Body.setAngularVelocity(b, 0.15);
@@ -204,7 +249,9 @@ export class Yard {
     const dog = this.dog,
       toy = this.activeToy;
     let target =
-      this.dogMode === "chase" && toy ? clamp(toy.position.x, 65, this.world.width - 40) : 92;
+      this.dogMode === "chase" && toy
+        ? clamp(toy.position.x, 65, this.world.width - 40)
+        : 92;
     if (
       this.dogMode === "chase" &&
       toy &&
@@ -255,21 +302,57 @@ export class Yard {
     }
     this.lastDogX = dog.position.x;
     Engine.update(this.engine, TUNE.step);
+    this.removeFallen(this.shots > 0);
     for (const b of this.pieces) {
-      if (b.game.kind !== "target" || this.rescued.has(b.game.id)) continue;
+      if (
+        this.shots === 0 ||
+        this.removed.has(b.game.id) ||
+        b.game.kind !== "target" ||
+        this.rescued.has(b.game.id)
+      )
+        continue;
       const h = b.game.home;
       if (
         Math.hypot(b.position.x - h.x, b.position.y - h.y) > TUNE.rescueDistance
       ) {
-        this.rescued.add(b.game.id);
+        this.rescue(b);
+      }
+    }
+  }
+  settle() {
+    for (let n = 0; n < 240; n++) {
+      Engine.update(this.engine, TUNE.step);
+      this.removeFallen(false);
+    }
+    this.pieces.forEach((b) => {
+      b.game.home = { ...b.position };
+    });
+  }
+  private rescue(b: PieceBody) {
+    if (this.rescued.has(b.game.id)) return;
+    this.rescued.add(b.game.id);
+    Composite.remove(this.engine.world, b);
+    this.events.push({
+      type: "rescue",
+      id: `${this.layout.id}:${b.game.id}`,
+      x: b.position.x,
+      y: Math.min(b.position.y, this.world.height),
+      color: b.game.color,
+    });
+  }
+  private removeFallen(active: boolean) {
+    for (const b of this.pieces) {
+      if (
+        this.removed.has(b.game.id) ||
+        this.rescued.has(b.game.id) ||
+        b.position.y <= this.world.height + 80
+      )
+        continue;
+      if (b.game.kind === "target" && active) this.rescue(b);
+      else {
+        if (b.game.kind === "target") this.unstable.add(b.game.id);
+        this.removed.add(b.game.id);
         Composite.remove(this.engine.world, b);
-        this.events.push({
-          type: "rescue",
-          id: `${this.layout.id}:${b.game.id}`,
-          x: b.position.x,
-          y: b.position.y,
-          color: b.game.color,
-        });
       }
     }
   }
@@ -281,9 +364,13 @@ export class Yard {
   }
   checkpoint(): Checkpoint {
     return {
+      revision: this.layout.revision,
+      removed: [...this.removed],
       rescued: [...this.rescued],
       pieces: this.pieces
-        .filter((b) => !this.rescued.has(b.game.id))
+        .filter(
+          (b) => !this.rescued.has(b.game.id) && !this.removed.has(b.game.id),
+        )
         .map((b) => ({
           id: b.game.id,
           x: b.position.x,
@@ -294,10 +381,16 @@ export class Yard {
   }
   restore(data: Checkpoint | null) {
     if (!data || !Array.isArray(data.pieces)) return;
+    if (this.layout.revision && data.revision !== this.layout.revision) return;
     const ids = Array.isArray(data.rescued) ? data.rescued : [];
     for (const b of this.pieces) {
       if (b.game.kind === "target" && ids.includes(b.game.id)) {
         this.rescued.add(b.game.id);
+        Composite.remove(this.engine.world, b);
+        continue;
+      }
+      if (data.removed?.includes(b.game.id)) {
+        this.removed.add(b.game.id);
         Composite.remove(this.engine.world, b);
         continue;
       }
@@ -310,8 +403,10 @@ export class Yard {
         p.x > 0 &&
         p.x < this.world.width &&
         p.y > -1000 &&
-        p.y < 650
+        p.y < this.world.height + 80
       ) {
+        if (this.removed.delete(b.game.id)) Composite.add(this.engine.world, b);
+        this.unstable.delete(b.game.id);
         Body.setPosition(b, { x: p.x, y: p.y });
         Body.setAngle(b, p.angle);
         Body.setVelocity(b, { x: 0, y: 0 });
@@ -325,4 +420,3 @@ export class Yard {
     Engine.clear(this.engine);
   }
 }
-

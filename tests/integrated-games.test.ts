@@ -29,6 +29,10 @@ test("integrated games have stable unique ids and distinct book entries", () => 
     IntegratedGames.get("vedas-great-escape")?.definition.book,
     "The Elephant in the Room",
   );
+  assert.equal(
+    IntegratedGames.get("keyfall")?.definition.book,
+    "The Mystery of Locked Rooms",
+  );
 });
 
 test("every integrated reward is allowlisted, catalogued, and idempotent", () => {
@@ -48,10 +52,10 @@ test("every integrated reward is allowlisted, catalogued, and idempotent", () =>
     }
     assert.equal(adapter.addReward(initial, `${adapter.definition.id}:unknown`), null);
   }
-  assert.equal(rewardIds.size, 56);
+  assert.equal(rewardIds.size, 45);
 });
 
-test("all 56 integrated rewards synchronize to placeable room inventory", () => {
+test("all 45 integrated rewards synchronize to placeable room inventory", () => {
   const profile = new ProfileRepository(new MemoryStore());
   const expectedCatalogIds = new Set<string>();
 
@@ -62,7 +66,7 @@ test("all 56 integrated rewards synchronize to placeable room inventory", () => 
     }
   }
 
-  assert.equal(expectedCatalogIds.size, 56);
+  assert.equal(expectedCatalogIds.size, 45);
   for (const catalogId of expectedCatalogIds) {
     const definition = getFurniture(catalogId);
     assert.ok(definition, catalogId);
@@ -73,4 +77,20 @@ test("all 56 integrated rewards synchronize to placeable room inventory", () => 
     assert.equal(owned.length, 1, catalogId);
     assert.equal(owned[0]?.placement, null, catalogId);
   }
+});
+
+test("Pocket Funhouse progress migrates to the profile archive", () => {
+  const store = new MemoryStore();
+  store.setItem(
+    "chapter-house-profile-v1",
+    JSON.stringify({
+      version: 1,
+      games: { "pocket-funhouse": { solved: ["old-room"] } },
+    }),
+  );
+  const profile = new ProfileRepository(store);
+  assert.deepEqual(profile.state.archivedGames["pocket-funhouse"], {
+    solved: ["old-room"],
+  });
+  assert.equal("pocket-funhouse" in profile.state.games, false);
 });

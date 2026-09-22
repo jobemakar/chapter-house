@@ -1,14 +1,19 @@
 {
-  "name": "@chapter-house/game-keyfall-prototype",
+  "name": "@chapter-house/game-keyfall",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./progress": "./src/progress.ts",
+    "./manifest": "./src/manifest.ts"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5198 --strictPort",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "tsx tests/keyfall.test.ts"
+    "test": "tsx --test tests/*.test.ts"
   },
-  "dependencies": { "matter-js": "0.20.0" },
+  "dependencies": { "@chapter-house/game-host": "*", "matter-js": "0.20.0" },
   "devDependencies": { "@types/matter-js": "0.20.2", "@types/node": "26.5.1", "tsx": "4.23.13", "typescript": "7.0.2", "vite": "8.3.0" }
 }

@@ -15,17 +15,52 @@ npm run build -w @chapter-house/game-keyfall-prototype
 npm run dev -w @chapter-house/game-keyfall-prototype
 ```
 
-The room picker separates the complete 20-room Campaign wing from the three
-preserved Prototype rooms. Campaign contains exactly two transformed MIT
+The file-backed room picker follows `public/levels/index.json` in order. The
+initial files retain the complete 20-room Campaign and three Prototype rooms.
+Campaign contains exactly two transformed MIT
 adaptations and eighteen original rooms authored from coordinate-free briefs.
 Rooms 03-08 introduce one concept at a time, 09-14 pair mechanics, and 15-20
 use readable multi-step combinations. See
 [docs/original-campaign.md](docs/original-campaign.md) for the briefs, room list,
 clean-room boundary, recovery grammar, and batch verification. The
 prototype rooms still demonstrate a direct drop, a two-cord pendulum sequence,
-and a bumper plus tappable bellows. This is a canvas prototype: the generated concept
-image is art direction, while cords, key, tickets, props, and goal are live
-objects. Progress and settings are local-only. No rewards are granted.
+and a bumper plus tappable bellows. The approved cartoon funhouse background is
+packaged locally; cords, key, tickets, props, and goal are separate live objects.
+See [cartoon art provenance](docs/cartoon-art.md). Progress and settings are
+local-only. No rewards are granted.
+
+## Local level editor
+
+Start the development command above, then open
+`http://127.0.0.1:5198/editor.html`. The game remains at
+`http://127.0.0.1:5198/`. Both use the same renderer, physics and input handling.
+
+The separate desktop-first editor creates blank rooms or copies saved rooms,
+places and moves built-in objects, rotates platforms and fans,
+and provides undo/redo, numeric coordinates and optional grid snapping. Fan
+power and platform length are adjustable; bounce and thickness stay fixed. Round bumpers remain
+available alongside flat platforms. Every anchor connects automatically to the
+one key using the initial distance.
+
+Save writes one versioned JSON level file directly to `public/levels/<id>.json`.
+Drafts may omit the key, goal or tickets; the editor lists problems before Play
+or campaign inclusion. Play starts a fresh test with no player-save writes;
+Stop restores the exact editing layout. Save is explicit and unsaved work is
+marked. Add/remove/reorder operations affect the campaign list separately;
+**Save order** writes `public/levels/index.json`. Removing a campaign entry does
+not delete its level file. A successful playtest is informational, not a gate.
+
+The game reads only included, valid files and reports missing/invalid entries.
+Reload gameplay after saving changes. Level saves do not trigger editor HMR,
+which would otherwise discard editing history. All 23 original files remain
+available as starting material; no old level or progress record was deleted.
+`src/rooms.ts` retains the historical authored fixtures and trace regression
+tests; normal gameplay now reads the JSON files, not a fallback to those fixtures.
+
+The file-write API exists only on the loopback development server, accepts
+same-origin JSON writes, and writes only into the levels directory. Built game
+output includes the level files and order but has no filesystem-write service.
+No database, custom-image uploads, cloud sync or publication is introduced.
 
 The campaign's two licensed adaptations are pinned to
 `emersion/mlgrope` commit `1c398f18dfb5977fb1f7fcb8a671584a102f406a`, paths
@@ -48,7 +83,28 @@ movable counterweights, and gentle-reset hazards through `PhysicsRoom` and
 create/update/collision/tap/dispose lifecycle. Pointer input is arbitrated into
 one tap or one slash, so operating a device cannot also sever a cord.
 
+## Fans and platforms
+
+**Q / E** rotates any selected rotatable object left/right by 15° (outside text
+fields), with undo support. **Wall** adds a solid wooden barrier with adjustable
+40–280px length and 20px thickness. It rotates like a platform but has no rebound.
+
+The former bellows are now animated fans. Select **Fan** and edit **Rotation °**
+to aim airflow: 0° right, 90° down, 180° left, -90° up. Tap in play to activate
+the push. **Power ×** adjusts fan push and blade speed from 0.25× to 3×, with
+1× retaining the original strength. **Length px** sets a platform's length
+from 40 to 280 logical pixels; thickness and bounce remain fixed. Ctrl/⌘ D
+duplicates the selected object outside text fields. Tickets gently sway and
+bob, respecting pause and reduced-motion settings.
+Existing files keep the `bellows` kind and their
+original trajectories; the editor converts stored angles to airflow headings.
+
 ## Rope tuning
+
+Bubble/balloon lift is controlled by `BUBBLE_TUNING.accelerationScale` near the
+top of `src/elements.ts`. It is now `0.1` (10% of original net upward
+acceleration); `1` restores the original lift. Gravity is compensated before
+scaling, so the bubble still rises. Per-level `buoyancy` values are unchanged.
 
 The primary feel controls are `CORD_TUNING` near the top of `src/physics.ts`:
 

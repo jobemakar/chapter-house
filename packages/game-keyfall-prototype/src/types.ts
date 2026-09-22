@@ -1,7 +1,7 @@
 export type Vec = { x: number; y: number };
 export type Viewport = { width: number; height: number };
 export type Bounds = { x: number; y: number; width: number; height: number };
-export type CollisionId = "key" | "bubble" | "air-zone" | "counterweight" | "hazard" | "ticket" | "goal" | "bumper" | "cord-link";
+export type CollisionId = "key" | "bubble" | "air-zone" | "counterweight" | "hazard" | "ticket" | "goal" | "bumper" | "wall" | "cord-link";
 export type RoomKind = "drop" | "pendulum" | "bellows";
 export type RoomWing = "campaign" | "prototype";
 export type RoomSource =
@@ -14,7 +14,7 @@ export type RoomSource =
       path: "levels/0.csv" | "levels/1.csv";
       license: "MIT";
     };
-export type PropDefinition = { kind: "bumper" | "bellows"; position: Vec; radius: number };
+export type PropDefinition = { kind: "bumper" | "bellows" | "platform" | "wall"; position: Vec; radius: number; angle?: number; power?: number; length?: number };
 export type BubbleDefinition = { id: string; kind: "bubble"; position: Vec; captureRadius: number; buoyancy: number; popRadius: number };
 export type AirJetDefinition = { id: string; kind: "air-jet"; position: Vec; zone: Bounds; direction: Vec; strength: number; mode: "continuous" | "tap"; tapRadius: number };
 export type CounterweightDefinition = { id: string; kind: "counterweight"; position: Vec; radius: number; mass: number; restitution: number };

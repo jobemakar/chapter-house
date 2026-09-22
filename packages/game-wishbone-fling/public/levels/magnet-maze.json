@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "playtested": true,
+  "nextPieceId": 9,
+  "yard": {
+    "id": "magnet-maze",
+    "name": "The Magnet Maze",
+    "subtitle": "Switch the pull to bend around the buckets.",
+    "legacyIndex": 20,
+    "world": {
+      "width": 1200,
+      "height": 720
+    },
+    "launcher": {
+      "x": 162,
+      "y": 478
+    },
+    "pieces": [
+      {
+        "id": 0,
+        "kind": "bucket",
+        "x": 710,
+        "y": 568,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 1,
+        "kind": "bucket",
+        "x": 835,
+        "y": 568,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 2,
+        "kind": "bucket",
+        "x": 960,
+        "y": 568,
+        "w": 60,
+        "h": 64,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 3,
+        "kind": "box",
+        "x": 770,
+        "y": 490,
+        "w": 62,
+        "h": 90,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 4,
+        "kind": "box",
+        "x": 900,
+        "y": 490,
+        "w": 62,
+        "h": 90,
+        "color": 2,
+        "angle": 0
+      },
+      {
+        "id": 5,
+        "kind": "plank",
+        "x": 835,
+        "y": 430,
+        "w": 310,
+        "h": 18,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 6,
+        "kind": "target",
+        "x": 710,
+        "y": 496,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 0,
+        "angle": 0
+      },
+      {
+        "id": 7,
+        "kind": "target",
+        "x": 835,
+        "y": 398,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 1,
+        "angle": 0
+      },
+      {
+        "id": 8,
+        "kind": "target",
+        "x": 960,
+        "y": 496,
+        "w": 0,
+        "h": 0,
+        "r": 20,
+        "color": 2,
+        "angle": 0
+      }
+    ],
+    "terrain": [
+      {
+        "id": "ground",
+        "x": 600,
+        "y": 638,
+        "w": 1600,
+        "h": 76,
+        "angle": 0
+      }
+    ],
+    "devices": [
+      {
+        "id": "button-1",
+        "kind": "button",
+        "x": 510,
+        "y": 566,
+        "targetId": "field-1"
+      },
+      {
+        "id": "field-1",
+        "kind": "field",
+        "x": 835,
+        "y": 450,
+        "r": 260
+      }
+    ]
+  }
+}
