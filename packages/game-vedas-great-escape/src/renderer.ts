@@ -91,7 +91,7 @@ export class VedaMotionController {
     this.baseFrame = continuing ? (this.frame + 1) % frameCount : 0;
     this.frame = this.baseFrame;
     this.startedAt = now;
-    this.until = now + (pushed ? 300 : 320);
+    this.until = now + (pushed ? 400 : 430);
   }
 
   tick(now: number): VedaMotionSnapshot {
@@ -100,7 +100,7 @@ export class VedaMotionController {
       this.frame = 0;
     } else if (!this.reducedMotion && this.state !== "idle") {
       const elapsed = Math.max(0, now - this.startedAt);
-      const interval = this.state === "push" ? 110 : 78;
+      const interval = this.state === "push" ? 145 : 108;
       const count = this.state === "push" ? 2 : 4;
       this.frame = (this.baseFrame + Math.floor(elapsed / interval)) % count;
     } else {

@@ -756,6 +756,7 @@ class ChapterHouse {
     this.root.querySelector<HTMLElement>(".room-page")!.hidden = true;
     const host = this.root.querySelector<HTMLElement>(".game-host")!;
     host.hidden = false;
+    host.scrollTop = 0;
     const loadToken = ++this.gameLoadToken;
     this.activeGameId = id;
     const adapter = IntegratedGames.get(id);

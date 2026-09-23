@@ -21,6 +21,7 @@ import dummyUrl from "./assets/intake-dummy-capped.png";
 import targetUrl from "./assets/campsite-target.png";
 import Box2DFactory from "liquidfun-wasm/dist/es/Box2D.js";
 import box2dWasmUrl from "liquidfun-wasm/dist/es/Box2D.wasm?url";
+import { DigAndDouseAudio } from "./audio";
 
 const SCALE = 50;
 const WIDTH = 600;
@@ -776,6 +777,7 @@ export class DigAndDouseGame implements GameSession {
   private accumulator = 0;
   private paused = false;
   private muted: boolean;
+  private readonly audio: DigAndDouseAudio;
   private disposed = false;
   private animationFrame = 0;
   private resizeFrame = 0;
@@ -817,6 +819,9 @@ export class DigAndDouseGame implements GameSession {
       () => this.noteMeaningfulDig(),
     );
     this.muted = services.muted;
+    this.audio = new DigAndDouseAudio(() => this.muted);
+    this.canvas.addEventListener("pointerdown", () => this.audio.unlock(), { passive: true });
+    this.canvas.addEventListener("keydown", () => this.audio.unlock(), { passive: true });
     this.progress = loadDigAndDouseProgress(services.progress);
     this.campaign = new CampaignProgress(
       this.progress,
@@ -855,12 +860,14 @@ export class DigAndDouseGame implements GameSession {
 
   setPaused(paused: boolean): void {
     this.paused = paused;
+    this.audio.setPaused(paused);
     this.last = 0;
     this.accumulator = 0;
     if (paused) this.input.clear();
   }
   setMuted(muted: boolean): void {
     this.muted = muted;
+    this.audio.setMuted(muted);
   }
   status(): unknown {
     return {
@@ -898,6 +905,7 @@ export class DigAndDouseGame implements GameSession {
     window.removeEventListener("resize", this.scheduleResize);
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
     this.input.clear();
+    this.audio.dispose();
     this.persistRun();
     this.flushProgress();
     this.level?.dispose();
@@ -1041,6 +1049,7 @@ export class DigAndDouseGame implements GameSession {
     this.persistedCanteensThisRun = 0;
     this.activityStepsRemaining = 0;
     this.runDirty = false;
+    this.audio.reset();
   }
   private persistRun(): void {
     if (this.options.testMode) return;
@@ -1069,6 +1078,7 @@ export class DigAndDouseGame implements GameSession {
     this.flushProgress();
   }
   private noteMeaningfulDig(): void {
+    this.audio.digging();
     this.activityStepsRemaining = 8 * 60;
     this.runDirty = true;
   }
@@ -1095,6 +1105,9 @@ export class DigAndDouseGame implements GameSession {
         let steps = 0;
         while (this.accumulator >= 1 / 60 && steps < 3) {
           const wasWon = this.level.won;
+          const oldCollected = this.level.collected;
+          const oldWasted = this.level.wasted;
+          const oldFilled = this.level.canteens.filter((canteen) => canteen.filled).length;
           this.level.step();
           this.accumulator -= 1 / 60;
           steps++;
@@ -1103,8 +1116,16 @@ export class DigAndDouseGame implements GameSession {
             this.activeStepsSinceCredit++;
           }
           if (!wasWon && this.level.won) {
+            this.audio.complete();
             this.runDirty = true;
             this.persistRun();
+          } else if (this.level.collected > oldCollected) {
+            this.audio.splash();
+            this.audio.waterFlow();
+          } else if (this.level.wasted > oldWasted) {
+            this.audio.splash();
+          } else if (this.level.canteens.filter((canteen) => canteen.filled).length > oldFilled) {
+            this.audio.collectible();
           }
         }
         if (this.activeStepsSinceCredit >= 60) this.creditActivePlay();

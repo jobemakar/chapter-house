@@ -7,6 +7,5 @@ export const bureauAfterDarkCardArt = new URL(
 ).href;
 /** Lazy entry avoids loading the canvas runtime and package CSS before launch. */
 export async function loadBureauAfterDark() {
-  await import("./style.css");
   return import("./game");
 }

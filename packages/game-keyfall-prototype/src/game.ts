@@ -63,7 +63,7 @@ export class KeyfallGame implements GameSession {
     this.creditedTotal = Math.floor(this.activeTotal);
     this.audio = new KeyfallAudio(() => this.progress.muted);
     root.className = "keyfall-app";
-    root.innerHTML = `<header><div><p class="eyebrow">THE ABANDONED FUNHOUSE</p><h1>Keyfall</h1><p id="keyfall-subtitle"></p><p class="instructions">Swipe across a cord to cut it · tap bubbles or marked devices</p></div><div class="top-actions"><button data-action="pause">Pause</button><button data-action="sound" aria-pressed="false">Sound on</button><button data-action="motion" aria-pressed="false">Motion</button></div></header><section class="room-picker" aria-label="Choose a room"></section><div class="board-wrap"><canvas aria-label="Keyfall physics puzzle"></canvas></div><footer><div><h2 id="keyfall-title" tabindex="-1"></h2><span id="keyfall-tickets"></span><a class="credits-link" href="credits.html">Credits &amp; licenses</a></div><button data-action="reset">Reset room</button></footer>`;
+    root.innerHTML = `<header><div><p class="eyebrow">THE ABANDONED FUNHOUSE</p><h1>Keyfall</h1><p id="keyfall-subtitle"></p><p class="instructions">Swipe across a cord to cut it · tap bubbles or marked devices</p></div><div class="top-actions"><button data-action="pause">Pause</button><button data-action="sound" aria-pressed="false">Sound on</button></div></header><section class="room-picker" aria-label="Choose a room"></section><div class="board-wrap"><canvas aria-label="Keyfall physics puzzle"></canvas></div><footer><div><h2 id="keyfall-title" tabindex="-1"></h2><span id="keyfall-tickets"></span><a class="credits-link" href="credits.html">Credits &amp; licenses</a></div><button data-action="reset">Reset room</button></footer>`;
     this.title = this.required("#keyfall-title");
     this.subtitle = this.required("#keyfall-subtitle");
     this.tickets = this.required("#keyfall-tickets");
@@ -162,11 +162,6 @@ export class KeyfallGame implements GameSession {
       if (action === "pause") this.setPaused(!this.paused);
       if (action === "reset") this.resetRoom();
       if (action === "sound") this.setMuted(!this.progress.muted);
-      if (action === "motion") {
-        this.progress = { ...this.progress, reducedMotion: !this.progress.reducedMotion };
-        this.persist();
-        this.updateButtons();
-      }
     }, { signal }));
   }
 
@@ -197,10 +192,8 @@ export class KeyfallGame implements GameSession {
   private updateButtons(): void {
     const pause = this.root.querySelector<HTMLButtonElement>('[data-action="pause"]');
     const sound = this.root.querySelector<HTMLButtonElement>('[data-action="sound"]');
-    const motion = this.root.querySelector<HTMLButtonElement>('[data-action="motion"]');
     if (pause) pause.textContent = this.paused ? "Resume" : "Pause";
     if (sound) { sound.textContent = this.progress.muted ? "Sound off" : "Sound on"; sound.setAttribute("aria-pressed", String(!this.progress.muted)); }
-    if (motion) { motion.textContent = this.progress.reducedMotion ? "Reduced motion" : "Motion"; motion.setAttribute("aria-pressed", String(this.progress.reducedMotion)); }
     this.tickets.textContent = ` · Tickets ${this.collected.size}/3`;
     this.roomPicker?.update(this.progress, this.room.id);
   }

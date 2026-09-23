@@ -43,6 +43,8 @@ export class GummyBoard {
       if (candy === null) continue;
       if (col <= 3 && candy === this.base(board[index + 1]) && candy === this.base(board[index + 2])) for (let x = col; x < 6 && this.base(board[row * 6 + x]) === candy; x++) found.add(row * 6 + x);
       if (row <= 3 && candy === this.base(board[index + 6]) && candy === this.base(board[index + 12])) for (let y = row; y < 6 && this.base(board[y * 6 + col]) === candy; y++) found.add(y * 6 + col);
+      if (row <= 3 && col <= 3 && candy === this.base(board[index + 7]) && candy === this.base(board[index + 14])) for (let step = 0; row + step < 6 && col + step < 6 && this.base(board[(row + step) * 6 + col + step]) === candy; step++) found.add((row + step) * 6 + col + step);
+      if (row <= 3 && col >= 2 && candy === this.base(board[index + 5]) && candy === this.base(board[index + 10])) for (let step = 0; row + step < 6 && col - step >= 0 && this.base(board[(row + step) * 6 + col - step]) === candy; step++) found.add((row + step) * 6 + col - step);
     }
     return [...found].sort((a, b) => a - b);
   }
@@ -62,7 +64,13 @@ export class GummyBoard {
     for (let attempt = 0; attempt < 50; attempt++) {
       const board: Board = [];
       for (let index = 0; index < 36; index++) {
-        const options = [0, 1, 2, 3, 4].filter(value => !(index % 6 >= 2 && board[index - 1] === value && board[index - 2] === value) && !(index >= 12 && board[index - 6] === value && board[index - 12] === value));
+        const col = index % 6;
+        const options = [0, 1, 2, 3, 4].filter(value =>
+          !(col >= 2 && board[index - 1] === value && board[index - 2] === value) &&
+          !(index >= 12 && board[index - 6] === value && board[index - 12] === value) &&
+          !(index >= 14 && col >= 2 && board[index - 7] === value && board[index - 14] === value) &&
+          !(index >= 10 && col <= 3 && board[index - 5] === value && board[index - 10] === value),
+        );
         board.push(options[Math.min(options.length - 1, Math.max(0, Math.floor(random() * options.length)))]);
       }
       if (this.legalMoves(board).length) return board;

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./progress": "./src/progress.ts", "./manifest": "./src/manifest.ts" },
+  "exports": { ".": "./src/index.ts", "./game": "./src/game.ts", "./progress": "./src/progress.ts", "./manifest": "./src/manifest.ts" },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5199 --strictPort",
     "build": "vite build",

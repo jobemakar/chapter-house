@@ -13,8 +13,8 @@ test("motion controller selects authored directional frames deterministically", 
   const motion = new VedaMotionController(false);
   motion.play("left", false, 1000);
   assert.deepEqual(motion.tick(1000), { direction: "left", state: "walk", frame: 0 });
-  assert.deepEqual(motion.tick(1080), { direction: "left", state: "walk", frame: 1 });
-  assert.deepEqual(motion.tick(1321), { direction: "left", state: "idle", frame: 0 });
+  assert.deepEqual(motion.tick(1108), { direction: "left", state: "walk", frame: 1 });
+  assert.deepEqual(motion.tick(1431), { direction: "left", state: "idle", frame: 0 });
   motion.play("up", true, 2000);
   assert.deepEqual(motion.tick(2010), { direction: "up", state: "push", frame: 0 });
 });
@@ -24,11 +24,11 @@ test("one ordinary move exposes all four walk frames before returning idle", () 
     const motion = new VedaMotionController(false);
     motion.play(direction, false, 1000);
     assert.deepEqual(
-      [1000, 1080, 1160, 1240].map((time) => motion.tick(time).frame),
+      [1000, 1108, 1216, 1324].map((time) => motion.tick(time).frame),
       [0, 1, 2, 3],
       direction,
     );
-    assert.equal(motion.tick(1321).state, "idle");
+    assert.equal(motion.tick(1431).state, "idle");
   }
 });
 
@@ -66,10 +66,10 @@ test("motion exposes an idle-drain boundary for a stoppable frame loop", () => {
   assert.equal(motion.isActive(0), false);
   motion.play("down", false, 1000);
   assert.equal(motion.isActive(1000), true);
-  assert.equal(motion.remaining(1000), 320);
-  motion.tick(1320);
-  assert.equal(motion.isActive(1320), false);
-  assert.equal(motion.remaining(1320), 0);
+  assert.equal(motion.remaining(1000), 430);
+  motion.tick(1430);
+  assert.equal(motion.isActive(1430), false);
+  assert.equal(motion.remaining(1430), 0);
 });
 
 test("reduced motion never keeps the RAF loop alive for a walk", () => {

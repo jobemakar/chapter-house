@@ -358,6 +358,15 @@ class GummyMotion {
           this.flight(run, phase.to, phase.from, phase.before[phase.to], 9),
         ]);
       } else if (phase.kind === "clear") {
+        for (const index of phase.cells)
+          this.cell(index).classList.add("gn-match-preview");
+        await this.animate(
+          run,
+          this.board(),
+          [{ filter: "brightness(1)" }, { filter: "brightness(1.08)" }],
+          180,
+        );
+        if (run.cancelled) return;
         onClear(phase);
         await Promise.all(
           phase.activated.map((activation) => this.power(run, activation)),

@@ -244,4 +244,30 @@
       transition: none;
     }
   }
+  @media (orientation: landscape) and (max-height: 700px) {
+    :scope {
+      overflow: auto;
+    }
+    main {
+      grid-template-columns: 1fr;
+      grid-template-rows: minmax(340px, 62svh) auto auto;
+      overflow: visible;
+    }
+    .stage {
+      grid-row: 1;
+      min-height: 340px;
+    }
+    aside {
+      padding: 0.55rem;
+      overflow: visible;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: center;
+    }
+    aside:first-child { grid-row: 2; }
+    aside:last-child { grid-row: 3; }
+    aside > label:first-child, .kit, .edit, .reward { grid-column: 1 / -1; }
+    .kit, .edit { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kit button { grid-template-columns: 34px minmax(0, 1fr); }
+    .kit canvas { width: 34px; height: 24px; }
+  }
 }

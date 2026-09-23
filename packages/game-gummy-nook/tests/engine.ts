@@ -8,6 +8,9 @@ assert.deepEqual(GummyBoard.coordinates(-12), { row: -2, col: 0 });
 assert.deepEqual(GummyBoard.coordinates(-5), { row: -1, col: 1 });
 assert.deepEqual(GummyBoard.coordinates(35), { row: 5, col: 5 });
 const board = Array.from({ length: 36 }, (_, i) => i % 5); board[0] = 1; board[1] = 1; board[2] = 1;
+const diagonal = Array.from({ length: 36 }, (_, i) => i % 5); diagonal[0] = 4; diagonal[7] = 4; diagonal[14] = 4; diagonal[5] = 3; diagonal[10] = 3; diagonal[15] = 3;
+const diagonalMatches = GummyBoard.matches(diagonal);
+assert.ok([0, 7, 14, 5, 10, 15].every((cell) => diagonalMatches.includes(cell)));
 const expanded = GummyBoard.expandPowers(board, [0,1,2]); assert.deepEqual(expanded.cells, [0,1,2]);
 const collapsed = GummyBoard.collapse(board, [1, 7, 13], () => .2);
 for (const fall of collapsed.falls.filter(fall => fall.from < 0)) {

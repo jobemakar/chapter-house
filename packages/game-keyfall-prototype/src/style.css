@@ -1,18 +1,16 @@
-:root { color-scheme: dark; font-family: "Trebuchet MS", ui-sans-serif, system-ui, sans-serif; background: #123640; color: #fff0c9; }
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(ellipse at 20% 0%, #235563, #123640 75%); }
-button { border: 2px solid #ad703e; color: #fff0c9; background: #633046; border-radius: .8rem; padding: .6rem .95rem; min-height: 44px; box-shadow: inset 0 2px 0 #ffffff12, 0 3px 0 #152b32; font: 700 .9rem "Trebuchet MS", ui-sans-serif, system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
-button:hover { background: #83405e; border-color: #ffd16d; }
-button:focus-visible { background: #83405e; border-color: #ffdf89; outline: 3px solid #ffdf89; outline-offset: 3px; }
-button:active { box-shadow: inset 0 2px 0 #0002; }
-.keyfall-app { width: min(100%, 980px); margin: 0 auto; padding: clamp(14px, 3vw, 30px); }
-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
-.eyebrow { color: #c0dedb; font-size: .7rem; letter-spacing: .14em; margin: 0 0 .35rem; }
-h1 { color: #ffd36c; font: 900 clamp(2.2rem, 5.5vw, 3.4rem)/1.1 "Arial Rounded MT Bold", "Trebuchet MS", sans-serif; letter-spacing: .035em; text-transform: uppercase; text-shadow: 0 3px 0 #955230, 0 5px 0 #142e35; margin: 0; }
-#keyfall-subtitle { color: #e8d5bb; margin: .65rem 0 0; }
-.instructions { color: #bcdedc; margin: .5rem 0 0; font-size: .78rem; line-height: 1.5; }
-.top-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
-.room-picker { margin-bottom: .65rem; min-width: 0; }
+.keyfall-app { width: min(100%, 980px); min-height: 100%; margin: 0 auto; padding: clamp(14px, 3vw, 30px); box-sizing: border-box; color-scheme: dark; color: #fff0c9; font-family: "Trebuchet MS", ui-sans-serif, system-ui, sans-serif; background: radial-gradient(ellipse at 20% 0%, #235563, #123640 75%); }
+.keyfall-app, .keyfall-app * { box-sizing: border-box; }
+.keyfall-app button { border: 2px solid #ad703e; color: #fff0c9; background: #633046; border-radius: .8rem; padding: .6rem .95rem; min-height: 44px; box-shadow: inset 0 2px 0 #ffffff12, 0 3px 0 #152b32; font: 700 .9rem "Trebuchet MS", ui-sans-serif, system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+.keyfall-app button:hover { background: #83405e; border-color: #ffd16d; }
+.keyfall-app button:focus-visible { background: #83405e; border-color: #ffdf89; outline: 3px solid #ffdf89; outline-offset: 3px; }
+.keyfall-app button:active { box-shadow: inset 0 2px 0 #0002; }
+.keyfall-app header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.keyfall-app .eyebrow { color: #c0dedb; font-size: .7rem; letter-spacing: .14em; margin: 0 0 .35rem; }
+.keyfall-app h1 { color: #ffd36c; font: 900 clamp(2.2rem, 5.5vw, 3.4rem)/1.1 "Arial Rounded MT Bold", "Trebuchet MS", sans-serif; letter-spacing: .035em; text-transform: uppercase; text-shadow: 0 3px 0 #955230, 0 5px 0 #142e35; margin: 0; }
+.keyfall-app #keyfall-subtitle { color: #e8d5bb; margin: .65rem 0 0; }
+.keyfall-app .instructions { color: #bcdedc; margin: .5rem 0 0; font-size: .78rem; line-height: 1.5; }
+.keyfall-app .top-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
+.keyfall-app .room-picker { margin-bottom: .65rem; min-width: 0; }
 .wing-tabs { display: flex; gap: .4rem; }
 .wing-tab { flex: 1 1 0; border-radius: .65rem; font-size: .86rem; padding: .5rem .75rem; }
 .wing-tab[aria-selected="true"] { background: #a23d6c; border-color: #ffd16d; color: #fff4d6; }
@@ -26,14 +24,14 @@ h1 { color: #ffd36c; font: 900 clamp(2.2rem, 5.5vw, 3.4rem)/1.1 "Arial Rounded M
 .room-button.is-complete .room-state { color: #f0be6a; }
 .empty-wing { margin: 0; padding: .65rem .75rem; border: 1px dashed #66465e; border-radius: .65rem; color: #d8b496; font-size: .8rem; line-height: 1.35; }
 .board-wrap { position: relative; width: 100%; aspect-ratio: 7 / 10; overflow: hidden; border: 0; outline: 2px solid #b27a49; outline-offset: -2px; border-radius: .7rem; box-shadow: 0 8px 0 #0b2732, 0 18px 45px #071e2c55; background: #197b92; }
-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-footer { display: flex; justify-content: space-between; align-items: center; padding-top: .8rem; color: #d2dcd0; }
-footer h2 { display: inline; margin: 0; color: #ffe3a1; font: 700 1rem "Trebuchet MS", sans-serif; } footer span { margin-left: .5rem; }
+.keyfall-app canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.keyfall-app footer { display: flex; justify-content: space-between; align-items: center; padding-top: .8rem; color: #d2dcd0; }
+.keyfall-app footer h2 { display: inline; margin: 0; color: #ffe3a1; font: 700 1rem "Trebuchet MS", sans-serif; } .keyfall-app footer span { margin-left: .5rem; }
 .credits-link { display: block; width: max-content; margin-top: .3rem; color: #badad6; font-size: .72rem; text-underline-offset: .18em; }
 .credits-link:hover, .credits-link:focus-visible { color: #f0be6a; outline: 2px solid #e3a15f; outline-offset: 3px; }
 .loading-levels { max-width: 680px; margin: 3rem auto; padding: 1rem; }
 .level-diagnostics { position: relative; z-index: 2; padding: 1rem; margin: 1rem; color: #ffedc1; background: #653048; border: 2px solid #d6a45e; border-radius: .6rem; }
 .level-diagnostics pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
-@media (max-width: 620px) { .keyfall-app { padding: 8px; } header { align-items: flex-start; flex-direction: column; gap: .55rem; margin-bottom: .65rem; } .top-actions { justify-content: flex-start; } .instructions { font-size: .72rem; } }
-@media (max-width: 620px) and (orientation: portrait) { h1 { font-size: 2rem; } #keyfall-subtitle { margin-top: .45rem; font-size: .88rem; } button { padding: .48rem .72rem; } }
-@media (min-width: 700px) { .keyfall-app { width: min(100%, 1280px); height: 100dvh; padding: 12px; display: grid; grid-template-columns: minmax(270px, 1fr) auto; grid-template-rows: minmax(0, auto) minmax(0, 1fr) minmax(0, auto); grid-template-areas: "header board" "picker board" "footer board"; column-gap: clamp(16px, 3vw, 38px); overflow: hidden; } header { grid-area: header; min-height: 0; max-height: 34dvh; align-items: flex-start; flex-direction: column; margin: 0; overflow-y: auto; } .top-actions { justify-content: flex-start; } .room-picker { grid-area: picker; display: flex; flex-direction: column; align-self: stretch; min-height: 0; margin: .5rem 0; overflow: hidden; } .wing-panels { flex: 1 1 auto; min-height: 0; overflow: hidden; } .wing-panel { height: 100%; min-height: 0; } .room-grid { height: 100%; max-height: none; grid-template-columns: 1fr; overflow-y: auto; } .board-wrap { grid-area: board; width: auto; height: min(calc(100dvh - 24px), calc((100vw - 330px) * 10 / 7)); align-self: center; justify-self: end; } footer { position: relative; z-index: 1; grid-area: footer; align-self: end; flex-wrap: wrap; gap: .7rem; padding: .25rem 0; background: #123640; } }
+@media (max-width: 620px) { .keyfall-app { padding: 12px 8px 18px; } .keyfall-app header { align-items: flex-start; flex-direction: column; gap: .55rem; margin-bottom: .65rem; } .keyfall-app .top-actions { justify-content: flex-start; } .keyfall-app .instructions { font-size: .72rem; } }
+@media (max-width: 620px) and (orientation: portrait) { .keyfall-app h1 { font-size: 2rem; } .keyfall-app #keyfall-subtitle { margin-top: .45rem; font-size: .88rem; } .keyfall-app button { padding: .48rem .72rem; } }
+@media (min-width: 700px) { .keyfall-app { width: min(100%, 1280px); height: 100%; padding: 12px; display: grid; grid-template-columns: minmax(270px, 1fr) auto; grid-template-rows: minmax(0, auto) minmax(0, 1fr) minmax(0, auto); grid-template-areas: "header board" "picker board" "footer board"; column-gap: clamp(16px, 3vw, 38px); overflow: hidden; } .keyfall-app header { grid-area: header; min-height: 0; max-height: 34dvh; align-items: flex-start; flex-direction: column; margin: 0; overflow-y: auto; } .keyfall-app .top-actions { justify-content: flex-start; } .keyfall-app .room-picker { grid-area: picker; display: flex; flex-direction: column; align-self: stretch; min-height: 0; margin: .5rem 0; overflow: hidden; } .keyfall-app .wing-panels { flex: 1 1 auto; min-height: 0; overflow: hidden; } .keyfall-app .wing-panel { height: 100%; min-height: 0; } .keyfall-app .room-grid { height: 100%; max-height: none; grid-template-columns: 1fr; overflow-y: auto; } .keyfall-app .board-wrap { grid-area: board; width: auto; height: min(calc(100dvh - 24px), calc((100vw - 330px) * 10 / 7)); align-self: center; justify-self: end; } .keyfall-app footer { position: relative; z-index: 1; grid-area: footer; align-self: end; flex-wrap: wrap; gap: .7rem; padding: .25rem 0; background: #123640; } }

@@ -1,4 +1,5 @@
 import type { GameHostServices, GameSession } from "@chapter-house/game-host";
+import "./style.css";
 import { LEVELS, Navigator, type Level, type Point, type SearchSpot, type Sigil } from "./domain";
 import { BUREAU_REWARD_REQUEST_IDS, loadBureauAfterDarkProgress, type BureauAfterDarkProgress } from "./progress";
 import { RewardCards } from "./reward-cards";

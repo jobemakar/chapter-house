@@ -3,6 +3,7 @@ import templateHtml from "./template.html?raw";
 import skyUrl from "./assets/sky.png";
 import { ActivePlayWindow } from "./activity";
 import { loadStormglideProgress, type StormglideProgress } from "./progress";
+import { thumbOffset, thumbVector } from "./touch-input";
 
 /*
  * Stormglide's browser entry point.  The focused classes below deliberately
@@ -238,7 +239,9 @@ function mountStormglide(root: HTMLElement, services: GameHostServices<Stormglid
     floats = storm.model.floats,
     history = storm.model.history,
     keys: Record<string, boolean> = {};
-  // Touch steering is relative, keeping fingers away from the rider.
+  // Touch steering belongs to the always-visible thumb pad.  Earlier builds
+  // also interpreted any touch on the sky as a relative steering gesture;
+  // that made a casual tap feel like a fling and hid the control's purpose.
   let touchMode = matchMedia("(any-pointer: coarse)").matches;
   const input = storm.input;
   let lastDashTouch = -Infinity;
@@ -624,31 +627,39 @@ function mountStormglide(root: HTMLElement, services: GameHostServices<Stormglid
     }
     if (e.pointerId !== input.activePointer || !input.origin) return;
     e.preventDefault();
-    const dx = e.clientX - input.origin.x,
-      dy = e.clientY - input.origin.y;
-    const distance = Math.hypot(dx, dy),
-      radius = 52,
-      deadZone = 7;
-    const strength = clamp((distance - deadZone) / (radius - deadZone), 0, 1);
-    input.vector =
-      distance > 0
-        ? { x: (dx / distance) * strength, y: (dy / distance) * strength }
-        : { x: 0, y: 0 };
-    $("touchKnob").style.transform =
-      "translate(" + input.vector.x * 34 + "px, " + input.vector.y * 34 + "px)";
+    const pad = $("touchPad");
+    const knob = $("touchKnob");
+    const radius = Math.max(30, pad.clientWidth * 0.42);
+    input.vector = thumbVector(
+      e.clientX - input.origin.x,
+      e.clientY - input.origin.y,
+      radius,
+    );
+    const travel = Math.max(0, (pad.clientWidth - knob.clientWidth) / 2 - 4);
+    const offset = thumbOffset(input.vector, travel);
+    knob.style.transform = "translate(" + offset.x + "px, " + offset.y + "px)";
   }
   function endSteering(e: PointerEvent): void {
     if (e.pointerId !== input.activePointer) return;
     resetSteering();
   }
-  for (const surface of [canvas, $("touchPad")]) {
-    surface.addEventListener("pointerdown", beginSteering);
-    surface.addEventListener("pointermove", moveSteering);
-    ["pointerup", "pointercancel", "lostpointercapture"].forEach((type) =>
-      surface.addEventListener(type, (event) => endSteering(event as PointerEvent)),
-    );
-    surface.addEventListener("contextmenu", (e) => e.preventDefault());
-  }
+  // Mouse retains its direct point-to-fly interaction on the sky.  Touch
+  // input intentionally starts only on the visible pad, so touch movement is
+  // never an invisible, accidental second control scheme.
+  canvas.addEventListener("pointerdown", (event) => {
+    if ((event as PointerEvent).pointerType === "mouse") beginSteering(event as PointerEvent);
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if ((event as PointerEvent).pointerType === "mouse") moveSteering(event as PointerEvent);
+  });
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+  const touchPad = $("touchPad");
+  touchPad.addEventListener("pointerdown", beginSteering);
+  touchPad.addEventListener("pointermove", moveSteering);
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((type) =>
+    touchPad.addEventListener(type, (event) => endSteering(event as PointerEvent)),
+  );
+  touchPad.addEventListener("contextmenu", (e) => e.preventDefault());
   canvas.addEventListener("pointerleave", (e: PointerEvent) => {
     if (e.pointerType === "mouse" && input.activePointer === null) input.pointer = null;
   });
@@ -823,8 +834,12 @@ function mountStormglide(root: HTMLElement, services: GameHostServices<Stormglid
       vx *= 0.8;
       vy *= 0.8;
     }
-    player.vx = lerp(player.vx, vx, 1 - Math.exp(-dt * 10));
-    player.vy = lerp(player.vy, vy, 1 - Math.exp(-dt * 10));
+    // The pad should feel like a joystick rather than a loose suggestion.
+    // Its response intentionally settles faster than keyboard movement while
+    // retaining a trace of softness for the game's forgiving cloud flight.
+    const steeringResponse = input.activePointer !== null ? 22 : 10;
+    player.vx = lerp(player.vx, vx, 1 - Math.exp(-dt * steeringResponse));
+    player.vy = lerp(player.vy, vy, 1 - Math.exp(-dt * steeringResponse));
     player.x = clamp(player.x + player.vx * dt, 42, W - 48);
     player.y = clamp(player.y + player.vy * dt, topBound(), bottomBound());
     player.tilt = lerp(

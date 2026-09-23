@@ -451,10 +451,11 @@ const bureau: IntegratedGameAdapter = {
     };
   },
   async load() {
-    const { loadBureauAfterDark } = await import(
-      "@chapter-house/game-bureau-after-dark"
+    // Load Bureau's executable entry directly. The game module owns its CSS,
+    // keeping the host launch to a single Vite-managed asynchronous boundary.
+    const { BureauAfterDarkGame } = await import(
+      "@chapter-house/game-bureau-after-dark/game"
     );
-    const { BureauAfterDarkGame } = await loadBureauAfterDark();
     return (target, services) =>
       new BureauAfterDarkGame(
         target,

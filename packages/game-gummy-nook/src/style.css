@@ -191,6 +191,14 @@
   background: #fff;
   z-index: 1;
 }
+.gummy-nook .gn-cell.gn-match-preview {
+  outline: 3px solid #fff2a4;
+  outline-offset: 1px;
+  background: #fffdf2;
+  box-shadow: 0 0 0 3px #ed9d9188, 0 0 18px #fff0a8;
+  transform: scale(1.06);
+  z-index: 1;
+}
 .gummy-nook .gn-candy {
   width: 92%;
   height: 92%;
